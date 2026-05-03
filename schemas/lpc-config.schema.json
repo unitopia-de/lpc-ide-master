@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LPC-IDE-Master Configuration",
+  "description": "Konfiguration für Dialekt und Mudlib-Spezifikationen.",
+  "type": "object",
+  "required": ["dialect", "mudlib"],
+  "properties": {
+    "dialect": {
+      "type": "string",
+      "enum": ["ldmud", "fluffos", "mudos"],
+      "description": "Der LPC-Driver-Dialekt."
+    },
+    "version": {
+      "type": "string",
+      "description": "Driver-Version, z.B. 3.5.0 oder 3.6.x."
+    },
+    "mudlib": {
+      "type": "object",
+      "required": ["name", "baseDir"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name der Mudlib (z.B. UNIlib, MGlib)."
+        },
+        "baseDir": {
+          "type": "string",
+          "description": "Wurzelverzeichnis der Mudlib im virtuellen MUD-Dateisystem."
+        },
+        "simulEfunFile": {
+          "type": "string",
+          "description": "Pfad zur simul_efun.c relativ zum baseDir oder absolut."
+        },
+        "includeDirs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Verzeichnisse, die für inherit/include aufgelöst werden."
+        },
+        "efunDefinitions": {
+          "type": "string",
+          "description": "Profil-Datei mit vorkompilierten Efun-Definitionen."
+        }
+      }
+    },
+    "ftp": {
+      "type": "object",
+      "description": "Optionale FTP-Verbindungsdaten. Passwörter werden NICHT hier gespeichert.",
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "integer", "default": 21 },
+        "user": { "type": "string" },
+        "remoteRoot": { "type": "string" },
+        "protocol": { "type": "string", "enum": ["ftp", "sftp"], "default": "ftp" }
+      }
+    }
+  }
+}

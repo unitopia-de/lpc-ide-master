@@ -1,0 +1,173 @@
+{
+  "name": "lpc-ide-master",
+  "displayName": "LPC-IDE-Master (UNItopia Edition)",
+  "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP-Sync und LSP-Unterstützung für UNItopia und weitere Mudlibs.",
+  "version": "0.1.0",
+  "publisher": "wd-ideenmanufaktur",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "lpc",
+    "ldmud",
+    "unitopia",
+    "mud",
+    "ftp"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:lpc",
+    "onFileSystem:lpc-ftp",
+    "workspaceContains:lpc-config.json"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "lpc",
+        "aliases": ["LPC", "lpc"],
+        "extensions": [".c", ".h", ".lpc"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lpc",
+        "scopeName": "source.lpc",
+        "path": "./syntaxes/lpc.tmLanguage.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "lpc-config.json",
+        "url": "./schemas/lpc-config.schema.json"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "lpcRemote",
+          "title": "Remote MUD",
+          "icon": "$(remote-explorer)"
+        }
+      ]
+    },
+    "views": {
+      "lpcRemote": [
+        {
+          "id": "lpcRemoteExplorer",
+          "name": "Remote Explorer",
+          "icon": "$(remote-explorer)",
+          "contextualTitle": "LPC Remote MUD"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "lpc.connect",
+        "title": "LPC: Mit MUD verbinden",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "lpc.disconnect",
+        "title": "LPC: Verbindung trennen",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "lpc.refreshRemote",
+        "title": "LPC: Remote-Baum aktualisieren",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "lpc.switchDialect",
+        "title": "LPC: Dialekt wechseln"
+      },
+      {
+        "command": "lpc.reloadConfig",
+        "title": "LPC: lpc-config.json neu laden"
+      },
+      {
+        "command": "lpc.updateObject",
+        "title": "LPC: Objekt aktualisieren (update)"
+      },
+      {
+        "command": "lpc.destructObject",
+        "title": "LPC: Objekt zerstören (destruct)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "lpc.refreshRemote",
+          "when": "view == lpcRemoteExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "lpc.connect",
+          "when": "view == lpcRemoteExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "lpc.updateObject",
+          "when": "view == lpcRemoteExplorer && viewItem == lpcFile",
+          "group": "lpc@1"
+        },
+        {
+          "command": "lpc.destructObject",
+          "when": "view == lpcRemoteExplorer && viewItem == lpcFile",
+          "group": "lpc@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LPC-IDE-Master",
+      "properties": {
+        "lpc.configFile": {
+          "type": "string",
+          "default": "lpc-config.json",
+          "description": "Pfad zur LPC-Konfigurationsdatei (relativ zum Workspace-Root)."
+        },
+        "lpc.dialect.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Beim Öffnen eines Workspaces automatisch den Dialekt erkennen."
+        },
+        "lpc.ftp.uploadOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Dateien beim Speichern automatisch via FTP zum MUD übertragen."
+        },
+        "lpc.ftp.protocol": {
+          "type": "string",
+          "enum": ["ftp", "sftp"],
+          "default": "ftp",
+          "description": "Übertragungsprotokoll für die Remote-Synchronisation."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "basic-ftp": "^5.0.5",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "LPC",
+  "scopeName": "source.lpc",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#types" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.lpc",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.lpc",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.lpc",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.lpc", "match": "\\\\." }
+      ]
+    },
+    "keywords": {
+      "name": "keyword.control.lpc",
+      "match": "\\b(if|else|for|foreach|while|do|switch|case|default|break|continue|return|inherit|include|private|public|protected|static|nomask|varargs|create|init)\\b"
+    },
+    "types": {
+      "name": "storage.type.lpc",
+      "match": "\\b(int|string|object|mapping|mixed|float|void|status|closure|symbol|struct)\\b"
+    }
+  }
+}

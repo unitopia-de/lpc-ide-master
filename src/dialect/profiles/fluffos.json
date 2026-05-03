@@ -1,0 +1,15 @@
+{
+  "dialect": "fluffos",
+  "driverVersion": "3.0",
+  "efuns": [
+    {
+      "name": "write",
+      "signature": "void write(mixed msg)"
+    },
+    {
+      "name": "this_player",
+      "signature": "object this_player()"
+    }
+  ],
+  "sfuns": []
+}
