@@ -21,7 +21,6 @@
   ],
   "main": "./out/extension.js",
   "activationEvents": [
-    "onLanguage:lpc",
     "onFileSystem:lpc-ftp",
     "workspaceContains:lpc-config.json"
   ],
@@ -74,68 +73,53 @@
       ]
     },
     "commands": [
-      {
-        "command": "lpc.connect",
-        "title": "LPC: Mit MUD verbinden",
-        "icon": "$(plug)"
-      },
-      {
-        "command": "lpc.disconnect",
-        "title": "LPC: Verbindung trennen",
-        "icon": "$(debug-disconnect)"
-      },
-      {
-        "command": "lpc.refreshRemote",
-        "title": "LPC: Remote-Baum aktualisieren",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "lpc.switchDialect",
-        "title": "LPC: Dialekt wechseln"
-      },
-      {
-        "command": "lpc.reloadConfig",
-        "title": "LPC: lpc-config.json neu laden"
-      },
-      {
-        "command": "lpc.changePassword",
-        "title": "LPC: FTP-Passwort ändern"
-      },
-      {
-        "command": "lpc.updateObject",
-        "title": "LPC: Objekt aktualisieren (update)"
-      },
-      {
-        "command": "lpc.destructObject",
-        "title": "LPC: Objekt zerstören (destruct)"
-      }
+      { "command": "lpc.connect",            "title": "LPC: Mit MUD verbinden",          "icon": "$(plug)" },
+      { "command": "lpc.disconnect",         "title": "LPC: Verbindung trennen",         "icon": "$(debug-disconnect)" },
+      { "command": "lpc.refreshRemote",      "title": "LPC: Remote-Baum aktualisieren",  "icon": "$(refresh)" },
+      { "command": "lpc.switchDialect",      "title": "LPC: Dialekt wechseln" },
+      { "command": "lpc.reloadConfig",       "title": "LPC: lpc-config.json neu laden" },
+      { "command": "lpc.changePassword",     "title": "LPC: FTP-Passwort ändern" },
+      { "command": "lpc.changeMudPassword",  "title": "LPC: MUD-Passwort ändern" },
+      { "command": "lpc.openMudConsole",     "title": "LPC: MUD-Konsole anzeigen",       "icon": "$(terminal)" },
+      { "command": "lpc.disconnectMud",      "title": "LPC: MUD-Konsole trennen" },
+      { "command": "lpc.updateObject",       "title": "Update Object (update)",          "icon": "$(refresh)" },
+      { "command": "lpc.destructObject",     "title": "Destruct Object (destruct)",      "icon": "$(trash)" },
+      { "command": "lpc.newFile",            "title": "Neue Datei",                      "icon": "$(new-file)" },
+      { "command": "lpc.newFolder",          "title": "Neuer Ordner",                    "icon": "$(new-folder)" },
+      { "command": "lpc.renameRemote",       "title": "Umbenennen" },
+      { "command": "lpc.deleteRemote",       "title": "Löschen" },
+      { "command": "lpc.copyRemotePath",     "title": "Pfad kopieren" }
     ],
     "menus": {
       "view/title": [
-        {
-          "command": "lpc.refreshRemote",
-          "when": "view == lpcRemoteExplorer",
-          "group": "navigation"
-        },
-        {
-          "command": "lpc.connect",
-          "when": "view == lpcRemoteExplorer",
-          "group": "navigation"
-        }
+        { "command": "lpc.connect",        "when": "view == lpcRemoteExplorer", "group": "navigation@1" },
+        { "command": "lpc.refreshRemote",  "when": "view == lpcRemoteExplorer", "group": "navigation@2" },
+        { "command": "lpc.openMudConsole", "when": "view == lpcRemoteExplorer", "group": "navigation@3" },
+        { "command": "lpc.disconnect",     "when": "view == lpcRemoteExplorer", "group": "1_connection" }
       ],
       "view/item/context": [
-        {
-          "command": "lpc.updateObject",
-          "when": "view == lpcRemoteExplorer && viewItem == lpcFile",
-          "group": "lpc@1"
-        },
-        {
-          "command": "lpc.destructObject",
-          "when": "view == lpcRemoteExplorer && viewItem == lpcFile",
-          "group": "lpc@2"
-        }
+        { "command": "lpc.newFile",        "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@1" },
+        { "command": "lpc.newFolder",      "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@2" },
+        { "command": "lpc.refreshRemote",  "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "1_navigation" },
+        { "command": "lpc.updateObject",   "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@1" },
+        { "command": "lpc.destructObject", "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@2" },
+        { "command": "lpc.renameRemote",   "when": "view == lpcRemoteExplorer",                       "group": "3_modify@1" },
+        { "command": "lpc.deleteRemote",   "when": "view == lpcRemoteExplorer",                       "group": "3_modify@2" },
+        { "command": "lpc.copyRemotePath", "when": "view == lpcRemoteExplorer",                       "group": "9_copy" }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "lpcRemoteExplorer",
+        "contents": "Keine FTP-Konfiguration gefunden.\n\nLege eine [lpc-config.json](command:lpc.reloadConfig) im Workspace-Root an und ergänze einen `ftp`-Block.\n\n[Konfiguration neu laden](command:lpc.reloadConfig)",
+        "when": "!lpc.hasFtpConfig"
+      },
+      {
+        "view": "lpcRemoteExplorer",
+        "contents": "Mit dem MUD verbinden, um den Remote-Baum zu laden.\n\n[Verbinden](command:lpc.connect)",
+        "when": "lpc.hasFtpConfig && !lpc.ftpConnected"
+      }
+    ],
     "configuration": {
       "title": "LPC-IDE-Master",
       "properties": {

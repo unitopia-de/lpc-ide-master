@@ -16,11 +16,24 @@ export interface FtpConfig {
     protocol?: 'ftp' | 'sftp';
 }
 
+export interface MudConsoleConfig {
+    host: string;
+    port?: number;
+    user: string;
+    protocol?: 'telnet' | 'telnets';
+    loginPrompt?: string;
+    passwordPrompt?: string;
+    commandPrompt?: string;
+    /** Endmarker, der nach jedem Befehl in die Antwort eingebettet wird, um das Ende zu erkennen. */
+    completionMarker?: string;
+}
+
 export interface LpcConfig {
     dialect: 'ldmud' | 'fluffos' | 'mudos';
     version?: string;
     mudlib: MudlibConfig;
     ftp?: FtpConfig;
+    mud?: MudConsoleConfig;
 }
 
 export interface ValidationIssue {
@@ -169,6 +182,26 @@ function validate(input: unknown): ValidationIssue[] {
             }
             if (ftp.protocol !== undefined && !['ftp', 'sftp'].includes(ftp.protocol as string)) {
                 issues.push({ path: 'ftp.protocol', message: 'Erlaubt: "ftp" | "sftp".' });
+            }
+        }
+    }
+
+    const mud = cfg.mud as Record<string, unknown> | undefined;
+    if (mud !== undefined) {
+        if (typeof mud !== 'object' || mud === null) {
+            issues.push({ path: 'mud', message: 'Objekt erwartet.' });
+        } else {
+            if (typeof mud.host !== 'string' || !mud.host) {
+                issues.push({ path: 'mud.host', message: 'Pflichtfeld wenn mud gesetzt ist.' });
+            }
+            if (typeof mud.user !== 'string' || !mud.user) {
+                issues.push({ path: 'mud.user', message: 'Pflichtfeld wenn mud gesetzt ist.' });
+            }
+            if (mud.port !== undefined && typeof mud.port !== 'number') {
+                issues.push({ path: 'mud.port', message: 'Zahl erwartet.' });
+            }
+            if (mud.protocol !== undefined && !['telnet', 'telnets'].includes(mud.protocol as string)) {
+                issues.push({ path: 'mud.protocol', message: 'Erlaubt: "telnet" | "telnets".' });
             }
         }
     }

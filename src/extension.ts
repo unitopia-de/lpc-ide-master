@@ -7,6 +7,7 @@ import { CredentialsManager } from './ftp/credentialsManager';
 import { ConnectionManager } from './ftp/connectionManager';
 import { RemoteExplorerProvider } from './tree/remoteExplorerProvider';
 import { LpcLanguageClient } from './lsp/client';
+import { MudConsole } from './mud/mudConsole';
 import { registerCommands } from './commands';
 import { createStatusBar } from './statusBar';
 
@@ -35,12 +36,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         })
     );
 
-    const treeProvider = new RemoteExplorerProvider(ftpProvider, config);
+    const treeProvider = new RemoteExplorerProvider(ftpProvider, config, connections);
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider('lpcRemoteExplorer', treeProvider)
     );
 
-    const statusBar = createStatusBar(dialectManager, efunProvider, config, connections);
+    const updateContextKeys = (): void => {
+        const hasFtp = !!config.value?.ftp?.host;
+        const isConnected = !!connections.active;
+        void vscode.commands.executeCommand('setContext', 'lpc.hasFtpConfig', hasFtp);
+        void vscode.commands.executeCommand('setContext', 'lpc.ftpConnected', isConnected);
+    };
+    updateContextKeys();
+    context.subscriptions.push(
+        config.onDidChange(updateContextKeys),
+        connections.onDidChangeConnection(updateContextKeys)
+    );
+
+    const mudChannel = vscode.window.createOutputChannel('LPC MUD Console');
+    context.subscriptions.push(mudChannel);
+    const mudConsole = new MudConsole(mudChannel, config, credentials);
+    context.subscriptions.push(mudConsole);
+
+    const statusBar = createStatusBar(dialectManager, efunProvider, config, connections, mudConsole);
     context.subscriptions.push(statusBar);
 
     const lspClient = new LpcLanguageClient(context, dialectManager, output);
@@ -54,6 +72,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         ftpProvider,
         treeProvider,
         credentials,
+        mudConsole,
         output
     });
 }

@@ -1,12 +1,17 @@
 {
   "$schema": "../../schemas/lpc-config.schema.json",
   "dialect": "ldmud",
-  "version": "3.5.0",
+  "version": "3.6.7",
   "mudlib": {
     "name": "UNIlib",
     "baseDir": "/sys/unitopia",
     "simulEfunFile": "/sys/simul_efun.c",
-    "includeDirs": ["/sys/include", "/std/include"]
+    "includeDirs": [
+      "/sys/include",
+      "/std/include",
+      "/players/magier/include"
+    ],
+    "efunDefinitions": "lpc-efuns.json"
   },
   "ftp": {
     "host": "mud.unitopia.de",
@@ -20,8 +25,9 @@
     "port": 4711,
     "user": "magier",
     "protocol": "telnet",
-    "loginPrompt": "(Wie heisst du|Name)",
+    "loginPrompt": "(Wie heisst du|Bitte gib Deinen Namen ein|Name)",
     "passwordPrompt": "Passwort",
-    "commandPrompt": "^>\\s*$"
+    "commandPrompt": "^(>|magier@unitopia>)\\s*$",
+    "completionMarker": "###LPC_IDE_DONE###"
   }
 }

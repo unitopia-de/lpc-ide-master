@@ -1,0 +1,16 @@
+{
+  "_comment": "Workspace-spezifische Efun-/Sfun-Erweiterungen. Wird ZUSÄTZLICH zum eingebauten Profil ldmud-unitopia geladen (vom efunDefinitions-Eintrag in lpc-config.json referenziert). Hier können magier-eigene Sfuns oder Gilden-spezifische Funktionen ergänzt werden.",
+  "efuns": [],
+  "sfuns": [
+    {
+      "name": "QueryGuildMember",
+      "signature": "int QueryGuildMember(object pl, string guild)",
+      "documentation": "Magier-eigene Hilfsfunktion: prüft Gildenzugehörigkeit eines Spielers."
+    },
+    {
+      "name": "log_file",
+      "signature": "void log_file(string file, string text)",
+      "documentation": "Schreibt eine Zeile in /log/<file>. Magier-eigene Wrapper-Sfun."
+    }
+  ]
+}

@@ -51,6 +51,21 @@
         "remoteRoot": { "type": "string" },
         "protocol": { "type": "string", "enum": ["ftp", "sftp"], "default": "ftp" }
       }
+    },
+    "mud": {
+      "type": "object",
+      "description": "Telnet-/Telnets-Verbindung zum MUD für Magier-Befehle (update, destruct, ...). Passwörter werden NICHT hier gespeichert.",
+      "required": ["host", "user"],
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "integer", "description": "Default 4711 (telnet) bzw. 992 (telnets)." },
+        "user": { "type": "string", "description": "Magier-Login." },
+        "protocol": { "type": "string", "enum": ["telnet", "telnets"], "default": "telnet" },
+        "loginPrompt": { "type": "string", "description": "Regex; Default: \"(Name|Wie heisst du)\"." },
+        "passwordPrompt": { "type": "string", "description": "Regex; Default: \"Passwort\"." },
+        "commandPrompt": { "type": "string", "description": "Regex für den Befehlsprompt; Default: \"^>\\s*$\"." },
+        "completionMarker": { "type": "string", "description": "Optionaler Endmarker pro Befehl. Wird nicht in den Output geschrieben." }
+      }
     }
   }
 }

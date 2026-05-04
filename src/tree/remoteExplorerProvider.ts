@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { FtpFileSystemProvider } from '../ftp/ftpFileSystemProvider';
 import { LpcConfigService } from '../config/lpcConfig';
+import { ConnectionManager } from '../ftp/connectionManager';
 
 export class RemoteNode extends vscode.TreeItem {
     constructor(
@@ -32,8 +33,13 @@ export class RemoteExplorerProvider implements vscode.TreeDataProvider<RemoteNod
 
     constructor(
         private readonly fs: FtpFileSystemProvider,
-        private readonly config: LpcConfigService
-    ) {}
+        private readonly config: LpcConfigService,
+        private readonly connections: ConnectionManager
+    ) {
+        // Bei Verbindungswechsel und Config-Reload den Tree aktualisieren.
+        this.connections.onDidChangeConnection(() => this.refresh());
+        this.config.onDidChange(() => this.refresh());
+    }
 
     refresh(node?: RemoteNode): void {
         this.emitter.fire(node);
@@ -46,6 +52,7 @@ export class RemoteExplorerProvider implements vscode.TreeDataProvider<RemoteNod
     async getChildren(element?: RemoteNode): Promise<RemoteNode[]> {
         const cfg = this.config.value;
         if (!cfg?.ftp?.host) {
+            // Welcome-View greift via package.json viewsWelcome.
             return [];
         }
         const host = cfg.ftp.host;
@@ -54,14 +61,21 @@ export class RemoteExplorerProvider implements vscode.TreeDataProvider<RemoteNod
 
         try {
             const entries = await this.fs.readDirectory(baseUri);
-            return entries.map(([name, type]) => {
+            const sorted = entries.slice().sort((a, b) => {
+                const dirA = a[1] === vscode.FileType.Directory ? 0 : 1;
+                const dirB = b[1] === vscode.FileType.Directory ? 0 : 1;
+                if (dirA !== dirB) return dirA - dirB;
+                return a[0].localeCompare(b[0]);
+            });
+            return sorted.map(([name, type]) => {
                 const childUri = vscode.Uri.parse(
                     `lpc-ftp://${host}${this.join(basePath, name)}`
                 );
                 return new RemoteNode(name, childUri, type === vscode.FileType.Directory);
             });
         } catch (err) {
-            vscode.window.showErrorMessage(`Remote-Auflistung fehlgeschlagen: ${err}`);
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Remote-Auflistung fehlgeschlagen: ${msg}`);
             return [];
         }
     }
