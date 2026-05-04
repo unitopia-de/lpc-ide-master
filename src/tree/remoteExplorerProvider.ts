@@ -49,7 +49,7 @@ export class RemoteExplorerProvider implements vscode.TreeDataProvider<RemoteNod
             return [];
         }
         const host = cfg.ftp.host;
-        const basePath = element?.uri.path ?? cfg.mudlib?.baseDir ?? '/';
+        const basePath = element?.uri.path ?? cfg.ftp.remoteRoot ?? cfg.mudlib?.baseDir ?? '/';
         const baseUri = vscode.Uri.parse(`lpc-ftp://${host}${basePath}`);
 
         try {

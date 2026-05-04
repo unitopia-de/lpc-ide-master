@@ -1,0 +1,18 @@
+{
+  "$schema": "../../schemas/lpc-config.schema.json",
+  "dialect": "ldmud",
+  "version": "3.5.0",
+  "mudlib": {
+    "name": "UNIlib",
+    "baseDir": "/sys/unitopia",
+    "simulEfunFile": "/sys/simul_efun.c",
+    "includeDirs": ["/sys/include", "/std/include"]
+  },
+  "ftp": {
+    "host": "mud.unitopia.de",
+    "port": 21,
+    "user": "magier",
+    "remoteRoot": "/players/magier",
+    "protocol": "ftp"
+  }
+}

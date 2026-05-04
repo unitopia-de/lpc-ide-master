@@ -29,8 +29,15 @@
     "languages": [
       {
         "id": "lpc",
-        "aliases": ["LPC", "lpc"],
-        "extensions": [".c", ".h", ".lpc"],
+        "aliases": [
+          "LPC",
+          "lpc"
+        ],
+        "extensions": [
+          ".c",
+          ".h",
+          ".lpc"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -91,6 +98,10 @@
         "title": "LPC: lpc-config.json neu laden"
       },
       {
+        "command": "lpc.changePassword",
+        "title": "LPC: FTP-Passwort ändern"
+      },
+      {
         "command": "lpc.updateObject",
         "title": "LPC: Objekt aktualisieren (update)"
       },
@@ -145,7 +156,10 @@
         },
         "lpc.ftp.protocol": {
           "type": "string",
-          "enum": ["ftp", "sftp"],
+          "enum": [
+            "ftp",
+            "sftp"
+          ],
           "default": "ftp",
           "description": "Übertragungsprotokoll für die Remote-Synchronisation."
         }
@@ -160,6 +174,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/ssh2-sftp-client": "^9.0.6",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
@@ -168,6 +183,7 @@
   },
   "dependencies": {
     "basic-ftp": "^5.0.5",
+    "ssh2-sftp-client": "^12.1.1",
     "vscode-languageclient": "^9.0.1"
   }
 }
