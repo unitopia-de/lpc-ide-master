@@ -46,12 +46,50 @@ viel weniger Felder, weil die Defaults greifen.
 |---|---|---|
 | `host` | **ja** | Hostname/IP des MUD-Servers. |
 | `port` | nein | Default `4711` (telnet) bzw. `992` (telnets). |
-| `user` | **ja** | Magier-Login. |
+| `user` | nein | Magier-Login. **Fehlt user**, wird die Login-Sequenz übersprungen — sinnvoll für homemud im Gast-Modus oder offene Test-MUDs. |
 | `protocol` | nein | `"telnet"` (Default, plain TCP) oder `"telnets"` (TLS). |
 | `loginPrompt` | nein | **Regex**, auf den der Client wartet, bevor der Username gesendet wird. Default: `"(Name\|Wie\\s*hei[ßs]?t\\s*du)"`. |
 | `passwordPrompt` | nein | **Regex** für den Passwort-Prompt. Default: `"Passwort"`. |
 | `commandPrompt` | nein | **Regex** für den Befehlsprompt — daran erkennt der Client, dass eine Antwort vollständig empfangen wurde. Default: `"^>\\s*$"`. |
 | `completionMarker` | nein | Optionaler Endmarker. Wenn gesetzt, sendet das Plugin nach jedem Befehl ein zusätzliches `echo <marker>` und sammelt den Output bis zum Marker — robuster als reines Prompt-Matching, falls der MUD-Output Prompt-ähnliche Zeichen enthält. |
+
+### `homemud` — lokales Entwicklungs-MUD im Workspace
+
+Optional. Wenn gesetzt, kann das Plugin Dateien zwischen dem Remote-MUD
+und einem lokalen MUD-Verzeichnis hin- und herkopieren — und einen
+zweiten Telnet-Kanal (z.B. zu localhost) bereitstellen.
+
+| Feld | Pflicht | Erläuterung |
+|---|---|---|
+| `path` | **ja** | Workspace-relativer Pfad zum lokalen MUD-Verzeichnis (z.B. `"./mud"`). |
+| `libPath` | nein | Pfad zur Mudlib innerhalb von `path`. Default `"/lib"`. |
+| `mud` | nein | Optionaler `mud`-Block (gleiche Felder wie oben) für eine zweite Telnet-Konsole zum localhost-MUD. |
+
+#### Pfad-Mapping
+
+```
+Remote (lpc-ftp)                          Lokal (homemud)
+lpc-ftp://host{remoteRoot}/foo/bar.c  ⇄   <ws>/{homemud.path}{homemud.libPath}/foo/bar.c
+```
+
+Mit dieser Config:
+
+```
+lpc-ftp://mud.unitopia.de/players/magier/std/room.c
+                ⇄
+<workspace>/mud/lib/std/room.c
+```
+
+#### Sync-Aktionen
+
+| Wo | Aktion |
+|---|---|
+| Remote-Tree → Rechtsklick | **Nach homemud kopieren** (Datei oder ganzes Verzeichnis rekursiv) |
+| Datei-Explorer / Editor-Tab → Rechtsklick (innerhalb von `homemud.path`) | **Zur Remote hochladen** (mit Modal-Bestätigung) |
+
+#### Default-MUD für `update`/`destruct`
+
+Sind beide MUDs konfiguriert, fragt das Plugin per QuickPick — **Default-Auswahl ist homemud**, weil dort entwickelt/getestet wird. Mit nur einem konfigurierten MUD entfällt die Frage.
 
 ## Was passiert beim Start
 

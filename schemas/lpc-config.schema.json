@@ -4,6 +4,22 @@
   "description": "Konfiguration für Dialekt und Mudlib-Spezifikationen.",
   "type": "object",
   "required": ["dialect", "mudlib"],
+  "definitions": {
+    "mudConsole": {
+      "type": "object",
+      "required": ["host"],
+      "properties": {
+        "host": { "type": "string" },
+        "port": { "type": "integer", "description": "Default 4711 (telnet) bzw. 992 (telnets)." },
+        "user": { "type": "string", "description": "Optional. Fehlt user, wird die Login-Sequenz übersprungen." },
+        "protocol": { "type": "string", "enum": ["telnet", "telnets"], "default": "telnet" },
+        "loginPrompt": { "type": "string", "description": "Regex; Default: \"(Name|Wie heisst du)\"." },
+        "passwordPrompt": { "type": "string", "description": "Regex; Default: \"Passwort\"." },
+        "commandPrompt": { "type": "string", "description": "Regex für den Befehlsprompt; Default: \"^>\\s*$\"." },
+        "completionMarker": { "type": "string", "description": "Optionaler Endmarker pro Befehl." }
+      }
+    }
+  },
   "properties": {
     "dialect": {
       "type": "string",
@@ -18,27 +34,11 @@
       "type": "object",
       "required": ["name", "baseDir"],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name der Mudlib (z.B. UNIlib, MGlib)."
-        },
-        "baseDir": {
-          "type": "string",
-          "description": "Wurzelverzeichnis der Mudlib im virtuellen MUD-Dateisystem."
-        },
-        "simulEfunFile": {
-          "type": "string",
-          "description": "Pfad zur simul_efun.c relativ zum baseDir oder absolut."
-        },
-        "includeDirs": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Verzeichnisse, die für inherit/include aufgelöst werden."
-        },
-        "efunDefinitions": {
-          "type": "string",
-          "description": "Profil-Datei mit vorkompilierten Efun-Definitionen."
-        }
+        "name": { "type": "string" },
+        "baseDir": { "type": "string" },
+        "simulEfunFile": { "type": "string" },
+        "includeDirs": { "type": "array", "items": { "type": "string" } },
+        "efunDefinitions": { "type": "string" }
       }
     },
     "ftp": {
@@ -53,18 +53,27 @@
       }
     },
     "mud": {
+      "$ref": "#/definitions/mudConsole",
+      "description": "Telnet-/Telnets-Verbindung zum REMOTE MUD für Magier-Befehle (update, destruct, ...)."
+    },
+    "homemud": {
       "type": "object",
-      "description": "Telnet-/Telnets-Verbindung zum MUD für Magier-Befehle (update, destruct, ...). Passwörter werden NICHT hier gespeichert.",
-      "required": ["host", "user"],
+      "description": "Optional: lokales Entwicklungs-MUD im Workspace. Erlaubt Sync zwischen remote und lokalem MUD.",
+      "required": ["path"],
       "properties": {
-        "host": { "type": "string" },
-        "port": { "type": "integer", "description": "Default 4711 (telnet) bzw. 992 (telnets)." },
-        "user": { "type": "string", "description": "Magier-Login." },
-        "protocol": { "type": "string", "enum": ["telnet", "telnets"], "default": "telnet" },
-        "loginPrompt": { "type": "string", "description": "Regex; Default: \"(Name|Wie heisst du)\"." },
-        "passwordPrompt": { "type": "string", "description": "Regex; Default: \"Passwort\"." },
-        "commandPrompt": { "type": "string", "description": "Regex für den Befehlsprompt; Default: \"^>\\s*$\"." },
-        "completionMarker": { "type": "string", "description": "Optionaler Endmarker pro Befehl. Wird nicht in den Output geschrieben." }
+        "path": {
+          "type": "string",
+          "description": "Workspace-relativer Pfad zum lokalen MUD-Verzeichnis."
+        },
+        "libPath": {
+          "type": "string",
+          "default": "/lib",
+          "description": "Pfad zur Mudlib innerhalb von path."
+        },
+        "mud": {
+          "$ref": "#/definitions/mudConsole",
+          "description": "Optional: Telnet-Konsole zum lokalen MUD."
+        }
       }
     }
   }

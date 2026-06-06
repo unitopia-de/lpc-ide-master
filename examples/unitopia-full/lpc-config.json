@@ -29,5 +29,15 @@
     "passwordPrompt": "Passwort",
     "commandPrompt": "^(>|magier@unitopia>)\\s*$",
     "completionMarker": "###LPC_IDE_DONE###"
+  },
+  "homemud": {
+    "path": "./mud",
+    "libPath": "/lib",
+    "mud": {
+      "host": "localhost",
+      "port": 4711,
+      "protocol": "telnet",
+      "commandPrompt": "^>\\s*$"
+    }
   }
 }

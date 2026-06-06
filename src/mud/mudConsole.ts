@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import { MudClient } from './mudClient';
-import { LpcConfigService, MudConsoleConfig } from '../config/lpcConfig';
+import { MudConsoleConfig } from '../config/lpcConfig';
 import { CredentialsManager } from '../ftp/credentialsManager';
 
+export type MudConsoleConfigProvider = () => MudConsoleConfig | undefined;
+
 // Hochlevel-Wrapper. Zeigt Output im Channel "LPC MUD Console" und kapselt
-// den Lifecycle einer Telnet-Session.
+// den Lifecycle einer Telnet-Session. Pro Konsolen-Instanz (remote, homemud)
+// jeweils ein eigener OutputChannel.
 export class MudConsole implements vscode.Disposable {
     private client: MudClient | undefined;
     private connecting: Promise<MudClient> | undefined;
@@ -13,13 +16,22 @@ export class MudConsole implements vscode.Disposable {
     readonly onDidChangeConnection = this.emitter.event;
 
     constructor(
+        readonly label: string,
         private readonly channel: vscode.OutputChannel,
-        private readonly config: LpcConfigService,
+        private readonly getConfig: MudConsoleConfigProvider,
         private readonly credentials: CredentialsManager
     ) {}
 
     get isConnected(): boolean {
         return this.client?.isConnected === true;
+    }
+
+    get isConfigured(): boolean {
+        return !!this.getConfig()?.host;
+    }
+
+    get host(): string | undefined {
+        return this.getConfig()?.host;
     }
 
     show(): void {
@@ -71,24 +83,23 @@ export class MudConsole implements vscode.Disposable {
     }
 
     private async openConnection(): Promise<MudClient> {
-        const cfg = this.config.value?.mud;
-        if (!cfg?.host || !cfg?.user) {
-            throw new Error('lpc-config.json: Block "mud" mit host und user fehlt.');
+        const cfg = this.getConfig();
+        if (!cfg?.host) {
+            throw new Error(`${this.label}: keine MUD-Konfiguration vorhanden.`);
         }
-        const password = await this.resolvePassword(cfg);
-        if (!password) {
+        const password = cfg.user ? await this.resolvePassword(cfg.host, cfg.user) : undefined;
+        if (cfg.user && !password) {
             throw new Error('Passwort-Eingabe abgebrochen.');
         }
 
         this.channel.show(true);
+        const who = cfg.user ?? '(kein Login)';
         this.channel.appendLine(
-            `— Verbinde ${cfg.user}@${cfg.host}:${cfg.port ?? '(default)'} via ${cfg.protocol ?? 'telnet'} —`
+            `— ${this.label}: verbinde ${who}@${cfg.host}:${cfg.port ?? '(default)'} via ${cfg.protocol ?? 'telnet'} —`
         );
 
         const client = new MudClient({ ...cfg, password });
         client.on('data', (chunk: string) => {
-            // Roh-Output nur, wenn er nicht über send() abgeholt wurde
-            // (z.B. asynchrone tells). Wir zeigen ihn immer mit.
             this.channel.append(chunk);
         });
         client.on('close', () => {
@@ -110,10 +121,10 @@ export class MudConsole implements vscode.Disposable {
         return client;
     }
 
-    private async resolvePassword(cfg: MudConsoleConfig): Promise<string | undefined> {
-        let pw = await this.credentials.getMudPassword(cfg.host, cfg.user);
+    private async resolvePassword(host: string, user: string): Promise<string | undefined> {
+        let pw = await this.credentials.getMudPassword(host, user);
         if (!pw) {
-            pw = await this.credentials.promptForMudPassword(cfg.host, cfg.user);
+            pw = await this.credentials.promptForMudPassword(host, user);
         }
         return pw;
     }

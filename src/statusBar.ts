@@ -4,19 +4,23 @@ import { EfunProvider } from './dialect/efunProvider';
 import { LpcConfigService } from './config/lpcConfig';
 import { ConnectionManager } from './ftp/connectionManager';
 import { MudConsole } from './mud/mudConsole';
+import { HomeMudService } from './homemud/homeMudService';
 
 export function createStatusBar(
     dialect: DialectManager,
     efuns: EfunProvider,
     config: LpcConfigService,
     connections: ConnectionManager,
-    mud: MudConsole
+    remoteMud: MudConsole,
+    homeMud: MudConsole,
+    homeMudService: HomeMudService
 ): vscode.Disposable {
     const dialectItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     dialectItem.command = 'lpc.switchDialect';
 
     const ftpItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
-    const mudItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98);
+    const remoteMudItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98);
+    const homeMudItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 97);
 
     const updateDialect = (): void => {
         const issues = config.issues;
@@ -45,35 +49,55 @@ export function createStatusBar(
                 ftpItem.tooltip = `Nicht verbunden\nKlick: Verbinden`;
                 ftpItem.command = 'lpc.connect';
             } else {
-                ftpItem.text = `$(circle-slash) FTP: kein Host`;
-                ftpItem.tooltip = 'lpc-config.json: ftp.host fehlt';
-                ftpItem.command = 'lpc.reloadConfig';
+                ftpItem.hide();
+                return;
             }
         }
         ftpItem.show();
     };
 
-    const updateMud = (): void => {
-        const cfg = config.value?.mud;
-        if (!cfg?.host) {
-            mudItem.hide();
+    const updateMudItem = (
+        item: vscode.StatusBarItem,
+        mud: MudConsole,
+        connectCmd: string
+    ): void => {
+        if (!mud.isConfigured) {
+            item.hide();
             return;
         }
+        const host = mud.host ?? '?';
         if (mud.isConnected) {
-            mudItem.text = `$(terminal) MUD: ${cfg.host}`;
-            mudItem.tooltip = `MUD-Konsole verbunden\nKlick: Output anzeigen`;
-            mudItem.command = 'lpc.openMudConsole';
+            item.text = `$(terminal) ${mud.label}: ${host}`;
+            item.tooltip = `${mud.label}-Konsole verbunden\nKlick: Output anzeigen`;
         } else {
-            mudItem.text = `$(circle-slash) MUD: ${cfg.host}`;
-            mudItem.tooltip = `MUD-Konsole nicht verbunden\nKlick: Konsole anzeigen`;
-            mudItem.command = 'lpc.openMudConsole';
+            item.text = `$(circle-slash) ${mud.label}: ${host}`;
+            item.tooltip = `${mud.label}-Konsole nicht verbunden\nKlick: Output anzeigen`;
         }
-        mudItem.show();
+        item.command = connectCmd;
+        item.show();
+    };
+
+    const updateHome = (): void => {
+        const cfg = config.value?.homemud;
+        if (homeMud.isConfigured) {
+            updateMudItem(homeMudItem, homeMud, 'lpc.openHomeMudConsole');
+            return;
+        }
+        if (cfg?.path && homeMudService.localRoot) {
+            // Konfigurierter homemud ohne Telnet — trotzdem als Hinweis anzeigen.
+            homeMudItem.text = `$(home) homemud: ${cfg.path}`;
+            homeMudItem.tooltip = `Lokaler MUD-Pfad: ${homeMudService.localRoot.fsPath}`;
+            homeMudItem.command = 'lpc.revealHomeMud';
+            homeMudItem.show();
+        } else {
+            homeMudItem.hide();
+        }
     };
 
     updateDialect();
     updateFtp();
-    updateMud();
+    updateMudItem(remoteMudItem, remoteMud, 'lpc.openRemoteMudConsole');
+    updateHome();
     dialectItem.show();
 
     const subs = [
@@ -82,16 +106,21 @@ export function createStatusBar(
         config.onDidChange(() => {
             updateDialect();
             updateFtp();
-            updateMud();
+            updateMudItem(remoteMudItem, remoteMud, 'lpc.openRemoteMudConsole');
+            updateHome();
         }),
         connections.onDidChangeConnection(updateFtp),
-        mud.onDidChangeConnection(updateMud)
+        remoteMud.onDidChangeConnection(() =>
+            updateMudItem(remoteMudItem, remoteMud, 'lpc.openRemoteMudConsole')
+        ),
+        homeMud.onDidChangeConnection(updateHome)
     ];
 
     return new vscode.Disposable(() => {
         subs.forEach((s) => s.dispose());
         dialectItem.dispose();
         ftpItem.dispose();
-        mudItem.dispose();
+        remoteMudItem.dispose();
+        homeMudItem.dispose();
     });
 }

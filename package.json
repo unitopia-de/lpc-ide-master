@@ -35,7 +35,9 @@
         "extensions": [
           ".c",
           ".h",
-          ".lpc"
+          ".lpc",
+          ".inc",
+          ".d"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -73,39 +75,51 @@
       ]
     },
     "commands": [
-      { "command": "lpc.connect",            "title": "LPC: Mit MUD verbinden",          "icon": "$(plug)" },
-      { "command": "lpc.disconnect",         "title": "LPC: Verbindung trennen",         "icon": "$(debug-disconnect)" },
-      { "command": "lpc.refreshRemote",      "title": "LPC: Remote-Baum aktualisieren",  "icon": "$(refresh)" },
-      { "command": "lpc.switchDialect",      "title": "LPC: Dialekt wechseln" },
-      { "command": "lpc.reloadConfig",       "title": "LPC: lpc-config.json neu laden" },
-      { "command": "lpc.changePassword",     "title": "LPC: FTP-Passwort ändern" },
-      { "command": "lpc.changeMudPassword",  "title": "LPC: MUD-Passwort ändern" },
-      { "command": "lpc.openMudConsole",     "title": "LPC: MUD-Konsole anzeigen",       "icon": "$(terminal)" },
-      { "command": "lpc.disconnectMud",      "title": "LPC: MUD-Konsole trennen" },
-      { "command": "lpc.updateObject",       "title": "Update Object (update)",          "icon": "$(refresh)" },
-      { "command": "lpc.destructObject",     "title": "Destruct Object (destruct)",      "icon": "$(trash)" },
-      { "command": "lpc.newFile",            "title": "Neue Datei",                      "icon": "$(new-file)" },
-      { "command": "lpc.newFolder",          "title": "Neuer Ordner",                    "icon": "$(new-folder)" },
-      { "command": "lpc.renameRemote",       "title": "Umbenennen" },
-      { "command": "lpc.deleteRemote",       "title": "Löschen" },
-      { "command": "lpc.copyRemotePath",     "title": "Pfad kopieren" }
+      { "command": "lpc.connect",                "title": "LPC: Mit MUD verbinden",                  "icon": "$(plug)" },
+      { "command": "lpc.disconnect",             "title": "LPC: Verbindung trennen",                 "icon": "$(debug-disconnect)" },
+      { "command": "lpc.refreshRemote",          "title": "LPC: Remote-Baum aktualisieren",          "icon": "$(refresh)" },
+      { "command": "lpc.switchDialect",          "title": "LPC: Dialekt wechseln" },
+      { "command": "lpc.reloadConfig",           "title": "LPC: lpc-config.json neu laden" },
+      { "command": "lpc.changePassword",         "title": "LPC: FTP-Passwort ändern" },
+      { "command": "lpc.changeMudPassword",      "title": "LPC: MUD-Passwort ändern" },
+      { "command": "lpc.openRemoteMudConsole",   "title": "LPC: Remote-MUD-Konsole anzeigen",        "icon": "$(terminal)" },
+      { "command": "lpc.openHomeMudConsole",     "title": "LPC: HomeMUD-Konsole anzeigen",           "icon": "$(terminal)" },
+      { "command": "lpc.disconnectMud",          "title": "LPC: MUD-Konsole trennen" },
+      { "command": "lpc.updateObject",           "title": "Update Object (update)",                  "icon": "$(refresh)" },
+      { "command": "lpc.destructObject",         "title": "Destruct Object (destruct)",              "icon": "$(trash)" },
+      { "command": "lpc.newFile",                "title": "Neue Datei",                              "icon": "$(new-file)" },
+      { "command": "lpc.newFolder",              "title": "Neuer Ordner",                            "icon": "$(new-folder)" },
+      { "command": "lpc.renameRemote",           "title": "Umbenennen" },
+      { "command": "lpc.deleteRemote",           "title": "Löschen" },
+      { "command": "lpc.copyRemotePath",         "title": "Pfad kopieren" },
+      { "command": "lpc.copyToHomemud",          "title": "Nach homemud kopieren",                   "icon": "$(arrow-down)" },
+      { "command": "lpc.uploadToRemote",         "title": "Zur Remote hochladen",                    "icon": "$(arrow-up)" },
+      { "command": "lpc.revealHomeMud",          "title": "LPC: HomeMUD im Explorer öffnen" }
     ],
     "menus": {
       "view/title": [
-        { "command": "lpc.connect",        "when": "view == lpcRemoteExplorer", "group": "navigation@1" },
-        { "command": "lpc.refreshRemote",  "when": "view == lpcRemoteExplorer", "group": "navigation@2" },
-        { "command": "lpc.openMudConsole", "when": "view == lpcRemoteExplorer", "group": "navigation@3" },
-        { "command": "lpc.disconnect",     "when": "view == lpcRemoteExplorer", "group": "1_connection" }
+        { "command": "lpc.connect",              "when": "view == lpcRemoteExplorer", "group": "navigation@1" },
+        { "command": "lpc.refreshRemote",        "when": "view == lpcRemoteExplorer", "group": "navigation@2" },
+        { "command": "lpc.openRemoteMudConsole", "when": "view == lpcRemoteExplorer", "group": "navigation@3" },
+        { "command": "lpc.disconnect",           "when": "view == lpcRemoteExplorer", "group": "1_connection" }
       ],
       "view/item/context": [
-        { "command": "lpc.newFile",        "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@1" },
-        { "command": "lpc.newFolder",      "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@2" },
-        { "command": "lpc.refreshRemote",  "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "1_navigation" },
-        { "command": "lpc.updateObject",   "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@1" },
-        { "command": "lpc.destructObject", "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@2" },
-        { "command": "lpc.renameRemote",   "when": "view == lpcRemoteExplorer",                       "group": "3_modify@1" },
-        { "command": "lpc.deleteRemote",   "when": "view == lpcRemoteExplorer",                       "group": "3_modify@2" },
-        { "command": "lpc.copyRemotePath", "when": "view == lpcRemoteExplorer",                       "group": "9_copy" }
+        { "command": "lpc.newFile",              "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@1" },
+        { "command": "lpc.newFolder",            "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "inline@2" },
+        { "command": "lpc.copyToHomemud",        "when": "view == lpcRemoteExplorer && lpc.hasHomeMud",      "group": "inline@3" },
+        { "command": "lpc.refreshRemote",        "when": "view == lpcRemoteExplorer && viewItem == lpcDir",  "group": "1_navigation" },
+        { "command": "lpc.copyToHomemud",        "when": "view == lpcRemoteExplorer && lpc.hasHomeMud",      "group": "1_sync" },
+        { "command": "lpc.updateObject",         "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@1" },
+        { "command": "lpc.destructObject",       "when": "view == lpcRemoteExplorer && viewItem == lpcFile", "group": "2_mud@2" },
+        { "command": "lpc.renameRemote",         "when": "view == lpcRemoteExplorer",                        "group": "3_modify@1" },
+        { "command": "lpc.deleteRemote",         "when": "view == lpcRemoteExplorer",                        "group": "3_modify@2" },
+        { "command": "lpc.copyRemotePath",       "when": "view == lpcRemoteExplorer",                        "group": "9_copy" }
+      ],
+      "explorer/context": [
+        { "command": "lpc.uploadToRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc" }
+      ],
+      "editor/title/context": [
+        { "command": "lpc.uploadToRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc" }
       ]
     },
     "viewsWelcome": [

@@ -6,20 +6,64 @@
   "brackets": [
     ["{", "}"],
     ["[", "]"],
-    ["(", ")"]
+    ["(", ")"],
+    ["({", "})"],
+    ["([", "])"],
+    ["(<", ">)"],
+    ["(:", ":)"]
   ],
   "autoClosingPairs": [
     { "open": "{", "close": "}" },
     { "open": "[", "close": "]" },
     { "open": "(", "close": ")" },
+    { "open": "({", "close": "})" },
+    { "open": "([", "close": "])" },
+    { "open": "(<", "close": ">)" },
+    { "open": "(:", "close": ":)" },
     { "open": "\"", "close": "\"", "notIn": ["string"] },
-    { "open": "'", "close": "'", "notIn": ["string", "comment"] }
+    { "open": "'", "close": "'", "notIn": ["string", "comment"] },
+    { "open": "/*", "close": " */", "notIn": ["string"] }
   ],
   "surroundingPairs": [
     ["{", "}"],
     ["[", "]"],
     ["(", ")"],
+    ["({", "})"],
+    ["([", "])"],
+    ["(<", ">)"],
+    ["(:", ":)"],
     ["\"", "\""],
     ["'", "'"]
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*//\\s*#?region\\b|^\\s*/\\*\\s*#?region\\b",
+      "end": "^\\s*//\\s*#?endregion\\b|^\\s*\\*/\\s*#?endregion\\b"
+    },
+    "offSide": false
+  },
+  "wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
+  "indentationRules": {
+    "increaseIndentPattern": "^.*\\{[^}\"']*$|^.*\\([^)\"']*$|^\\s*(case\\b.*|default):\\s*$",
+    "decreaseIndentPattern": "^\\s*(\\}|\\)|\\]).*$|^\\s*(case\\b.*|default):\\s*$"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": "^\\s*/\\*\\*(?!\\/)([^\\*]|\\*(?!\\/))*$",
+      "afterText": "^\\s*\\*/$",
+      "action": { "indent": "indentOutdent", "appendText": " * " }
+    },
+    {
+      "beforeText": "^\\s*/\\*\\*(?!\\/)([^\\*]|\\*(?!\\/))*$",
+      "action": { "indent": "none", "appendText": " * " }
+    },
+    {
+      "beforeText": "^(\\t|[ ])* [ ]\\*([ ]([^\\*]|\\*(?!\\/))*)?$",
+      "action": { "indent": "none", "appendText": "* " }
+    },
+    {
+      "beforeText": "^(\\t|[ ])* [ ]\\*\\/\\s*$",
+      "action": { "indent": "none", "removeText": 1 }
+    }
   ]
 }

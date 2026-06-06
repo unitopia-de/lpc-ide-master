@@ -8,8 +8,12 @@ import { ConnectionManager } from './ftp/connectionManager';
 import { RemoteExplorerProvider } from './tree/remoteExplorerProvider';
 import { LpcLanguageClient } from './lsp/client';
 import { MudConsole } from './mud/mudConsole';
+import { HomeMudService } from './homemud/homeMudService';
 import { registerCommands } from './commands';
 import { createStatusBar } from './statusBar';
+import { registerHoverProvider } from './providers/hoverProvider';
+import { registerCompletionProvider } from './providers/completionProvider';
+import { registerDocumentSymbolProvider } from './providers/documentSymbolProvider';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const output = vscode.window.createOutputChannel('LPC-IDE-Master');
@@ -42,10 +46,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     const updateContextKeys = (): void => {
-        const hasFtp = !!config.value?.ftp?.host;
-        const isConnected = !!connections.active;
-        void vscode.commands.executeCommand('setContext', 'lpc.hasFtpConfig', hasFtp);
-        void vscode.commands.executeCommand('setContext', 'lpc.ftpConnected', isConnected);
+        const cfg = config.value;
+        void vscode.commands.executeCommand('setContext', 'lpc.hasFtpConfig', !!cfg?.ftp?.host);
+        void vscode.commands.executeCommand('setContext', 'lpc.ftpConnected', !!connections.active);
+        void vscode.commands.executeCommand('setContext', 'lpc.hasHomeMud', !!cfg?.homemud?.path);
     };
     updateContextKeys();
     context.subscriptions.push(
@@ -53,13 +57,41 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         connections.onDidChangeConnection(updateContextKeys)
     );
 
-    const mudChannel = vscode.window.createOutputChannel('LPC MUD Console');
-    context.subscriptions.push(mudChannel);
-    const mudConsole = new MudConsole(mudChannel, config, credentials);
-    context.subscriptions.push(mudConsole);
+    // Zwei OutputChannels + zwei MudConsole-Instanzen (remote + homemud).
+    const remoteChannel = vscode.window.createOutputChannel('LPC MUD Console (remote)');
+    const homeChannel = vscode.window.createOutputChannel('LPC MUD Console (homemud)');
+    context.subscriptions.push(remoteChannel, homeChannel);
 
-    const statusBar = createStatusBar(dialectManager, efunProvider, config, connections, mudConsole);
+    const remoteMud = new MudConsole(
+        'remote',
+        remoteChannel,
+        () => config.value?.mud,
+        credentials
+    );
+    const homeMud = new MudConsole(
+        'homemud',
+        homeChannel,
+        () => config.value?.homemud?.mud,
+        credentials
+    );
+    context.subscriptions.push(remoteMud, homeMud);
+
+    const homeMudService = new HomeMudService(config);
+
+    const statusBar = createStatusBar(
+        dialectManager,
+        efunProvider,
+        config,
+        connections,
+        remoteMud,
+        homeMud,
+        homeMudService
+    );
     context.subscriptions.push(statusBar);
+
+    registerHoverProvider(context, efunProvider);
+    registerCompletionProvider(context, efunProvider);
+    registerDocumentSymbolProvider(context);
 
     const lspClient = new LpcLanguageClient(context, dialectManager, output);
     context.subscriptions.push({ dispose: () => lspClient.stop() });
@@ -72,7 +104,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         ftpProvider,
         treeProvider,
         credentials,
-        mudConsole,
+        remoteMud,
+        homeMud,
+        homeMudService,
         output
     });
 }

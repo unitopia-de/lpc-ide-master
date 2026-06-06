@@ -19,7 +19,8 @@ export interface FtpConfig {
 export interface MudConsoleConfig {
     host: string;
     port?: number;
-    user: string;
+    /** Optional. Fehlt user, springt der Client die Login-Sequenz und wartet direkt auf den Befehlsprompt. */
+    user?: string;
     protocol?: 'telnet' | 'telnets';
     loginPrompt?: string;
     passwordPrompt?: string;
@@ -28,12 +29,22 @@ export interface MudConsoleConfig {
     completionMarker?: string;
 }
 
+export interface HomeMudConfig {
+    /** Workspace-relativer Pfad zum lokalen MUD-Verzeichnis. */
+    path: string;
+    /** Pfad zur Mudlib innerhalb von path. Default "/lib". */
+    libPath?: string;
+    /** Optional: Telnet-Konsole zum lokalen MUD (z.B. localhost:4711). */
+    mud?: MudConsoleConfig;
+}
+
 export interface LpcConfig {
     dialect: 'ldmud' | 'fluffos' | 'mudos';
     version?: string;
     mudlib: MudlibConfig;
     ftp?: FtpConfig;
     mud?: MudConsoleConfig;
+    homemud?: HomeMudConfig;
 }
 
 export interface ValidationIssue {
@@ -186,25 +197,43 @@ function validate(input: unknown): ValidationIssue[] {
         }
     }
 
-    const mud = cfg.mud as Record<string, unknown> | undefined;
-    if (mud !== undefined) {
-        if (typeof mud !== 'object' || mud === null) {
-            issues.push({ path: 'mud', message: 'Objekt erwartet.' });
+    validateMud(cfg.mud, 'mud', issues);
+
+    const home = cfg.homemud as Record<string, unknown> | undefined;
+    if (home !== undefined) {
+        if (typeof home !== 'object' || home === null) {
+            issues.push({ path: 'homemud', message: 'Objekt erwartet.' });
         } else {
-            if (typeof mud.host !== 'string' || !mud.host) {
-                issues.push({ path: 'mud.host', message: 'Pflichtfeld wenn mud gesetzt ist.' });
+            if (typeof home.path !== 'string' || !home.path) {
+                issues.push({ path: 'homemud.path', message: 'Pflichtfeld wenn homemud gesetzt ist.' });
             }
-            if (typeof mud.user !== 'string' || !mud.user) {
-                issues.push({ path: 'mud.user', message: 'Pflichtfeld wenn mud gesetzt ist.' });
+            if (home.libPath !== undefined && typeof home.libPath !== 'string') {
+                issues.push({ path: 'homemud.libPath', message: 'String erwartet.' });
             }
-            if (mud.port !== undefined && typeof mud.port !== 'number') {
-                issues.push({ path: 'mud.port', message: 'Zahl erwartet.' });
-            }
-            if (mud.protocol !== undefined && !['telnet', 'telnets'].includes(mud.protocol as string)) {
-                issues.push({ path: 'mud.protocol', message: 'Erlaubt: "telnet" | "telnets".' });
-            }
+            validateMud(home.mud, 'homemud.mud', issues);
         }
     }
 
     return issues;
+}
+
+function validateMud(value: unknown, path: string, issues: ValidationIssue[]): void {
+    if (value === undefined) return;
+    if (typeof value !== 'object' || value === null) {
+        issues.push({ path, message: 'Objekt erwartet.' });
+        return;
+    }
+    const mud = value as Record<string, unknown>;
+    if (typeof mud.host !== 'string' || !mud.host) {
+        issues.push({ path: `${path}.host`, message: 'Pflichtfeld.' });
+    }
+    if (mud.user !== undefined && typeof mud.user !== 'string') {
+        issues.push({ path: `${path}.user`, message: 'String erwartet (oder weglassen, um Login zu überspringen).' });
+    }
+    if (mud.port !== undefined && typeof mud.port !== 'number') {
+        issues.push({ path: `${path}.port`, message: 'Zahl erwartet.' });
+    }
+    if (mud.protocol !== undefined && !['telnet', 'telnets'].includes(mud.protocol as string)) {
+        issues.push({ path: `${path}.protocol`, message: 'Erlaubt: "telnet" | "telnets".' });
+    }
 }

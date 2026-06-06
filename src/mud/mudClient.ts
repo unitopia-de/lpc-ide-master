@@ -12,7 +12,8 @@ const DEFAULTS = {
 };
 
 export interface MudClientOptions extends MudConsoleConfig {
-    password: string;
+    /** Pflicht nur wenn user gesetzt ist. Bei MUDs ohne Login leer lassen. */
+    password?: string;
 }
 
 export interface MudClientEvents {
@@ -125,15 +126,23 @@ export class MudClient extends EventEmitter {
     }
 
     private async runLogin(): Promise<void> {
-        const loginRe = new RegExp(this.opts.loginPrompt ?? DEFAULTS.loginPrompt, 'i');
-        const passRe = new RegExp(this.opts.passwordPrompt ?? DEFAULTS.passwordPrompt, 'i');
         const promptRe = new RegExp(this.opts.commandPrompt ?? DEFAULTS.commandPrompt, 'm');
 
+        if (!this.opts.user) {
+            // Kein Login — direkt auf Befehlsprompt warten.
+            await this.collectUntil(promptRe, DEFAULTS.loginTimeoutMs);
+            return;
+        }
+
+        const loginRe = new RegExp(this.opts.loginPrompt ?? DEFAULTS.loginPrompt, 'i');
         await this.collectUntil(loginRe, DEFAULTS.loginTimeoutMs);
         this.write(this.opts.user + '\n');
 
-        await this.collectUntil(passRe, DEFAULTS.loginTimeoutMs);
-        this.write(this.opts.password + '\n');
+        if (this.opts.password) {
+            const passRe = new RegExp(this.opts.passwordPrompt ?? DEFAULTS.passwordPrompt, 'i');
+            await this.collectUntil(passRe, DEFAULTS.loginTimeoutMs);
+            this.write(this.opts.password + '\n');
+        }
 
         await this.collectUntil(promptRe, DEFAULTS.loginTimeoutMs);
     }
