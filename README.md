@@ -46,8 +46,8 @@ Die Verbindungsblöcke und Funktion für direkte Mudverbindungen kommt evtl spä
 
 | Datei / Ort | Zweck |
 | --- | --- |
-| `lpc-config.json` im Workspace-Root | Dialekt, Mudlib, FTP|
-| OS-Keychain (Windows Credential Manager o. ä.) | Passwörter für FTP und MUD — automatisch verwaltet |
+| `lpc-config.json` im Workspace-Root | Dialekt, Mudlib, FTP |
+| OS-Keychain (Windows Credential Manager o. ä.) | FTP-Passwort — automatisch verwaltet |
 | `Strg+,` → "lpc" | VS-Code-User/Workspace-Settings (siehe unten) |
 
 ### Globale Plugin-Settings
@@ -70,3 +70,7 @@ Die Verbindungsblöcke und Funktion für direkte Mudverbindungen kommt evtl spä
 - **uploadOnSave** — Setting existiert, Logik (Phase 2.5) folgt
 - **Externer LSP-Server** (z. B. jlchmura/lpc-language-server) — Client-Stub steht, Server-Anbindung offen
 - **Unit-Tests / CI / VSIX-Packaging** — noch nicht eingerichtet
+
+## Repository
+
+<https://github.com/unitopia-de/lpc-ide-master>

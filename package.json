@@ -1,9 +1,9 @@
 {
   "name": "lpc-ide-master",
   "displayName": "LPC-IDE-Master (UNItopia Edition)",
-  "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP/FTPS/SFTP-Sync, Telnet-Konsole und Editor-Unterstützung für UNItopia und weitere Mudlibs.",
+  "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP/FTPS/SFTP-Sync, Editor-Unterstützung für UNItopia und weitere Mudlibs.",
   "version": "0.1.0",
-  "publisher": "wd-ideenmanufaktur",
+  "publisher": "unitopia-de",
   "license": "MIT",
   "icon": "images/icon.png",
   "galleryBanner": {
@@ -12,11 +12,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wd-ideenmanufaktur/lpc-ide-master.git"
+    "url": "https://github.com/unitopia-de/lpc-ide-master.git"
   },
-  "homepage": "https://github.com/wd-ideenmanufaktur/lpc-ide-master#readme",
+  "homepage": "https://github.com/unitopia-de/lpc-ide-master#readme",
   "bugs": {
-    "url": "https://github.com/wd-ideenmanufaktur/lpc-ide-master/issues"
+    "url": "https://github.com/unitopia-de/lpc-ide-master/issues"
   },
   "qna": "marketplace",
   "engines": {
@@ -184,10 +184,12 @@
           "type": "string",
           "enum": [
             "ftp",
+            "ftps",
+            "ftps-implicit",
             "sftp"
           ],
-          "default": "ftp",
-          "description": "Übertragungsprotokoll für die Remote-Synchronisation."
+          "default": "ftps",
+          "description": "Aktuell nicht ausgewertet — das tatsächliche Protokoll wird aus lpc-config.json (ftp.protocol) gelesen. Reserviert für künftige globale Defaults."
         }
       }
     }
