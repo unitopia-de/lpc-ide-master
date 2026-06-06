@@ -1,5 +1,4 @@
 {
-  "$schema": "../../schemas/lpc-config.schema.json",
   "dialect": "ldmud",
   "version": "3.5.0",
   "mudlib": {

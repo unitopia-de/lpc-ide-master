@@ -152,6 +152,11 @@
           "default": false,
           "description": "Dateien beim Speichern automatisch via FTP zum MUD übertragen."
         },
+        "lpc.ftp.verbose": {
+          "type": "boolean",
+          "default": false,
+          "description": "Loggt alle FTP-Kommandos und Server-Antworten in den Output-Channel 'LPC FTP Trace'. Nur zur Fehlersuche aktivieren."
+        },
         "lpc.ftp.protocol": {
           "type": "string",
           "enum": [

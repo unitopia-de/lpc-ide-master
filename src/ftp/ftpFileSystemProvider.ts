@@ -174,6 +174,16 @@ export class FtpFileSystemProvider implements vscode.FileSystemProvider {
     private handleRemoteError(err: unknown, uri: vscode.Uri): never {
         const msg = err instanceof Error ? err.message : String(err);
         this.output.appendLine(`Remote-Fehler bei ${uri.toString()}: ${msg}`);
+        if (err instanceof RemoteError && err.cause) {
+            const cause = err.cause as Error;
+            this.output.appendLine(`  Ursache: ${cause?.message ?? cause}`);
+            if (cause && typeof cause === 'object' && 'code' in cause) {
+                this.output.appendLine(`  Code: ${(cause as { code?: unknown }).code}`);
+            }
+            if (cause?.stack) {
+                this.output.appendLine(cause.stack);
+            }
+        }
         throw vscode.FileSystemError.Unavailable(msg);
     }
 }
