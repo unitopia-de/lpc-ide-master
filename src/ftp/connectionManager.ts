@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RemoteBackend, RemoteError } from './backend';
+import { RemoteBackend, RemoteError, RemoteProtocol } from './backend';
 import { FtpBackend } from './ftpBackend';
 import { SftpBackend } from './sftpBackend';
 import { CredentialsManager } from './credentialsManager';
@@ -8,7 +8,7 @@ import { LpcConfigService } from '../config/lpcConfig';
 export interface ConnectionInfo {
     host: string;
     user: string;
-    protocol: 'ftp' | 'sftp';
+    protocol: RemoteProtocol;
 }
 
 // Pro Host genau eine Verbindung. Verbindungsaufbau ist idempotent —
@@ -104,7 +104,9 @@ export class ConnectionManager {
             host,
             port: cfg.port,
             user,
-            password
+            password,
+            mode: protocol === 'sftp' ? undefined : protocol,
+            tls: cfg.tls
         });
         this.clients.set(host, backend);
         this.output.appendLine(

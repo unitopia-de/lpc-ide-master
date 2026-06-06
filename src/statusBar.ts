@@ -39,8 +39,8 @@ export function createStatusBar(
     const updateFtp = (): void => {
         const active = connections.active;
         if (active) {
-            ftpItem.text = `$(plug) ${active.protocol.toUpperCase()}: ${active.host}`;
-            ftpItem.tooltip = `Verbunden als ${active.user}@${active.host}\nKlick: Trennen`;
+            ftpItem.text = `$(plug) ${protocolLabel(active.protocol)}: ${active.host}`;
+            ftpItem.tooltip = `Verbunden als ${active.user}@${active.host} (${active.protocol})\nKlick: Trennen`;
             ftpItem.command = 'lpc.disconnect';
         } else {
             const cfg = config.value?.ftp;
@@ -123,4 +123,17 @@ export function createStatusBar(
         remoteMudItem.dispose();
         homeMudItem.dispose();
     });
+}
+
+function protocolLabel(p: string): string {
+    switch (p) {
+        case 'ftps-implicit':
+            return 'FTPS-I';
+        case 'ftps':
+            return 'FTPS';
+        case 'sftp':
+            return 'SFTP';
+        default:
+            return 'FTP';
+    }
 }

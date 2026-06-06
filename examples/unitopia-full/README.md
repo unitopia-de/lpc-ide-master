@@ -35,10 +35,23 @@ viel weniger Felder, weil die Defaults greifen.
 | Feld | Pflicht | Erläuterung |
 |---|---|---|
 | `host` | **ja** | Hostname/IP des FTP-/SFTP-Servers. |
-| `port` | nein | Default `21` (FTP) bzw. `22` (SFTP). |
+| `port` | nein | Default `21` (ftp/ftps), `990` (ftps-implicit), `22` (sftp). |
 | `user` | **ja** | Benutzername. Das Passwort wird **niemals** in dieser Datei gespeichert, sondern bei Bedarf abgefragt und in der OS-Keychain abgelegt. |
 | `remoteRoot` | nein | Startverzeichnis für den Remote Explorer und beim "Remote-Workspace-Folder hinzufügen". Default: `mudlib.baseDir`. |
-| `protocol` | nein | `"ftp"` (Default) oder `"sftp"`. Bei `"sftp"` wird `ssh2-sftp-client` benutzt. |
+| `protocol` | nein | Eines von: `"ftp"` (plain, Default), `"ftps"` (explicit AUTH TLS), `"ftps-implicit"` (TLS ab Verbindungsbeginn), `"sftp"` (SSH-basiert). |
+| `tls` | nein | Nur für `ftps`/`ftps-implicit`. Optionen für die TLS-Schicht. |
+| `tls.rejectUnauthorized` | nein | Default `true` (strikte Zertifikatsprüfung). Auf `false` setzen, um selbst-signierte Zertifikate zu akzeptieren. |
+
+**Beispiel FTPS (explicit, mit selbst-signiertem Zertifikat)**:
+```json
+"ftp": {
+  "host": "mud.beispiel.de",
+  "port": 21,
+  "user": "magier",
+  "protocol": "ftps",
+  "tls": { "rejectUnauthorized": false }
+}
+```
 
 ### `mud` — Telnet-Konsole für `update`/`destruct`
 

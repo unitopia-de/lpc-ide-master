@@ -46,10 +46,26 @@
       "description": "Optionale FTP-Verbindungsdaten. Passwörter werden NICHT hier gespeichert.",
       "properties": {
         "host": { "type": "string" },
-        "port": { "type": "integer", "default": 21 },
+        "port": { "type": "integer", "description": "Default 21 (ftp/ftps), 990 (ftps-implicit), 22 (sftp)." },
         "user": { "type": "string" },
         "remoteRoot": { "type": "string" },
-        "protocol": { "type": "string", "enum": ["ftp", "sftp"], "default": "ftp" }
+        "protocol": {
+          "type": "string",
+          "enum": ["ftp", "ftps", "ftps-implicit", "sftp"],
+          "default": "ftp",
+          "description": "ftp=plain, ftps=explicit AUTH TLS, ftps-implicit=TLS ab Verbindungsbeginn, sftp=SSH-basiert."
+        },
+        "tls": {
+          "type": "object",
+          "description": "Nur für ftps/ftps-implicit. Optionen für die TLS-Schicht.",
+          "properties": {
+            "rejectUnauthorized": {
+              "type": "boolean",
+              "default": true,
+              "description": "Default true (strikte Zertifikatsprüfung). Auf false setzen, um selbst-signierte Zertifikate zu akzeptieren."
+            }
+          }
+        }
       }
     },
     "mud": {

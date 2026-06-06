@@ -13,10 +13,18 @@ export interface ConnectionOptions {
     port?: number;
     user: string;
     password: string;
+    /** "ftp" (plain), "ftps" (explicit AUTH TLS) oder "ftps-implicit" (TLS ab Verbindungsbeginn). Nur für FTP-Backend relevant. */
+    mode?: 'ftp' | 'ftps' | 'ftps-implicit';
+    /** Übergeben an die TLS-Schicht (Node tls.connect-Optionen). */
+    tls?: {
+        rejectUnauthorized?: boolean;
+    };
 }
 
+export type RemoteProtocol = 'ftp' | 'ftps' | 'ftps-implicit' | 'sftp';
+
 export interface RemoteBackend {
-    readonly protocol: 'ftp' | 'sftp';
+    readonly protocol: RemoteProtocol;
     connect(opts: ConnectionOptions): Promise<void>;
     list(path: string): Promise<RemoteEntry[]>;
     stat(path: string): Promise<RemoteEntry>;

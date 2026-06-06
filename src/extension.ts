@@ -14,6 +14,9 @@ import { createStatusBar } from './statusBar';
 import { registerHoverProvider } from './providers/hoverProvider';
 import { registerCompletionProvider } from './providers/completionProvider';
 import { registerDocumentSymbolProvider } from './providers/documentSymbolProvider';
+import { registerDefinitionProvider } from './providers/definitionProvider';
+import { registerDiagnosticProvider } from './providers/diagnosticProvider';
+import { registerSignatureHelpProvider } from './providers/signatureHelpProvider';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const output = vscode.window.createOutputChannel('LPC-IDE-Master');
@@ -92,6 +95,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerHoverProvider(context, efunProvider);
     registerCompletionProvider(context, efunProvider);
     registerDocumentSymbolProvider(context);
+    registerDefinitionProvider(context, config, homeMudService);
+    registerDiagnosticProvider(context, config, dialectManager, homeMudService);
+    registerSignatureHelpProvider(context, efunProvider);
 
     const lspClient = new LpcLanguageClient(context, dialectManager, output);
     context.subscriptions.push({ dispose: () => lspClient.stop() });

@@ -5,7 +5,11 @@ import { RemoteBackend, RemoteEntry, ConnectionOptions, RemoteError } from './ba
 // kompiliert, wenn `npm install` noch nicht gelaufen ist.
 
 export class FtpBackend implements RemoteBackend {
-    readonly protocol = 'ftp' as const;
+    private _protocol: 'ftp' | 'ftps' | 'ftps-implicit' = 'ftp';
+    get protocol(): 'ftp' | 'ftps' | 'ftps-implicit' {
+        return this._protocol;
+    }
+
     private client: any | undefined;
 
     get isConnected(): boolean {
@@ -15,13 +19,24 @@ export class FtpBackend implements RemoteBackend {
     async connect(opts: ConnectionOptions): Promise<void> {
         const basicFtp = await this.loadLib();
         this.client = new basicFtp.Client();
+
+        const mode = opts.mode ?? 'ftp';
+        this._protocol = mode;
+        const secure = mode === 'ftps' ? true : mode === 'ftps-implicit' ? 'implicit' : false;
+        const port = opts.port ?? (mode === 'ftps-implicit' ? 990 : 21);
+        const secureOptions =
+            mode === 'ftp'
+                ? undefined
+                : { rejectUnauthorized: opts.tls?.rejectUnauthorized !== false };
+
         try {
             await this.client.access({
                 host: opts.host,
-                port: opts.port ?? 21,
+                port,
                 user: opts.user,
                 password: opts.password,
-                secure: false
+                secure,
+                secureOptions
             });
         } catch (err) {
             this.client = undefined;

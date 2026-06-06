@@ -13,7 +13,12 @@ export interface FtpConfig {
     port?: number;
     user?: string;
     remoteRoot?: string;
-    protocol?: 'ftp' | 'sftp';
+    protocol?: 'ftp' | 'ftps' | 'ftps-implicit' | 'sftp';
+    /** TLS-Optionen, nur relevant für ftps/ftps-implicit. */
+    tls?: {
+        /** Default true. Auf false setzen, um selbst-signierte Zertifikate zu akzeptieren. */
+        rejectUnauthorized?: boolean;
+    };
 }
 
 export interface MudConsoleConfig {
@@ -191,8 +196,30 @@ function validate(input: unknown): ValidationIssue[] {
             if (ftp.port !== undefined && typeof ftp.port !== 'number') {
                 issues.push({ path: 'ftp.port', message: 'Zahl erwartet.' });
             }
-            if (ftp.protocol !== undefined && !['ftp', 'sftp'].includes(ftp.protocol as string)) {
-                issues.push({ path: 'ftp.protocol', message: 'Erlaubt: "ftp" | "sftp".' });
+            if (
+                ftp.protocol !== undefined &&
+                !['ftp', 'ftps', 'ftps-implicit', 'sftp'].includes(ftp.protocol as string)
+            ) {
+                issues.push({
+                    path: 'ftp.protocol',
+                    message: 'Erlaubt: "ftp" | "ftps" | "ftps-implicit" | "sftp".'
+                });
+            }
+            if (ftp.tls !== undefined) {
+                if (typeof ftp.tls !== 'object' || ftp.tls === null) {
+                    issues.push({ path: 'ftp.tls', message: 'Objekt erwartet.' });
+                } else {
+                    const tls = ftp.tls as Record<string, unknown>;
+                    if (
+                        tls.rejectUnauthorized !== undefined &&
+                        typeof tls.rejectUnauthorized !== 'boolean'
+                    ) {
+                        issues.push({
+                            path: 'ftp.tls.rejectUnauthorized',
+                            message: 'Boolean erwartet.'
+                        });
+                    }
+                }
             }
         }
     }
