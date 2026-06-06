@@ -65,19 +65,33 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const homeChannel = vscode.window.createOutputChannel('LPC MUD Console (homemud)');
     context.subscriptions.push(remoteChannel, homeChannel);
 
+    const isMudEnabled = (): boolean =>
+        vscode.workspace.getConfiguration('lpc').get<boolean>('mud.enabled', false);
+
     const remoteMud = new MudConsole(
         'remote',
         remoteChannel,
-        () => config.value?.mud,
+        () => (isMudEnabled() ? config.value?.mud : undefined),
         credentials
     );
     const homeMud = new MudConsole(
         'homemud',
         homeChannel,
-        () => config.value?.homemud?.mud,
+        () => (isMudEnabled() ? config.value?.homemud?.mud : undefined),
         credentials
     );
     context.subscriptions.push(remoteMud, homeMud);
+
+    // Bei Setting-Änderung: Statusbar refresh anstoßen, indem wir den
+    // onDidChange-Event der MudConsole feuern (no-op disconnect).
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('lpc.mud.enabled')) {
+                void remoteMud.disconnect();
+                void homeMud.disconnect();
+            }
+        })
+    );
 
     const homeMudService = new HomeMudService(config);
 

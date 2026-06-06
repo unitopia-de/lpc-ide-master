@@ -1,10 +1,24 @@
 {
   "name": "lpc-ide-master",
   "displayName": "LPC-IDE-Master (UNItopia Edition)",
-  "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP-Sync und LSP-Unterstützung für UNItopia und weitere Mudlibs.",
+  "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP/FTPS/SFTP-Sync, Telnet-Konsole und Editor-Unterstützung für UNItopia und weitere Mudlibs.",
   "version": "0.1.0",
   "publisher": "wd-ideenmanufaktur",
   "license": "MIT",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#2a3f5f",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wd-ideenmanufaktur/lpc-ide-master.git"
+  },
+  "homepage": "https://github.com/wd-ideenmanufaktur/lpc-ide-master#readme",
+  "bugs": {
+    "url": "https://github.com/wd-ideenmanufaktur/lpc-ide-master/issues"
+  },
+  "qna": "marketplace",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -17,7 +31,11 @@
     "ldmud",
     "unitopia",
     "mud",
-    "ftp"
+    "mudlib",
+    "ftp",
+    "ftps",
+    "sftp",
+    "telnet"
   ],
   "main": "./out/extension.js",
   "activationEvents": [
@@ -156,6 +174,11 @@
           "type": "boolean",
           "default": false,
           "description": "Loggt alle FTP-Kommandos und Server-Antworten in den Output-Channel 'LPC FTP Trace'. Nur zur Fehlersuche aktivieren."
+        },
+        "lpc.mud.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Aktiviert die Telnet-Verbindungen zum remote MUD und zum homemud. Wenn false, werden die Blöcke 'mud' und 'homemud.mud' aus lpc-config.json ignoriert. HomeMUD-File-Sync (Pfad-Mapping) bleibt davon unberührt."
         },
         "lpc.ftp.protocol": {
           "type": "string",

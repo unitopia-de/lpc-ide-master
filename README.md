@@ -3,38 +3,70 @@
 VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 **UNIlib** (LDMud 3.5.0/3.6.x), erweiterbar für weitere Mudlibs.
 
-> Dieses Repository ist ein **Template/Skelett** auf Basis von
-> [PLUGIN_PLAN.md](PLUGIN_PLAN.md). Es enthält die Verzeichnisstruktur und
-> Stubs für alle im Plan beschriebenen Komponenten. Geschäftslogik ist
-> bewusst minimal gehalten und wird in den Phasen 1–4 ausgebaut.
+Funktionsumfang: Remote-Dateisystem über FTP/FTPS/SFTP, optionaler
+lokaler Entwicklungs-MUD ("homemud") mit Datei-Sync zur Remote, Telnet-
+Konsole für Magier-Befehle (`update`/`destruct`), LPC-Syntax-Highlighting
+und Editor-Unterstützung (Hover, Completion, Outline, Goto-Definition,
+Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns.
 
-## Komponenten im Überblick
+## Beispielkonfiguration
 
-| Bereich | Datei | Status |
-| --- | --- | --- |
-| Konfiguration | [src/config/lpcConfig.ts](src/config/lpcConfig.ts) | Stub: Lesen/Validieren |
-| Dialekt-Management | [src/dialect/dialectManager.ts](src/dialect/dialectManager.ts) | Stub: Profile + Auto-Discovery |
-| Efun-Provider | [src/dialect/efunProvider.ts](src/dialect/efunProvider.ts) | Stub: JSON-Profile |
-| FTP FileSystemProvider | [src/ftp/ftpFileSystemProvider.ts](src/ftp/ftpFileSystemProvider.ts) | Stub: read/write/list |
-| FTP-Client | [src/ftp/ftpClient.ts](src/ftp/ftpClient.ts) | Wrapper um `basic-ftp` |
-| SecretStorage | [src/ftp/credentialsManager.ts](src/ftp/credentialsManager.ts) | Funktionsfähig |
-| Remote Explorer | [src/tree/remoteExplorerProvider.ts](src/tree/remoteExplorerProvider.ts) | Lazy-Loading-Tree |
-| LSP-Client | [src/lsp/client.ts](src/lsp/client.ts) | Stub (Server folgt) |
-| Statusbar | [src/statusBar.ts](src/statusBar.ts) | Aktiver Dialekt |
+`lpc-config.json` im Workspace-Root:
 
-## Erste Schritte
-
-```powershell
-npm install
-npm run compile
+```json
+{
+  "dialect": "ldmud",
+  "version": "3.6.8",
+  "mudlib": {
+    "name": "UNIlib",
+    "baseDir": "/sys/unitopia",
+    "simulEfunFile": "/secure/simul_efun/simul_efun.c",
+    "includeDirs": [
+      "/sys/include"
+    ],
+    "efunDefinitions": "lpc-efuns.json"
+  },
+  "ftp": {
+    "host": "unitopia.de",
+    "port": 21,
+    "user": "wizard?",
+    "remoteRoot": "/",
+    "protocol": "ftps"
+  }
+}
 ```
 
-Anschließend in VS Code mit **F5** eine Extension-Development-Host-Instanz
-starten (Konfiguration siehe [.vscode/launch.json](.vscode/launch.json)).
+Das Passwort wird **nicht** in dieser Datei abgelegt, sondern beim ersten
+Verbindungsaufbau abgefragt und in der OS-Keychain (SecretStorage) gespeichert.
 
-## Phasenplan (aus PLUGIN_PLAN.md)
+Die Verbindungsblöcke und Funktion für direkte Mudverbindungen kommt evtl später.
 
-1. **Phase 1** — `lpc-config.json` und Profil-Umschaltung für UNItopia.
-2. **Phase 2** — `FileSystemProvider` für FTP/SFTP inkl. SecretStorage.
-3. **Phase 3** — Remote Explorer Tree in der Sidebar.
-4. **Phase 4** — LSP-Feinabstimmung auf UNItopia-Header und simul_efuns.
+
+## Konfigurationsdateien
+
+| Datei / Ort | Zweck |
+| --- | --- |
+| `lpc-config.json` im Workspace-Root | Dialekt, Mudlib, FTP|
+| OS-Keychain (Windows Credential Manager o. ä.) | Passwörter für FTP und MUD — automatisch verwaltet |
+| `Strg+,` → "lpc" | VS-Code-User/Workspace-Settings (siehe unten) |
+
+### Globale Plugin-Settings
+
+| Setting | Default | Wirkung |
+| --- | --- | --- |
+| `lpc.configFile` | `"lpc-config.json"` | Anderer Dateiname für die Workspace-Konfig |
+| `lpc.dialect.autoDetect` | `true` | Auto-Discovery beim Workspace-Öffnen |
+| `lpc.mud.enabled` | `false` | Telnet zu remote MUD und homemud aktivieren |
+| `lpc.ftp.verbose` | `false` | FTP-Protokoll-Trace in eigenem OutputChannel |
+| `lpc.ftp.uploadOnSave` | `false` | *Reserviert für Phase 2.5 (noch nicht aktiv)* |
+| `lpc.ftp.protocol` | `"ftps"` | *Reserviert (echtes Protokoll kommt aus lpc-config.json)* |
+
+### Bekannte Einschränkungen / offene Punkte
+
+- **FTP** — kein automatischer Reconnect bei Timeout, keine SSH-Key-Auth (nur Passwort)
+- **DocumentSymbolProvider** — erkennt nur Funktionen mit explizitem Return-Typ
+- **tmLanguage** — Heredoc-Edge-Cases, kein semantisches Highlighting für lokale Funktionen
+- **Multi-Root-Workspace** — nur der erste Folder wird ausgewertet
+- **uploadOnSave** — Setting existiert, Logik (Phase 2.5) folgt
+- **Externer LSP-Server** (z. B. jlchmura/lpc-language-server) — Client-Stub steht, Server-Anbindung offen
+- **Unit-Tests / CI / VSIX-Packaging** — noch nicht eingerichtet

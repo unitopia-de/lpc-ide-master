@@ -8,3 +8,5 @@ tsconfig.json
 **/*.ts
 node_modules/**
 PLUGIN_PLAN.md
+*.vsix
+.efun-alternation.txt
