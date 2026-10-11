@@ -112,6 +112,8 @@
       { "command": "lpc.copyRemotePath",         "title": "Pfad kopieren" },
       { "command": "lpc.copyToHomemud",          "title": "Nach homemud kopieren",                   "icon": "$(arrow-down)" },
       { "command": "lpc.uploadToRemote",         "title": "Zur Remote hochladen",                    "icon": "$(arrow-up)" },
+      { "command": "lpc.downloadFromRemote",     "title": "Von Remote herunterladen",                "icon": "$(arrow-down)" },
+      { "command": "lpc.compareWithRemote",      "title": "Mit Remote vergleichen",                  "icon": "$(diff)" },
       { "command": "lpc.revealHomeMud",          "title": "LPC: HomeMUD im Explorer öffnen" }
     ],
     "menus": {
@@ -134,10 +136,14 @@
         { "command": "lpc.copyRemotePath",       "when": "view == lpcRemoteExplorer",                        "group": "9_copy" }
       ],
       "explorer/context": [
-        { "command": "lpc.uploadToRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc" }
+        { "command": "lpc.uploadToRemote",     "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc@1" },
+        { "command": "lpc.downloadFromRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc@2" },
+        { "command": "lpc.compareWithRemote",  "when": "lpc.hasHomeMud && lpc.hasFtpConfig && !explorerResourceIsFolder", "group": "5_lpc@3" }
       ],
       "editor/title/context": [
-        { "command": "lpc.uploadToRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc" }
+        { "command": "lpc.uploadToRemote",     "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc@1" },
+        { "command": "lpc.downloadFromRemote", "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc@2" },
+        { "command": "lpc.compareWithRemote",  "when": "lpc.hasHomeMud && lpc.hasFtpConfig", "group": "5_lpc@3" }
       ]
     },
     "viewsWelcome": [

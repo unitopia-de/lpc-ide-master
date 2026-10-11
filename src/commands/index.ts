@@ -305,6 +305,73 @@ export function registerCommands(
         }
     });
 
+    sub('lpc.downloadFromRemote', async (uri?: vscode.Uri) => {
+        const target = uri ?? vscode.window.activeTextEditor?.document.uri;
+        if (!target) {
+            vscode.window.showWarningMessage('Keine Datei ausgewählt.');
+            return;
+        }
+        if (!deps.homeMudService.isConfigured) {
+            vscode.window.showWarningMessage('homemud nicht konfiguriert.');
+            return;
+        }
+        try {
+            const mapping = deps.homeMudService.localToRemote(target);
+            const confirm = await vscode.window.showWarningMessage(
+                `Von Remote herunterladen?\n\n${mapping.remoteUri.toString()}\n→ ${target.fsPath}\n\n` +
+                    `Die lokale Version wird überschrieben.`,
+                { modal: true },
+                'Herunterladen'
+            );
+            if (confirm !== 'Herunterladen') return;
+            const count = await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: `Lade ${labelFor(target)} von der Remote …`,
+                    cancellable: false
+                },
+                (progress) => deps.homeMudService.copyFromRemote(mapping.remoteUri, progress)
+            );
+            vscode.window.showInformationMessage(`${count} Datei(en) von der Remote heruntergeladen.`);
+        } catch (err) {
+            vscode.window.showErrorMessage(`Herunterladen fehlgeschlagen: ${err}`);
+        }
+    });
+
+    sub('lpc.compareWithRemote', async (uri?: vscode.Uri) => {
+        const target = uri ?? vscode.window.activeTextEditor?.document.uri;
+        if (!target) {
+            vscode.window.showWarningMessage('Keine Datei ausgewählt.');
+            return;
+        }
+        if (!deps.homeMudService.isConfigured) {
+            vscode.window.showWarningMessage('homemud nicht konfiguriert.');
+            return;
+        }
+        try {
+            const stat = await vscode.workspace.fs.stat(target);
+            if (stat.type !== vscode.FileType.File) {
+                vscode.window.showWarningMessage('Vergleichen geht nur mit einzelnen Dateien.');
+                return;
+            }
+            const mapping = deps.homeMudService.localToRemote(target);
+            try {
+                await vscode.workspace.fs.stat(mapping.remoteUri);
+            } catch {
+                vscode.window.showWarningMessage(`Auf der Remote existiert keine Datei ${mapping.remoteUri.path}.`);
+                return;
+            }
+            await vscode.commands.executeCommand(
+                'vscode.diff',
+                mapping.remoteUri,
+                target,
+                `${labelFor(target)} (Remote ↔ homemud)`
+            );
+        } catch (err) {
+            vscode.window.showErrorMessage(`Vergleichen fehlgeschlagen: ${err}`);
+        }
+    });
+
     sub('lpc.revealHomeMud', async () => {
         const root = deps.homeMudService.localRoot;
         if (!root) {

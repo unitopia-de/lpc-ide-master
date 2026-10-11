@@ -189,7 +189,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 4. Wählen, ob das Remote-Verzeichnis als Workspace-Ordner eingebunden werden soll oder nur im Baum erscheint.
 5. Dateien öffnen, bearbeiten und speichern; Speichern schreibt direkt auf den Server.
 6. Optional mit `lpc.mud.enabled = true` und einem `mud`-Block: Rechtsklick auf eine Datei → **Update Object**.
-7. Optional mit HomeMUD: Dateien per **Nach homemud kopieren** holen, lokal testen und per **Zur Remote hochladen** (Rechtsklick im Explorer oder Editor-Tab) zurückspielen.
+7. Optional mit HomeMUD: Dateien per **Nach homemud kopieren** holen, lokal testen und per **Zur Remote hochladen** (Rechtsklick im Explorer oder Editor-Tab) zurückspielen. Über dasselbe Menü lassen sich lokale Dateien mit **Von Remote herunterladen** aktualisieren oder mit **Mit Remote vergleichen** in einer Diff-Ansicht gegenüberstellen.
 
 ### 5.4 Befehle (Befehlspalette)
 
@@ -203,7 +203,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 | `LPC: Remote-MUD-Konsole anzeigen` / `LPC: HomeMUD-Konsole anzeigen` | Telnet-Ausgabe anzeigen |
 | `LPC: MUD-Konsole trennen` | Telnet-Verbindung beenden |
 | `LPC: HomeMUD im Explorer öffnen` | Lokales HomeMUD-Verzeichnis im Explorer anzeigen |
-| Kontextmenü | Neue Datei/Ordner, Umbenennen, Löschen, Pfad kopieren, Update/Destruct Object, Nach homemud kopieren, Zur Remote hochladen |
+| Kontextmenü | Neue Datei/Ordner, Umbenennen, Löschen, Pfad kopieren, Update/Destruct Object, Nach homemud kopieren, Zur Remote hochladen, Von Remote herunterladen, Mit Remote vergleichen |
 
 ### 5.5 Einstellungen
 

@@ -6,6 +6,9 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Hinzugefügt
+- HomeMUD: Befehle „Von Remote herunterladen“ und „Mit Remote vergleichen“ (Diff-Ansicht) im Explorer- und Editor-Tab-Kontextmenü.
+
 ### Geändert
 - Standard-Protokoll für `ftp.protocol` ist jetzt `ftps` statt unverschlüsseltem `ftp`.
 - Eingebautes Profil `ldmud-unitopia` enthält jetzt alle 322 Efuns und 201 Sfuns.
