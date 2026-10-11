@@ -3,13 +3,30 @@
 VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 **UNIlib** (LDMud 3.5.0/3.6.x), erweiterbar für weitere Mudlibs.
 
-Funktionsumfang: Remote-Dateisystem über FTP/FTPS/SFTP, optionaler
-lokaler Entwicklungs-MUD ("homemud") mit Datei-Sync zur Remote, Telnet-
-Konsole für Magier-Befehle (`update`/`destruct`), LPC-Syntax-Highlighting
-und Editor-Unterstützung (Hover, Completion, Outline, Goto-Definition,
-Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns.
+## Funktionsumfang: 
+* Remote-Dateisystem über FTP/FTPS/SFTP, 
+* optionaler lokaler Entwicklungs-MUD ("homemud") mit Datei-Sync zur Remote 
+* Telnet-Konsole für Magier-Befehle (`update`/`destruct`)
+* LPC-Syntax-Highlighting und Editor-Unterstützung (Hover, Completion, Outline, Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns.
 
-## Beispielkonfiguration
+## Einrichtung
+Derzeit ist eine Installation über den workspace noch nicht vorgesehen und ist nur über eine Entwicklungsumgebung zugänglich.
+
+### Entwicklung / Installation
+Im Ende gibt es zwei Workspaces, eine für das Plugin und eine für die Ausführung des Plugins(z.B. inkl eines optionalen Homemuds).
+
+1. Suche ein Unterverzeichnis, wo das Plugin abgelegt werden kann
+
+```bash
+git clone https://github.com/unitopia-de/lpc-ide-master.git
+cd lpc-ude-master
+npm install
+npm run compile      # oder: npm run watch
+```
+
+2. Suche das Unterverzeichnis für die Ausführung ggf mit optionalen homemmud
+3. lege dort die lpc-config.json ab und passe sie an (Pfade, user)
+4. Falls ohne homemud, lösche den Abschnitt homemud aus dem json File!
 
 `lpc-config.json` im Workspace-Root:
 
@@ -32,6 +49,10 @@ Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns.
     "user": "wizard?",
     "remoteRoot": "/",
     "protocol": "ftps"
+  },
+  "homemud": {
+    "path": "./",
+    "libPath": "/lib"
   }
 }
 ```
