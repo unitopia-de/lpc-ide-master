@@ -174,8 +174,8 @@ Lege im Workspace-Root eine `lpc-config.json` an. Minimal:
 }
 ```
 
-Pflichtfelder: `dialect` (`ldmud` | `fluffos` | `mudos`), `mudlib.name`, `mudlib.baseDir`.
-Wenn ein `ftp`-Block da ist, ist `ftp.host` Pflicht und `ftp.user` wird zum Verbinden gebraucht.
+Pflichtfelder: `dialect` (`ldmud` | `fluffos`), `mudlib.name`, `mudlib.baseDir`.
+Wenn ein `ftp`-Block da ist, ist `ftp.host` Pflicht und `ftp.user` wird zum Verbinden gebraucht. Ohne `ftp.protocol` wird `ftps` verwendet.
 Optional sind die Blöcke `mud` (Telnet) und `homemud` (`path`, `libPath`, `mud`).
 Eine vollständige, kommentierte Vorlage steht in [examples/unitopia-full/](examples/unitopia-full/).
 
@@ -221,8 +221,8 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 ### 6.1 Abweichungen zwischen Dokumentation und Code
 
 1. **Anzahl der Efuns/Sfuns – behoben:** README und CHANGELOG versprechen Hover/Completion für „322 LDMud-Efuns und 201 UNItopia-Sfuns“. Das eingebaute Profil enthielt ursprünglich nur 33 Efuns und 4 Sfuns. Die vollständigen Daten lagen nur im Workspace `C:\_M\mud\lpc-efuns.json`. Sie wurden als [resources/profiles/ldmud-unitopia.json](resources/profiles/ldmud-unitopia.json) ins Plugin übernommen (322 Efuns, 201 Sfuns). Drei alte Einträge ohne Bezug zu UNItopia (`members`, `SetProp`, `QueryProp`) sind dabei entfallen. Offen bleibt: Die Efuns haben noch keine Beschreibungstexte, bei den Sfuns haben 137 von 201 eine. Die Profile für MorgenGrauen und FluffOS enthalten weiterhin nur je 2 Efuns.
-2. **Standard-Protokoll:** Im Code ist der Default `ftp` (unverschlüsselt, [connectionManager.ts:93](src/ftp/connectionManager.ts#L93)), Setting und README legen `ftps` nahe. Wer `protocol` weglässt, überträgt das Passwort im Klartext.
-3. **`mudos`** wird als Dialekt akzeptiert, es gibt dafür aber weder ein Profil noch eine Erkennung.
+2. **Standard-Protokoll – behoben:** Der Default war `ftp` (unverschlüsselt), obwohl Setting und README `ftps` nahelegten. Wer `protocol` wegließ, übertrug das Passwort im Klartext. Jetzt ist `ftps` der Default, in [connectionManager.ts](src/ftp/connectionManager.ts), [ftpBackend.ts](src/ftp/ftpBackend.ts) und im JSON-Schema. Die Beispielkonfigurationen setzen `"protocol": "ftp"` weiterhin ausdrücklich.
+3. **`mudos` – entfernt:** Der Wert wurde als Dialekt akzeptiert, ohne dass es ein Profil oder eine Erkennung dafür gab. Er ist aus Typ, Validierung, Schema und Doku entfernt. Eine `lpc-config.json` mit `"dialect": "mudos"` gilt jetzt als ungültig.
 4. **`simulEfunFile`** und **`version`** werden gelesen, aber nicht ausgewertet (laut Plan für Phase 4 vorgesehen).
 
 ### 6.2 Funktionale Lücken

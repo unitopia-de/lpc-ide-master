@@ -17,7 +17,7 @@ viel weniger Felder, weil die Defaults greifen.
 | Feld | Pflicht | Erläuterung |
 |---|---|---|
 | `$schema` | nein | Aktiviert JSON-Schema-Validierung im VS-Code-Editor (Auto-Completion, Fehlermarkierung). |
-| `dialect` | **ja** | LPC-Treiber: `"ldmud"`, `"fluffos"` oder `"mudos"`. UNItopia nutzt `"ldmud"`. |
+| `dialect` | **ja** | LPC-Treiber: `"ldmud"` oder `"fluffos"`. UNItopia nutzt `"ldmud"`. |
 | `version` | nein | Treiber-Version, z.B. `"3.6.7"`. Aktuell informativ — kann später für versionsabhängige Efun-Definitionen ausgewertet werden. |
 
 ### `mudlib`
@@ -38,7 +38,7 @@ viel weniger Felder, weil die Defaults greifen.
 | `port` | nein | Default `21` (ftp/ftps), `990` (ftps-implicit), `22` (sftp). |
 | `user` | **ja** | Benutzername. Das Passwort wird **niemals** in dieser Datei gespeichert, sondern bei Bedarf abgefragt und in der OS-Keychain abgelegt. |
 | `remoteRoot` | nein | Startverzeichnis für den Remote Explorer und beim "Remote-Workspace-Folder hinzufügen". Default: `mudlib.baseDir`. |
-| `protocol` | nein | Eines von: `"ftp"` (plain, Default), `"ftps"` (explicit AUTH TLS), `"ftps-implicit"` (TLS ab Verbindungsbeginn), `"sftp"` (SSH-basiert). |
+| `protocol` | nein | Eines von: `"ftp"` (unverschlüsselt), `"ftps"` (explicit AUTH TLS, Default), `"ftps-implicit"` (TLS ab Verbindungsbeginn), `"sftp"` (SSH-basiert). |
 | `tls` | nein | Nur für `ftps`/`ftps-implicit`. Optionen für die TLS-Schicht. |
 | `tls.rejectUnauthorized` | nein | Default `true` (strikte Zertifikatsprüfung). Auf `false` setzen, um selbst-signierte Zertifikate zu akzeptieren. |
 

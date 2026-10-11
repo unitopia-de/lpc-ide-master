@@ -89,7 +89,7 @@ export class ConnectionManager {
         if (!user) {
             throw new RemoteError('lpc-config.json: ftp.user fehlt.');
         }
-        const protocol = cfg.protocol ?? 'ftp';
+        const protocol = cfg.protocol ?? 'ftps';
 
         let password = await this.credentials.getPassword(host, user);
         if (!password) {

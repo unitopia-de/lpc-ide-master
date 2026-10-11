@@ -1,6 +1,6 @@
 {
   "dialect": "ldmud-unitopia",
-  "driverVersion": "3.5.0",
+  "driverVersion": "3.6.8",
   "_comment": "LDMud-Efuns (efuns.alpha) und UNItopia-Sfuns (secure/simul_efun/*), aus der UNItopia-Mudlib extrahiert. Eingebautes Profil; per lpc-config.json -> mudlib.efunDefinitions lassen sich weitere Eintraege ergaenzen oder ueberschreiben.",
   "_sources": [
     "lib/doc/efun/efuns.alpha",

@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## [Unreleased]
+
+### Geändert
+- Standard-Protokoll für `ftp.protocol` ist jetzt `ftps` statt unverschlüsseltem `ftp`.
+- Eingebautes Profil `ldmud-unitopia` enthält jetzt alle 322 Efuns und 201 Sfuns.
+
+### Entfernt
+- Dialekt `mudos` (gab weder Profil noch Erkennung).
+
 ## 0.1.0
 
 Erste Auslieferung als VSIX-Paket. Funktionsumfang im Detail:

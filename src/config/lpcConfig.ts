@@ -44,7 +44,7 @@ export interface HomeMudConfig {
 }
 
 export interface LpcConfig {
-    dialect: 'ldmud' | 'fluffos' | 'mudos';
+    dialect: 'ldmud' | 'fluffos';
     version?: string;
     mudlib: MudlibConfig;
     ftp?: FtpConfig;
@@ -163,10 +163,10 @@ function validate(input: unknown): ValidationIssue[] {
     const cfg = input as Record<string, unknown>;
 
     const dialect = cfg.dialect;
-    if (typeof dialect !== 'string' || !['ldmud', 'fluffos', 'mudos'].includes(dialect)) {
+    if (typeof dialect !== 'string' || !['ldmud', 'fluffos'].includes(dialect)) {
         issues.push({
             path: 'dialect',
-            message: 'Pflichtfeld; erlaubt: "ldmud" | "fluffos" | "mudos".'
+            message: 'Pflichtfeld; erlaubt: "ldmud" | "fluffos".'
         });
     }
 

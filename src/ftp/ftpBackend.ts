@@ -39,7 +39,7 @@ export class FtpBackend implements RemoteBackend {
             channel.show(true);
         }
 
-        const mode = opts.mode ?? 'ftp';
+        const mode = opts.mode ?? 'ftps';
         this._protocol = mode;
         const secure = mode === 'ftps' ? true : mode === 'ftps-implicit' ? 'implicit' : false;
         const port = opts.port ?? (mode === 'ftps-implicit' ? 990 : 21);

@@ -23,7 +23,7 @@
   "properties": {
     "dialect": {
       "type": "string",
-      "enum": ["ldmud", "fluffos", "mudos"],
+      "enum": ["ldmud", "fluffos"],
       "description": "Der LPC-Driver-Dialekt."
     },
     "version": {
@@ -52,7 +52,7 @@
         "protocol": {
           "type": "string",
           "enum": ["ftp", "ftps", "ftps-implicit", "sftp"],
-          "default": "ftp",
+          "default": "ftps",
           "description": "ftp=plain, ftps=explicit AUTH TLS, ftps-implicit=TLS ab Verbindungsbeginn, sftp=SSH-basiert."
         },
         "tls": {
