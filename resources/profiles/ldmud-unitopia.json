@@ -1,45 +1,2445 @@
 {
   "dialect": "ldmud-unitopia",
   "driverVersion": "3.5.0",
+  "_comment": "LDMud-Efuns (efuns.alpha) und UNItopia-Sfuns (secure/simul_efun/*), aus der UNItopia-Mudlib extrahiert. Eingebautes Profil; per lpc-config.json -> mudlib.efunDefinitions lassen sich weitere Eintraege ergaenzen oder ueberschreiben.",
+  "_sources": [
+    "lib/doc/efun/efuns.alpha",
+    "lib/secure/simul_efun/*.{c,inc}"
+  ],
+  "_efun_count": 322,
+  "_sfun_count": 201,
   "efuns": [
-    { "name": "write", "signature": "void write(mixed msg)", "documentation": "Schreibt eine Nachricht an this_player()." },
-    { "name": "say", "signature": "void say(string msg, mixed exclude)", "documentation": "Sendet eine Nachricht an alle anderen Spieler im Raum." },
-    { "name": "tell_object", "signature": "void tell_object(object ob, string msg)", "documentation": "Sendet eine Nachricht an ein bestimmtes Objekt." },
-    { "name": "tell_room", "signature": "void tell_room(mixed ob, string msg, object *exclude)", "documentation": "Sendet eine Nachricht an alle Objekte im Raum." },
-    { "name": "this_player", "signature": "object this_player()", "documentation": "Liefert den aktuellen interaktiven Spieler." },
-    { "name": "this_interactive", "signature": "object this_interactive()", "documentation": "Liefert das aktuelle interaktive Objekt." },
-    { "name": "this_object", "signature": "object this_object()", "documentation": "Liefert das aktuelle Objekt." },
-    { "name": "previous_object", "signature": "object previous_object(int|void depth)", "documentation": "Liefert das aufrufende Objekt." },
-    { "name": "find_object", "signature": "object find_object(string name)", "documentation": "Sucht ein bereits geladenes Objekt anhand seines Pfades." },
-    { "name": "find_player", "signature": "object find_player(string name)", "documentation": "Sucht einen Spieler anhand seines Namens." },
-    { "name": "find_living", "signature": "object find_living(string name)", "documentation": "Sucht ein lebendes Objekt anhand seines Namens." },
-    { "name": "load_object", "signature": "object load_object(string name)", "documentation": "Lädt ein Objekt, falls noch nicht geladen." },
-    { "name": "clone_object", "signature": "object clone_object(string|object name)", "documentation": "Erzeugt einen Klon eines Blueprint-Objekts." },
-    { "name": "destruct", "signature": "void destruct(object ob)", "documentation": "Zerstört ein Objekt." },
-    { "name": "present", "signature": "object present(string|object str, object env)", "documentation": "Prüft, ob ein Objekt im Inventar/Umgebung vorhanden ist." },
-    { "name": "environment", "signature": "object environment(object|void ob)", "documentation": "Liefert die Umgebung eines Objekts." },
-    { "name": "all_inventory", "signature": "object *all_inventory(object|void ob)", "documentation": "Liefert das gesamte Inventar eines Objekts." },
-    { "name": "deep_inventory", "signature": "object *deep_inventory(object ob)", "documentation": "Liefert das Inventar inkl. aller verschachtelten Objekte." },
-    { "name": "move_object", "signature": "void move_object(mixed item, mixed dest)", "documentation": "Bewegt ein Objekt in eine neue Umgebung." },
-    { "name": "call_other", "signature": "mixed call_other(object|string ob, string func, mixed... args)", "documentation": "Ruft eine Funktion in einem anderen Objekt auf." },
-    { "name": "call_out", "signature": "void call_out(string func, int delay, mixed... args)", "documentation": "Plant einen verzögerten Funktionsaufruf." },
-    { "name": "remove_call_out", "signature": "int remove_call_out(string func)", "documentation": "Entfernt einen geplanten call_out." },
-    { "name": "sprintf", "signature": "string sprintf(string fmt, mixed... args)", "documentation": "Formatierte String-Ausgabe." },
-    { "name": "sscanf", "signature": "int sscanf(string str, string fmt, mixed& ...)", "documentation": "Formatiertes Parsen eines Strings." },
-    { "name": "explode", "signature": "string *explode(string str, string delim)", "documentation": "Zerlegt einen String an einem Trennzeichen." },
-    { "name": "implode", "signature": "string implode(mixed *arr, string delim)", "documentation": "Verbindet ein Array mit einem Trennzeichen." },
-    { "name": "to_int", "signature": "int to_int(mixed val)", "documentation": "Konvertiert nach int." },
-    { "name": "to_string", "signature": "string to_string(mixed val)", "documentation": "Konvertiert nach string." },
-    { "name": "sizeof", "signature": "int sizeof(mixed val)", "documentation": "Liefert die Größe eines Arrays/Mappings/Strings." },
-    { "name": "time", "signature": "int time()", "documentation": "Aktuelle Zeit als Unix-Timestamp." },
-    { "name": "ctime", "signature": "string ctime(int|void t)", "documentation": "Konvertiert einen Timestamp in einen lesbaren String." },
-    { "name": "members", "signature": "mixed *members(mapping m)", "documentation": "Liefert alle Werte eines Mappings." },
-    { "name": "m_indices", "signature": "mixed *m_indices(mapping m)", "documentation": "Liefert alle Schlüssel eines Mappings." }
+    {
+      "name": "abs",
+      "signature": "int|float abs(int|float arg)"
+    },
+    {
+      "name": "acos",
+      "signature": "float acos(float)"
+    },
+    {
+      "name": "add_action",
+      "signature": "varargs void add_action(string|closure function, string verb [, int flag ])"
+    },
+    {
+      "name": "all_environment",
+      "signature": "object *all_environment(object o default: this_object())"
+    },
+    {
+      "name": "all_inventory",
+      "signature": "varargs object *all_inventory(object who default: this_object())"
+    },
+    {
+      "name": "allocate",
+      "signature": "mixed *allocate(int|int* size [, mixed init_value])"
+    },
+    {
+      "name": "and_bits",
+      "signature": "string and_bits(string str1, string str2)"
+    },
+    {
+      "name": "apply",
+      "signature": "varargs mixed apply(closure, mixed|mixed &, ...)"
+    },
+    {
+      "name": "asin",
+      "signature": "float asin(float)"
+    },
+    {
+      "name": "atan",
+      "signature": "float atan(float)"
+    },
+    {
+      "name": "atan2",
+      "signature": "float atan2(float y, float x)"
+    },
+    {
+      "name": "attach_erq_demon",
+      "signature": "int attach_erq_demon(object ob, int do_close)"
+    },
+    {
+      "name": "baseof",
+      "signature": "int baseof(struct b, struct s)"
+    },
+    {
+      "name": "binary_message",
+      "signature": "int binary_message(int *|bytes message, int flags)"
+    },
+    {
+      "name": "bind_lambda",
+      "signature": "varargs closure bind_lambda(closure, object|lwobject default: this_object())"
+    },
+    {
+      "name": "blueprint",
+      "signature": "object blueprint(string|object|lwobject ob)"
+    },
+    {
+      "name": "break_point",
+      "signature": "void break_point()"
+    },
+    {
+      "name": "bytesp",
+      "signature": "int bytesp(mixed arg)"
+    },
+    {
+      "name": "call_coroutine",
+      "signature": "mixed call_coroutine(coroutine cr, mixed value = 0)"
+    },
+    {
+      "name": "call_direct",
+      "signature": "varargs unknown call_direct({object wo | object* wo | string wo | string* wo}, string function, ...args...)"
+    },
+    {
+      "name": "call_direct_resolved",
+      "signature": "varargs unknown call_direct_resolved(mixed &ret, {object wo | object* wo | string wo | string* wo}, string function, ...args...)"
+    },
+    {
+      "name": "call_direct_strict",
+      "signature": "varargs unknown call_direct_strict(object|string|object*|string* ob, string func, ...)"
+    },
+    {
+      "name": "caller_stack",
+      "signature": "<object|lwobject> *caller_stack({int add_interactive})"
+    },
+    {
+      "name": "caller_stack_depth",
+      "signature": "int caller_stack_depth()"
+    },
+    {
+      "name": "call_other",
+      "signature": "varargs unknown call_other({object wo | object* wo | string wo | string* wo}, string function, ...args...)"
+    },
+    {
+      "name": "call_out",
+      "signature": "varargs void call_out({string function | closure }, int delay [, mixed arg, ...])"
+    },
+    {
+      "name": "call_out_info",
+      "signature": "mixed *call_out_info()"
+    },
+    {
+      "name": "call_resolved",
+      "signature": "varargs int call_resolved(mixed &ret, {object ob | string file_name}, string function [, ...arg...])"
+    },
+    {
+      "name": "call_strict",
+      "signature": "varargs unknown call_strict(object|string|object*|string* ob, string func, ...)"
+    },
+    {
+      "name": "capitalize",
+      "signature": "string capitalize(string str)"
+    },
+    {
+      "name": "cat",
+      "signature": "varargs int cat(string file_name [, int from [, int lines ]])"
+    },
+    {
+      "name": "catch",
+      "signature": "string catch(...)"
+    },
+    {
+      "name": "check_type",
+      "signature": "int check_type(mixed arg, lpctype type)"
+    },
+    {
+      "name": "ceil",
+      "signature": "float ceil(float arg)"
+    },
+    {
+      "name": "clear_bit",
+      "signature": "string clear_bit(string str, int bit)"
+    },
+    {
+      "name": "clone_object",
+      "signature": "object clone_object(string file_name | object template, ...)"
+    },
+    {
+      "name": "clonep",
+      "signature": "int clonep(string|object obj default: this_object())"
+    },
+    {
+      "name": "clones",
+      "signature": "object *clones([int what | string|object obj [, int what]])"
+    },
+    {
+      "name": "closurep",
+      "signature": "int closurep(mixed m)"
+    },
+    {
+      "name": "command",
+      "signature": "int command(string command)"
+    },
+    {
+      "name": "command_stack",
+      "signature": "mixed *command_stack()"
+    },
+    {
+      "name": "command_stack_depth",
+      "signature": "int command_stack_depth()"
+    },
+    {
+      "name": "compile_string",
+      "signature": "closure compile_string(symbol* args, string|string& str [, struct compile_string_options opts])"
+    },
+    {
+      "name": "configure_driver",
+      "signature": "void configure_driver(int what, mixed data)"
+    },
+    {
+      "name": "configure_interactive",
+      "signature": "void configure_interactive(object ob, int what, mixed data)"
+    },
+    {
+      "name": "configure_lwobject",
+      "signature": "void configure_lwobject(lwobject lwob, int what, mixed data)"
+    },
+    {
+      "name": "configure_object",
+      "signature": "void configure_object(object ob, int what, mixed data)"
+    },
+    {
+      "name": "convert_charset",
+      "signature": "string convert_charset(string str, string from, string to)"
+    },
+    {
+      "name": "copy",
+      "signature": "mixed copy(mixed arg)"
+    },
+    {
+      "name": "copy_bits",
+      "signature": "string copy_bits(string src, string dest [, int srcstart [, int deststart [, int copylen ]]])"
+    },
+    {
+      "name": "copy_file",
+      "signature": "int copy_file(string from, string to)"
+    },
+    {
+      "name": "cos",
+      "signature": "float cos(float)"
+    },
+    {
+      "name": "count_bits",
+      "signature": "int count_bits(string str)"
+    },
+    {
+      "name": "crypt",
+      "signature": "varargs string crypt(string|bytes str [, {string crypt_string | int flag default: 0}])"
+    },
+    {
+      "name": "ctime",
+      "signature": "varargs string ctime(int time default: time())"
+    },
+    {
+      "name": "db_affected_rows",
+      "signature": "int db_affected_rows(int handle)"
+    },
+    {
+      "name": "db_close",
+      "signature": "int db_close(int handle)"
+    },
+    {
+      "name": "db_coldefs",
+      "signature": "string *db_coldefs(int handle)"
+    },
+    {
+      "name": "db_connect",
+      "signature": "int db_connect(string database[, string user[, string password]])"
+    },
+    {
+      "name": "db_conv_string",
+      "signature": "string db_conv_string(string str)"
+    },
+    {
+      "name": "db_error",
+      "signature": "string db_error(int handle)"
+    },
+    {
+      "name": "db_exec",
+      "signature": "int db_exec(int handle, string statement)"
+    },
+    {
+      "name": "db_fetch",
+      "signature": "mixed db_fetch(int handle)"
+    },
+    {
+      "name": "db_handles",
+      "signature": "int *db_handles()"
+    },
+    {
+      "name": "db_insert_id",
+      "signature": "int db_insert_id (int handle)"
+    },
+    {
+      "name": "debug_message",
+      "signature": "varargs void debug_message(string text, int flag)"
+    },
+    {
+      "name": "deep_copy",
+      "signature": "mixed deep_copy(mixed arg)"
+    },
+    {
+      "name": "deep_inventory",
+      "signature": "varargs object *deep_inventory(object who default: this_object()[, int depth])"
+    },
+    {
+      "name": "destruct",
+      "signature": "void destruct(object who)"
+    },
+    {
+      "name": "disable_commands",
+      "signature": "void disable_commands()"
+    },
+    {
+      "name": "driver_info",
+      "signature": "mixed driver_info(int what)"
+    },
+    {
+      "name": "dump_driver_info",
+      "signature": "int dump_driver_info(int what[, string filename])"
+    },
+    {
+      "name": "ed",
+      "signature": "varargs int ed( [string file_name [, string fun_to_call_at_end ]])"
+    },
+    {
+      "name": "enable_commands",
+      "signature": "void enable_commands()"
+    },
+    {
+      "name": "environment",
+      "signature": "varargs object environment(object who default: this_object())"
+    },
+    {
+      "name": "exec",
+      "signature": "int exec(object from, object to)"
+    },
+    {
+      "name": "execute_command",
+      "signature": "int execute_command(string command, object origin, object player)"
+    },
+    {
+      "name": "exp",
+      "signature": "float exp(float)"
+    },
+    {
+      "name": "expand_define",
+      "signature": "string expand_define(string, string default: F_CONST0)"
+    },
+    {
+      "name": "explode",
+      "signature": "string|bytes *explode(string|bytes str, string|bytes pattern)"
+    },
+    {
+      "name": "extern_call",
+      "signature": "int extern_call()"
+    },
+    {
+      "name": "file_size",
+      "signature": "int file_size(string file_name)"
+    },
+    {
+      "name": "filter",
+      "signature": "mapping|mixed * filter(mapping|string|mixed * arg, {string fun, object ob|closure cl|mapping map}, mixed extra...)"
+    },
+    {
+      "name": "filter_indices",
+      "signature": "varargs mapping filter_indices(mapping map, {string function | closure} [,  ...arg...])"
+    },
+    {
+      "name": "filter_objects",
+      "signature": "varargs mixed *filter_objects(mixed *arr, string function [, ...arg...])"
+    },
+    {
+      "name": "find_call_out",
+      "signature": "int find_call_out(string call_out_function)"
+    },
+    {
+      "name": "find_input_to",
+      "signature": "int find_input_to (object player, object|string|closure fun [, string fun])"
+    },
+    {
+      "name": "find_object",
+      "signature": "object find_object(string file_name)"
+    },
+    {
+      "name": "first_inventory",
+      "signature": "varargs object first_inventory({object ob | string file_name} default: this_object())"
+    },
+    {
+      "name": "floatp",
+      "signature": "int floatp(mixed m)"
+    },
+    {
+      "name": "floor",
+      "signature": "float floor(float arg)"
+    },
+    {
+      "name": "funcall",
+      "signature": "varargs mixed funcall (closure, ...)"
+    },
+    {
+      "name": "function_exists",
+      "signature": "varargs string function_exists(string function, object|lwobject where default: this_object())"
+    },
+    {
+      "name": "functionlist",
+      "signature": "varargs string *functionlist(object|lwobject|string, int default: 1)"
+    },
+    {
+      "name": "garbage_collection",
+      "signature": "void garbage_collection([string filename[, int flag]])"
+    },
+    {
+      "name": "get_combine_charset",
+      "signature": "mixed get_combine_charset(int mode)"
+    },
+    {
+      "name": "get_dir",
+      "signature": "varargs string *get_dir(string dir [, int flag default: 1])"
+    },
+    {
+      "name": "get_error_file",
+      "signature": "varargs mixed *get_error_file(string name, int default: 1)"
+    },
+    {
+      "name": "get_eval_cost",
+      "signature": "int get_eval_cost()"
+    },
+    {
+      "name": "get_extra_wizinfo",
+      "signature": "mixed get_extra_wizinfo(object|lwobject|string)"
+    },
+    {
+      "name": "get_type_info",
+      "signature": "varargs mixed get_type_info(mixed m, int flag)"
+    },
+    {
+      "name": "geteuid",
+      "signature": "varargs string geteuid(object|lwobject default:this_object())"
+    },
+    {
+      "name": "getuid",
+      "signature": "varargs string getuid(object|lwobject default: this_object())"
+    },
+    {
+      "name": "gmtime",
+      "signature": "int *gmtime(int clock|int *uclock)"
+    },
+    {
+      "name": "heart_beat_info",
+      "signature": "object *heart_beat_info()"
+    },
+    {
+      "name": "hash",
+      "signature": "string hash(int method, string|bytes|int* arg [, int iterations ])"
+    },
+    {
+      "name": "hmac",
+      "signature": "string hmac(int method, string|bytes key, string|bytes|int* arg)"
+    },
+    {
+      "name": "implode",
+      "signature": "string|bytes implode(string|bytes *strs, string|bytes pattern)"
+    },
+    {
+      "name": "include_list",
+      "signature": "varargs string *include_list(object|lwobject ob, int flags)"
+    },
+    {
+      "name": "inherit_list",
+      "signature": "varargs string *inherit_list(object|lwobject ob default: this_object())"
+    },
+    {
+      "name": "input_to",
+      "signature": "varagrs int input_to(string funtion [, int visible [, ...args...]])"
+    },
+    {
+      "name": "input_to_info",
+      "signature": "mixed *input_to_info(object player)"
+    },
+    {
+      "name": "interactive",
+      "signature": "varagrs int interactive(object who default: this_object())"
+    },
+    {
+      "name": "interactive_info",
+      "signature": "mixed interactive_info(object ob, int what)"
+    },
+    {
+      "name": "intp",
+      "signature": "int intp(mixed m)"
+    },
+    {
+      "name": "invert_bits",
+      "signature": "string invert_bits(string str)"
+    },
+    {
+      "name": "lambda",
+      "signature": "closure lambda(mixed *, mixed)"
+    },
+    {
+      "name": "last_bit",
+      "signature": "int last_bit(string str)"
+    },
+    {
+      "name": "last_instructions",
+      "signature": "string *last_instructions (int length, int verbose)"
+    },
+    {
+      "name": "limited",
+      "signature": "mixed limited(closure fun, {int * limits [, mixed args...] | int tag, int value, ...})"
+    },
+    {
+      "name": "living",
+      "signature": "int living(object who)"
+    },
+    {
+      "name": "load_name",
+      "signature": "string load_name(object|lwobject obj default: this_object())"
+    },
+    {
+      "name": "load_object",
+      "signature": "object load_object(string name)"
+    },
+    {
+      "name": "localtime",
+      "signature": "int *localtime(int clock|int *uclock)"
+    },
+    {
+      "name": "log",
+      "signature": "float log(float)"
+    },
+    {
+      "name": "lower_case",
+      "signature": "string lower_case(string str)"
+    },
+    {
+      "name": "lwobject_info",
+      "signature": "mixed lwobject_info(lwobject lwob, int what)"
+    },
+    {
+      "name": "lwobjectp",
+      "signature": "int lwobjectp(mixed arg)"
+    },
+    {
+      "name": "m_add",
+      "signature": "mapping m_add(mapping map, mixed key, [mixed data...])"
+    },
+    {
+      "name": "m_allocate",
+      "signature": "mapping m_allocate(int size, int width)"
+    },
+    {
+      "name": "m_contains",
+      "signature": "int m_contains(mixed &data1, ..., &dataN, map, key)"
+    },
+    {
+      "name": "m_delete",
+      "signature": "mapping m_delete(mapping map, mixed key)"
+    },
+    {
+      "name": "m_entry",
+      "signature": "mixed *m_entry(mapping map, mixed key)"
+    },
+    {
+      "name": "m_indices",
+      "signature": "mixed *m_indices(mapping map)"
+    },
+    {
+      "name": "m_reallocate",
+      "signature": "mapping m_reallocate(mapping m, int width)"
+    },
+    {
+      "name": "m_values",
+      "signature": "mixed *m_values(mapping map)"
+    },
+    {
+      "name": "make_shared_string",
+      "signature": "string|bytes make_shared_string(string|bytes str)"
+    },
+    {
+      "name": "map",
+      "signature": "mapping|mixed * map(mapping|string|mixed * arg, {string func, object ob|closure cl|mapping map[, int index]}, mixed extra...)"
+    },
+    {
+      "name": "map_indices",
+      "signature": "varargs mapping map_indices(mapping map, {string function | closure} [, ...arg...])"
+    },
+    {
+      "name": "map_objects",
+      "signature": "varargs mixed *map_objects(mixed *arr, string function [, ...arg...])"
+    },
+    {
+      "name": "mappingp",
+      "signature": "int mappingp(mixed m)"
+    },
+    {
+      "name": "master",
+      "signature": "object master([int dont_load])"
+    },
+    {
+      "name": "match_command",
+      "signature": "mixed *match_command(string command, object origin)"
+    },
+    {
+      "name": "max",
+      "signature": "string|bytes|int|float max(string|bytes|int|float [*] arg, ...)"
+    },
+    {
+      "name": "md5",
+      "signature": "string md5(string|bytes arg)"
+    },
+    {
+      "name": "md5_crypt",
+      "signature": "string md5_crypt(string|bytes str, {int seed | string seed })"
+    },
+    {
+      "name": "member",
+      "signature": "int member({mixed *arr | string str | bytes buf | mapping map}, mixed key[, int start])"
+    },
+    {
+      "name": "min",
+      "signature": "string|bytes|int|float min(string|bytes|int|float [*] arg, ...)"
+    },
+    {
+      "name": "mkdir",
+      "signature": "int mkdir(string dir)"
+    },
+    {
+      "name": "mkmapping",
+      "signature": "varagrs mapping mkmapping(mixed *arr, ...)"
+    },
+    {
+      "name": "mktime",
+      "signature": "int mktime(int *ts);"
+    },
+    {
+      "name": "move_object",
+      "signature": "void move_object(object|string, object|string)"
+    },
+    {
+      "name": "negate",
+      "signature": "mixed negate({int i | float f})"
+    },
+    {
+      "name": "net_connect",
+      "signature": "int net_connect(string host, int port)"
+    },
+    {
+      "name": "new_lwobject",
+      "signature": "lwobject new_lwobject(string name, ...)"
+    },
+    {
+      "name": "next_bit",
+      "signature": "int next_bit(string str, int start [, int find_cleared])"
+    },
+    {
+      "name": "next_inventory",
+      "signature": "varagrs object next_inventory(object ob default: this_object())"
+    },
+    {
+      "name": "notify_fail",
+      "signature": "int notify_fail(string fail_string)"
+    },
+    {
+      "name": "object_info",
+      "signature": "mixed object_info(object ob, int what)"
+    },
+    {
+      "name": "object_name",
+      "signature": "string object_name(object ob default: this_object())"
+    },
+    {
+      "name": "object_time",
+      "signature": "int object_time(object ob default: this_object())"
+    },
+    {
+      "name": "objectp",
+      "signature": "int objectp(mixed m)"
+    },
+    {
+      "name": "objects",
+      "signature": "object* objects([int pos|object prev_ob[, int num]])"
+    },
+    {
+      "name": "or_bits",
+      "signature": "string or_bits(string str1, string str2)"
+    },
+    {
+      "name": "pointerp",
+      "signature": "int pointerp(mixed m)"
+    },
+    {
+      "name": "pow",
+      "signature": "float pow(float base, float exp)"
+    },
+    {
+      "name": "present",
+      "signature": "varargs object present({object ob | string id} [, object where] [, int n])"
+    },
+    {
+      "name": "present_clone",
+      "signature": "object present_clone({string str | object ob} [, object env] [, int n])"
+    },
+    {
+      "name": "previous_object",
+      "signature": "varargs object|lwobject previous_object(int i)"
+    },
+    {
+      "name": "printf",
+      "signature": "varargs void printf(string fmt_str, ...)"
+    },
+    {
+      "name": "process_string",
+      "signature": "string process_string(string str)"
+    },
+    {
+      "name": "program_name",
+      "signature": "string program_name(object|lwobject ob default: this_object())"
+    },
+    {
+      "name": "program_time",
+      "signature": "varargs int program_time(object|lwobject ob default: this_object())"
+    },
+    {
+      "name": "query_actions",
+      "signature": "varargs mixed *query_actions(object|string, int|object|string default: 1)"
+    },
+    {
+      "name": "query_command",
+      "signature": "string query_command()"
+    },
+    {
+      "name": "query_editing",
+      "signature": "mixed query_editing(object|string)"
+    },
+    {
+      "name": "query_idle",
+      "signature": "int query_idle(object player)"
+    },
+    {
+      "name": "query_input_pending",
+      "signature": "object query_input_pending(object|string)"
+    },
+    {
+      "name": "query_limits",
+      "signature": "int * query_limits([int default])"
+    },
+    {
+      "name": "query_load_average",
+      "signature": "string query_load_average()"
+    },
+    {
+      "name": "query_notify_fail",
+      "signature": "mixed query_notify_fail()"
+    },
+    {
+      "name": "query_once_interactive",
+      "signature": "int query_once_interactive(object ob)"
+    },
+    {
+      "name": "query_shadowing",
+      "signature": "object query_shadowing(object shadow)"
+    },
+    {
+      "name": "query_verb",
+      "signature": "string query_verb()"
+    },
+    {
+      "name": "quote",
+      "signature": "mixed quote(mixed *|quoted_array|symbol|string)"
+    },
+    {
+      "name": "raise_error",
+      "signature": "void raise_error(string str)"
+    },
+    {
+      "name": "random",
+      "signature": "int random(int i)"
+    },
+    {
+      "name": "read_bytes",
+      "signature": "varargs bytes read_bytes(string file_name [, int from [, int bytes ]])"
+    },
+    {
+      "name": "read_file",
+      "signature": "varargs string read_file(string file_name [, int from [, int lines [, string encoding ]]])"
+    },
+    {
+      "name": "referencep",
+      "signature": "int referencep(mixed &m)"
+    },
+    {
+      "name": "regexp",
+      "signature": "string *regexp(string *arr, string pattern, int opt)"
+    },
+    {
+      "name": "regexp_package",
+      "signature": "int regexp_package()"
+    },
+    {
+      "name": "regexplode",
+      "signature": "string *regexplode(string str, string pattern, int opt)"
+    },
+    {
+      "name": "regmatch",
+      "signature": "string|string* regmatch(string text, string pattern[, int opt[, int start]])"
+    },
+    {
+      "name": "regreplace",
+      "signature": "string regreplace(string txt, string pattern, string replacepattern, int flags)"
+    },
+    {
+      "name": "remove_action",
+      "signature": "int remove_action(string verb, object ob)"
+    },
+    {
+      "name": "remove_call_out",
+      "signature": "int remove_call_out(string call_out_function)"
+    },
+    {
+      "name": "remove_input_to",
+      "signature": "int remove_input_to(object player [, string|closure|object fun])"
+    },
+    {
+      "name": "remove_interactive",
+      "signature": "void remove_interactive(object ob)"
+    },
+    {
+      "name": "rename",
+      "signature": "int rename(string from, string to)"
+    },
+    {
+      "name": "rename_object",
+      "signature": "void rename_object(object ob, string nem_file_name)"
+    },
+    {
+      "name": "replace_program",
+      "signature": "varargs void replace_program(string inherit_file_name)"
+    },
+    {
+      "name": "restore_object",
+      "signature": "int restore_object(string file_name)"
+    },
+    {
+      "name": "restore_value",
+      "signature": "mixed restore_value(string str)"
+    },
+    {
+      "name": "reverse",
+      "signature": "int|string|bytes|mixed* reverse(int|string|bytes|mixed* arg)"
+    },
+    {
+      "name": "rm",
+      "signature": "int rm(string file_name)"
+    },
+    {
+      "name": "rmdir",
+      "signature": "int rmdir(string dir)"
+    },
+    {
+      "name": "rmember",
+      "signature": "int rmember(mixed *array | string s | bytes b, mixed elem[, int start])"
+    },
+    {
+      "name": "rusage",
+      "signature": "mixed *rusage()"
+    },
+    {
+      "name": "save_object",
+      "signature": "void save_object(string file_name)"
+    },
+    {
+      "name": "save_value",
+      "signature": "string save_value(mixed value)"
+    },
+    {
+      "name": "say",
+      "signature": "varargs void say({string str | mixed *arr} [, {object ob | object *obs} ])"
+    },
+    {
+      "name": "send_erq",
+      "signature": "int send_erq(closure callback, bytes|int * data, int request)"
+    },
+    {
+      "name": "send_udp",
+      "signature": "int send_udp(string host, int port, bytes|int* message)"
+    },
+    {
+      "name": "set_bit",
+      "signature": "string set_bit(string str, int bit)"
+    },
+    {
+      "name": "set_combine_charset",
+      "signature": "void set_combine_charset(int *bitvector | string charset)"
+    },
+    {
+      "name": "set_driver_hook",
+      "signature": "void set_driver_hook(int flag, closure c)"
+    },
+    {
+      "name": "set_environment",
+      "signature": "void set_environment(object who, object dest)"
+    },
+    {
+      "name": "set_extra_wizinfo",
+      "signature": "void set_extra_wizinfo(object|lwobject|string, mixed)"
+    },
+    {
+      "name": "set_heart_beat",
+      "signature": "int set_heart_beat(int flag)"
+    },
+    {
+      "name": "set_next_reset",
+      "signature": "int set_next_reset(int delay)"
+    },
+    {
+      "name": "set_prompt",
+      "signature": "varargs string set_prompt(string|closure|int, object default: this_player())"
+    },
+    {
+      "name": "set_this_object",
+      "signature": "void set_this_object(object|lwobject what_object_should_be)"
+    },
+    {
+      "name": "set_this_player",
+      "signature": "void set_this_player(object who)"
+    },
+    {
+      "name": "seteuid",
+      "signature": "int seteuid(string|int)"
+    },
+    {
+      "name": "sgn",
+      "signature": "int sgn (int|float arg)"
+    },
+    {
+      "name": "sha1",
+      "signature": "string sha1(string|bytes arg)"
+    },
+    {
+      "name": "shadow",
+      "signature": "object shadow(object ob, int flag)"
+    },
+    {
+      "name": "shutdown",
+      "signature": "void shutdown([int exit_code])"
+    },
+    {
+      "name": "sin",
+      "signature": "float sin(float)"
+    },
+    {
+      "name": "sizeof",
+      "signature": "int sizeof(mixed *|mapping|string|bytes|struct val)"
+    },
+    {
+      "name": "sl_close",
+      "signature": "void sl_close()"
+    },
+    {
+      "name": "sl_exec",
+      "signature": "mixed* sl_exec(string statement, ...)"
+    },
+    {
+      "name": "sl_insert_id",
+      "signature": "int sl_insert_id()"
+    },
+    {
+      "name": "sl_open",
+      "signature": "int sl_open(string filename)"
+    },
+    {
+      "name": "snoop",
+      "signature": "int snoop(object who, void|object whom)"
+    },
+    {
+      "name": "sort_array",
+      "signature": "varargs mixed *sort_array(mixed *arr, {string function | closure} [, object where | string function default: this_object() ])"
+    },
+    {
+      "name": "sprintf",
+      "signature": "varargs string sprintf(string fmt_str, ...)"
+    },
+    {
+      "name": "sqrt",
+      "signature": "float sqrt(float)"
+    },
+    {
+      "name": "sscanf",
+      "signature": "varargs int sscanf(string str, string fmt_str, ...)"
+    },
+    {
+      "name": "stringp",
+      "signature": "int stringp(mixed m)"
+    },
+    {
+      "name": "strftime",
+      "signature": "string strftime([string fmt] [, int clock] [, int localized])"
+    },
+    {
+      "name": "strlen",
+      "signature": "int strlen(string str)"
+    },
+    {
+      "name": "strrstr",
+      "signature": "varargs int strrstr(string|bytes str, string|bytes pattern [, int from ])"
+    },
+    {
+      "name": "strstr",
+      "signature": "varargs int strstr(string|bytes str, string|bytes pattern [, int from ])"
+    },
+    {
+      "name": "struct_info",
+      "signature": "mixed *struct_info(struct st, int what)"
+    },
+    {
+      "name": "structp",
+      "signature": "int structp(mixed arg)"
+    },
+    {
+      "name": "swap",
+      "signature": "void swap(object);   /* Only used for debugging */"
+    },
+    {
+      "name": "symbol_function",
+      "signature": "closure symbol_function(symbol|string, string|object|lwobject default: 0)"
+    },
+    {
+      "name": "symbol_variable",
+      "signature": "closure symbol_variable(symbol|string|int)"
+    },
+    {
+      "name": "symbolp",
+      "signature": "int symbolp(mixed m)"
+    },
+    {
+      "name": "tail",
+      "signature": "int tail(string file_name)"
+    },
+    {
+      "name": "tan",
+      "signature": "float tan(float)"
+    },
+    {
+      "name": "tell_object",
+      "signature": "void tell_object(object ob, string str)"
+    },
+    {
+      "name": "tell_room",
+      "signature": "varargs void tell_room({object room | string file_name}, {string str | mixed *arr} [, object *arr])"
+    },
+    {
+      "name": "terminal_colour",
+      "signature": "varargs string terminal_colour(string str, mapping map, int wrap, int indent)"
+    },
+    {
+      "name": "test_bit",
+      "signature": "int test_bit(string str, int bit)"
+    },
+    {
+      "name": "text_width",
+      "signature": "int text_width(string str)"
+    },
+    {
+      "name": "this_coroutine",
+      "signature": "coroutine this_coroutine()"
+    },
+    {
+      "name": "this_interactive",
+      "signature": "object this_interactive()"
+    },
+    {
+      "name": "this_object",
+      "signature": "object|lwobject this_object()"
+    },
+    {
+      "name": "this_player",
+      "signature": "object this_player()"
+    },
+    {
+      "name": "throw",
+      "signature": "void throw(mixed err_msg)"
+    },
+    {
+      "name": "time",
+      "signature": "int time()"
+    },
+    {
+      "name": "tls_available",
+      "signature": "int tls_available()"
+    },
+    {
+      "name": "tls_check_certificate",
+      "signature": "mixed *tls_check_certificate(object obj [, int extra]);"
+    },
+    {
+      "name": "tls_deinit_connection",
+      "signature": "void tls_deinit_connection(object ob)"
+    },
+    {
+      "name": "tls_error",
+      "signature": "string tls_error(int errorno)"
+    },
+    {
+      "name": "tls_init_connection",
+      "signature": "int tls_init_connection(object ob, [{closure fun | string fun, string|object fob}, mixed extra...)"
+    },
+    {
+      "name": "tls_query_connection_info",
+      "signature": "int *tls_query_connection_info(object ob)"
+    },
+    {
+      "name": "tls_query_connection_state",
+      "signature": "int tls_query_connection_state(object ob)"
+    },
+    {
+      "name": "tls_refresh_certs",
+      "signature": "void tls_refresh_certs()"
+    },
+    {
+      "name": "to_array",
+      "signature": "int *to_array(symbol|quotedarray|mixed *|struct|string|bytes)"
+    },
+    {
+      "name": "to_bytes",
+      "signature": "string to_bytes(bytes|string|int* buf [, string encoding])"
+    },
+    {
+      "name": "to_float",
+      "signature": "float to_float(string|int)"
+    },
+    {
+      "name": "to_int",
+      "signature": "int to_int(string|float)"
+    },
+    {
+      "name": "to_lpctype",
+      "signature": "lpctype to_lpctype(string type)"
+    },
+    {
+      "name": "to_object",
+      "signature": "object to_object(string|closure)"
+    },
+    {
+      "name": "to_string",
+      "signature": "string to_string(mixed m)"
+    },
+    {
+      "name": "to_struct",
+      "signature": "mixed to_struct(mixed *|mapping data[, struct template])"
+    },
+    {
+      "name": "to_text",
+      "signature": "string to_text(bytes|string|int* buf [, string encoding])"
+    },
+    {
+      "name": "to_type",
+      "signature": "mixed to_type(mixed value, lpctype type [, struct to_type_options options])"
+    },
+    {
+      "name": "trace",
+      "signature": "int trace(int)"
+    },
+    {
+      "name": "traceprefix",
+      "signature": "string traceprefix(string|int)"
+    },
+    {
+      "name": "transpose_array",
+      "signature": "mixed *transpose_array(mixed *arr)"
+    },
+    {
+      "name": "trim",
+      "signature": "string trim(string str [, int flag [, int ch]])"
+    },
+    {
+      "name": "typeof",
+      "signature": "int typeof(mixed m)"
+    },
+    {
+      "name": "unbound_lambda",
+      "signature": "closure unbound_lambda(mixed *, mixed)"
+    },
+    {
+      "name": "unique_array",
+      "signature": "varargs mixed *unique_array(mixed *arr, string|closure function [, mixed extra[, mixed skip]])"
+    },
+    {
+      "name": "unmkmapping",
+      "signature": "mixed *unmkmapping(mapping map)"
+    },
+    {
+      "name": "unquote",
+      "signature": "mixed unquote(mixed m)"
+    },
+    {
+      "name": "unshadow",
+      "signature": "void unshadow()"
+    },
+    {
+      "name": "upper_case",
+      "signature": "string upper_case(string str)"
+    },
+    {
+      "name": "users",
+      "signature": "object *users()"
+    },
+    {
+      "name": "utime",
+      "signature": "int *utime()"
+    },
+    {
+      "name": "variable_exists",
+      "signature": "string variable_exists(string str, object|lwobject ob, [, int flags])"
+    },
+    {
+      "name": "variable_list",
+      "signature": "mixed *variable_list(object|lwobject ob, int flags)"
+    },
+    {
+      "name": "walk_mapping",
+      "signature": "varargs void walk_mapping(mapping map, {string function | closure} [, ...arg...])"
+    },
+    {
+      "name": "widthof",
+      "signature": "int widthof(mapping map)"
+    },
+    {
+      "name": "wizlist_info",
+      "signature": "mixed *wizlist_info()"
+    },
+    {
+      "name": "write",
+      "signature": "void write(mixed m)"
+    },
+    {
+      "name": "write_bytes",
+      "signature": "int write_bytes(string file_name, int where, bytes str)"
+    },
+    {
+      "name": "write_file",
+      "signature": "int write_file(string file_name, string str, int flags, string encoding)"
+    },
+    {
+      "name": "xml_generate",
+      "signature": "string xml_generate(mixed *xml)"
+    },
+    {
+      "name": "xml_parse",
+      "signature": "mixed* xml_parse(string xml)"
+    },
+    {
+      "name": "xor_bits",
+      "signature": "string xor_bits(string str1, string str2)"
+    },
+    {
+      "name": "git_cat",
+      "signature": "void git_cat(string path, string commitid, string fname, string destfile)"
+    },
+    {
+      "name": "git_commit",
+      "signature": "void git_commit(string repo, string* files, string msg[, string wiz])"
+    },
+    {
+      "name": "git_info_commit",
+      "signature": "mixed* git_info_commit(string path, string commitid)"
+    },
+    {
+      "name": "git_list_commits",
+      "signature": "mixed* git_list_commits(string* paths[, int addfiles])"
+    },
+    {
+      "name": "git_reverse",
+      "signature": "void git_reverse(string path, string commitid[, string fname])"
+    },
+    {
+      "name": "git_search_commits",
+      "signature": "void git_search_commits(closure callback, string* paths, string search[, int regexp[, int addfiles]])"
+    },
+    {
+      "name": "git_show_diff",
+      "signature": "string git_show_diff(string path, string commitid, string fname)"
+    },
+    {
+      "name": "git_status",
+      "signature": "mixed** git_status(string* paths)"
+    },
+    {
+      "name": "git_status_diff",
+      "signature": "string git_status_diff(string repo, string path)"
+    },
+    {
+      "name": "json_parse",
+      "signature": "mixed json_parse(string jsonstring)"
+    },
+    {
+      "name": "json_serialize",
+      "signature": "string json_serialize(mixed data)"
+    },
+    {
+      "name": "python_efun_help",
+      "signature": "string python_efun_help(string efunname)"
+    },
+    {
+      "name": "python_reload",
+      "signature": "void python_reload()"
+    },
+    {
+      "name": "query_verb_ascii",
+      "signature": "string query_verb_ascii([int flag])"
+    },
+    {
+      "name": "spell_check",
+      "signature": "int spell_check(string word)"
+    },
+    {
+      "name": "spell_suggest",
+      "signature": "string* spell_suggest(string word)"
+    }
   ],
   "sfuns": [
-    { "name": "notify_fail", "signature": "void notify_fail(string msg)", "documentation": "UNIlib: Fehler-Handler für add_action." },
-    { "name": "add_action", "signature": "void add_action(string func, string verb)", "documentation": "Registriert ein Spielerkommando." },
-    { "name": "SetProp", "signature": "mixed SetProp(string key, mixed value)", "documentation": "UNIlib: Setzt eine Objekt-Eigenschaft." },
-    { "name": "QueryProp", "signature": "mixed QueryProp(string key)", "documentation": "UNIlib: Liest eine Objekt-Eigenschaft." }
+    {
+      "name": "abs_path",
+      "signature": "string abs_path(string path, [string absolute_path])",
+      "documentation": "abs_path liefert den absoluten Pfad zu dem relativen Pfad path, bezogen auf",
+      "source": "paths.inc"
+    },
+    {
+      "name": "add_dot_to_msg",
+      "signature": "string add_dot_to_msg(string msg)",
+      "documentation": "Haengt an <msg> einen Punkt an, wenn <msg> kein Satzzeichen !?.,;:",
+      "source": "string.inc"
+    },
+    {
+      "name": "arr_delete",
+      "signature": "mixed *arr_delete(mixed *array, int index)",
+      "documentation": "Loescht aus dem Array <array> das Feld mit dem Index <index> und",
+      "source": "util.inc"
+    },
+    {
+      "name": "array_to_time",
+      "signature": "int array_to_time(int* arr)",
+      "documentation": "Liefert zu einem Array (wie es von timearray() geliefert wurde)",
+      "source": "time.inc"
+    },
+    {
+      "name": "array_to_vtime",
+      "signature": "int array_to_vtime(int* arr)",
+      "documentation": "Liefert zu einem Array (wie es von vtimearray() geliefert wurde)",
+      "source": "time.inc"
+    },
+    {
+      "name": "auto_owner_search",
+      "signature": "object auto_owner_search(object|mapping ob)",
+      "documentation": "Liefert das naechst-umgebende lebende Objekt von ob zurueck",
+      "source": "deklin.c"
+    },
+    {
+      "name": "binary_message",
+      "signature": "nomask varargs int binary_message(mixed m, int i)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "break_point",
+      "signature": "nomask void break_point()",
+      "source": "secure.inc"
+    },
+    {
+      "name": "call_out",
+      "signature": "nomask void call_out(varargs mixed args)",
+      "source": "call_out.inc"
+    },
+    {
+      "name": "call_proved",
+      "signature": "mixed call_proved(string fn|object ob|object *ob, string fun|mapping fun|mixed *fun, varargs mixed *par)",
+      "documentation": "call_proved ist eine Erweiterung von call_other, welche einen Fehler wirft,",
+      "source": "util.inc"
+    },
+    {
+      "name": "call_with_this_player",
+      "signature": "mixed call_with_this_player(string fun|closure cl, varargs mixed *args)",
+      "documentation": "call_with_this_player ruft die Funktion 'fun' im aktuellen Objekt oder",
+      "source": "util.inc"
+    },
+    {
+      "name": "caller_stack_depth",
+      "signature": "int caller_stack_depth()",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "cat",
+      "signature": "varargs int cat(string file, int start, int num)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "center",
+      "signature": "string center(string text, int len [,string pad] )",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text zentriert wurde.",
+      "source": "string.inc"
+    },
+    {
+      "name": "choose_by_gender",
+      "signature": "mixed choose_by_gender(string gender|object ob|mapping vitem, mixed *values|mapping values|string str)",
+      "documentation": "Diese Funktion waehlt entsprechend gender (\"maennlich\",\"weiblich\" oder",
+      "source": "deklin.c"
+    },
+    {
+      "name": "clock",
+      "signature": "int clock()",
+      "documentation": "Liefert einen Integer im Format: hhmmss mit der Realuhrzeit",
+      "source": "time.inc"
+    },
+    {
+      "name": "clone_object",
+      "signature": "object clone_object(string|object toclone, varargs mixed* args)",
+      "source": "clone_object.inc"
+    },
+    {
+      "name": "clone_object_create",
+      "signature": "protected void clone_object_create()",
+      "source": "clone_object.inc"
+    },
+    {
+      "name": "clone_object_reset",
+      "signature": "protected void clone_object_reset()",
+      "source": "clone_object.inc"
+    },
+    {
+      "name": "clonep",
+      "signature": "int clonep( [object ob] )",
+      "documentation": "Returned 1, falls das Objekt ob mit clone_object() erschafft (gecloned) wurde,",
+      "source": "util.inc"
+    },
+    {
+      "name": "command",
+      "signature": "nomask int command(string str)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "command_stack_depth",
+      "signature": "nomask int command_stack_depth()",
+      "source": "secure.inc"
+    },
+    {
+      "name": "command_start",
+      "signature": "void command_start()",
+      "source": "notify_fail.inc"
+    },
+    {
+      "name": "cond_deep_present",
+      "signature": "varargs object cond_deep_present(string was, object wo, int flags, mixed fun, varargs mixed args)",
+      "documentation": "cond_deep_present (conditional deep present) sucht im Objekt 'wo' und in",
+      "source": "util.inc"
+    },
+    {
+      "name": "cond_present",
+      "signature": "object cond_present(string was, object wo, mixed fun, [ mixed args])",
+      "documentation": "cond_present (conditional present) sucht im Objekt 'wo' nach dem ersten",
+      "source": "util.inc"
+    },
+    {
+      "name": "convert_message",
+      "signature": "deprecated mixed convert_message(mixed str)",
+      "documentation": "ACHTUNG: convert_message() fÃ¼hrt keine Konvertierung mehr durch, sondern",
+      "source": "deklin.c"
+    },
+    {
+      "name": "convert_umlaute",
+      "signature": "string convert_umlaute(string str)",
+      "documentation": "Konvertiert alle (einbuchstabigen) Umlaute in die zweibuchstabige",
+      "source": "string.inc"
+    },
+    {
+      "name": "copies",
+      "signature": "string copies(string pattern, int times)",
+      "documentation": "Gibt 'times' aneinandergesetzte Kopien von 'pattern' zurueck.",
+      "source": "string.inc"
+    },
+    {
+      "name": "create",
+      "signature": "protected void create()",
+      "source": "simul_efun.c"
+    },
+    {
+      "name": "debug_info",
+      "signature": "nomask varargs mixed debug_info(int flag, mixed m)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "deep_present",
+      "signature": "object deep_present(mixed was, object wo)",
+      "documentation": "deep_present sucht im Objekt 'wo' und in allen darin enthaltenen Objekten",
+      "source": "util.inc"
+    },
+    {
+      "name": "dein",
+      "signature": "varargs string dein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "deinem",
+      "signature": "varargs string deinem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "deinen",
+      "signature": "varargs string deinen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "deines",
+      "signature": "varargs string deines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "dem",
+      "signature": "varargs string dem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "den",
+      "signature": "varargs string den(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "der",
+      "signature": "varargs string der(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens mit bestimmten Artikel",
+      "source": "deklin.c"
+    },
+    {
+      "name": "des",
+      "signature": "varargs string des(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "diesem",
+      "signature": "varargs string diesem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "diesen",
+      "signature": "varargs string diesen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "dieser",
+      "signature": "varargs string dieser(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "dieses",
+      "signature": "varargs string dieses(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "disable_commands",
+      "signature": "void disable_commands()",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "domain2map",
+      "signature": "string domain2map(string file_name)",
+      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen",
+      "source": "map.inc"
+    },
+    {
+      "name": "dump_driver_info",
+      "signature": "varargs int dump_driver_info(int what, string filename)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "efun308",
+      "signature": "nomask void efun308(object ob1, object ob2)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "ein",
+      "signature": "varargs string ein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "einem",
+      "signature": "varargs string einem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "einen",
+      "signature": "varargs string einen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "eines",
+      "signature": "varargs string eines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "enable_commands",
+      "signature": "void enable_commands()",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "er",
+      "signature": "varargs string er(object|mapping|int who)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "escape_string",
+      "signature": "varargs string escape_string(string str, int mode)",
+      "documentation": "Die Funktion fuegt Escape-Zeichen (\\) nach verschiedenen Regeln in",
+      "source": "string.inc"
+    },
+    {
+      "name": "expand_direction",
+      "signature": "varargs string expand_direction(string dir, int flags)",
+      "documentation": "Loest Abkuerzungen von Richtungen auf (z.B. expand_direction(\"no\") liefert",
+      "source": "map.inc"
+    },
+    {
+      "name": "file_path",
+      "signature": "string file_path([object file])",
+      "documentation": "file_path liefert das Directory zurueck, in dem das File von ob steht. Wenn",
+      "source": "paths.inc"
+    },
+    {
+      "name": "file_time",
+      "signature": "int file_time(string file)",
+      "documentation": "Liefert das File-Datum des Files <file>",
+      "source": "time.inc"
+    },
+    {
+      "name": "find_living",
+      "signature": "object find_living(string name)",
+      "documentation": "Diese Funktion sucht das Lebewesen mit dem Namen 'name' und liefert",
+      "source": "living.inc"
+    },
+    {
+      "name": "find_player",
+      "signature": "object find_player(string name)",
+      "documentation": "Findet den Spieler mit dem Namen 'name'",
+      "source": "living.inc"
+    },
+    {
+      "name": "foldl",
+      "signature": "mixed foldl(mixed *array, mixed startwert, closure funktion, ...)",
+      "documentation": "Diese Funktion geht das Array von links nach rechts durch, ruft",
+      "source": "util.inc"
+    },
+    {
+      "name": "foldr",
+      "signature": "mixed foldr(mixed *array, mixed startwert, closure funktion, ...)",
+      "documentation": "Diese Funktion geht das Array von rechts nach links durch, ruft",
+      "source": "util.inc"
+    },
+    {
+      "name": "format_seconds",
+      "signature": "string format_seconds(int seconds)",
+      "documentation": "Liefert einen String der Form:",
+      "source": "time.inc"
+    },
+    {
+      "name": "format_vseconds",
+      "signature": "string format_vseconds(int seconds)",
+      "documentation": "Liefert fuer seconds einen String der Form:",
+      "source": "time.inc"
+    },
+    {
+      "name": "garbage_collection",
+      "signature": "nomask varargs void garbage_collection(string filename)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "get_align_string",
+      "signature": "string get_align_string(int align)",
+      "documentation": "Liefert einen String zurueck, welcher Gesinnung ein Lebewesen ist.",
+      "source": "util.inc"
+    },
+    {
+      "name": "get_combine_charset",
+      "signature": "int *|string get_combine_charset(int mode)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "get_genitiv",
+      "signature": "string get_genitiv(string name)",
+      "documentation": "Liefert die Genitiv-Form eines (Personal)-Namens zurueck.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "get_unique_string",
+      "signature": "string get_unique_string()",
+      "documentation": "Funktion liefert einen einmaligen String.",
+      "source": "util.inc"
+    },
+    {
+      "name": "HAS_ID",
+      "signature": "int HAS_ID(object ob|mapping vitem, string id)",
+      "documentation": "Liefert 1 zurueck, wenn das Objekt ob bzw. das V-Item vitem auf die ID id",
+      "source": "util.inc"
+    },
+    {
+      "name": "ihm",
+      "signature": "varargs string ihm(object|mapping|int who)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "ihn",
+      "signature": "varargs string ihn(object|mapping|int who)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "ihr",
+      "signature": "varargs string ihr(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe der().",
+      "source": "deklin.c"
+    },
+    {
+      "name": "ihrem",
+      "signature": "varargs string ihrem(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "source": "deklin.c"
+    },
+    {
+      "name": "ihren",
+      "signature": "varargs string ihren(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "source": "deklin.c"
+    },
+    {
+      "name": "ihres",
+      "signature": "varargs string ihres(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "source": "deklin.c"
+    },
+    {
+      "name": "input_to",
+      "signature": "varargs void input_to(mixed fun, int flag, varargs mixed *args)",
+      "source": "input_to.inc"
+    },
+    {
+      "name": "interactive",
+      "signature": "int interactive(varargs mixed* args)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "interactive_info",
+      "signature": "nomask mixed interactive_info(object ob, int what)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "is_direction",
+      "signature": "varargs int is_direction(string dir, int flags)",
+      "documentation": "Liefert 1, wenn der erste Parameter dir eine Richtung ist, sonst 0.",
+      "source": "map.inc"
+    },
+    {
+      "name": "ist",
+      "signature": "varargs string ist(object|mapping|int ob, int spaces)",
+      "documentation": "Liefert \"sind\", wenn ob im Plural ist, sonst \"ist\".",
+      "source": "deklin.c"
+    },
+    {
+      "name": "its_here",
+      "signature": "varargs string its_here(string command, object ob, mixed name, mapping ret)",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "its_me",
+      "signature": "string its_me(string command, object ob)",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "json_parse",
+      "signature": "varargs mixed json_parse(string text)",
+      "source": "string.inc"
+    },
+    {
+      "name": "json_serialize",
+      "signature": "varargs string json_serialize(mixed val)",
+      "source": "string.inc"
+    },
+    {
+      "name": "left",
+      "signature": "string left(string text, int len [,string pattern] )",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text linksbuendig",
+      "source": "string.inc"
+    },
+    {
+      "name": "liste",
+      "signature": "string liste(string *str [, string pad])",
+      "documentation": "Macht aus einem Stringarray eine normale Aufzaehlung:",
+      "source": "string.inc"
+    },
+    {
+      "name": "living_create",
+      "signature": "protected void living_create()",
+      "source": "living.inc"
+    },
+    {
+      "name": "living_reset",
+      "signature": "protected void living_reset()",
+      "source": "living.inc"
+    },
+    {
+      "name": "log_file",
+      "signature": "int log_file(string file_name, string message)",
+      "documentation": "Haengt den String <message> an das File <file_name> an.",
+      "source": "log.inc"
+    },
+    {
+      "name": "map_object",
+      "signature": "int map_object(string file_name)",
+      "documentation": "Liefert 1, wenn es sich bei dem Raum 'file_name' um einen Map-Raum handelt.",
+      "source": "map.inc"
+    },
+    {
+      "name": "map2domain",
+      "signature": "string map2domain(string file_name, int flag)",
+      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen",
+      "source": "map.inc"
+    },
+    {
+      "name": "mixed_to_closure",
+      "signature": "varargs closure mixed_to_closure(closure|mixed*|string mix, symbol* symbols, int tp_flag, int|symbol use_tp, mapping functions)",
+      "documentation": "Eine vollstaendige Dokumentation dazu ist /doc/funktionsweisen/pseudoclosures.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "mixed2str",
+      "signature": "string mixed2str(mixed arr)",
+      "documentation": "Wandelt einen beliebigen Datentyp in einen String um.",
+      "source": "convert.inc"
+    },
+    {
+      "name": "move_object",
+      "signature": "nomask void move_object(object ob1, object ob2)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "Name",
+      "signature": "string Name(object ob)",
+      "documentation": "Liefert einen Cap-Namen des Objektes ob. (fuer Debugzwecke geeignet)",
+      "source": "util.inc"
+    },
+    {
+      "name": "not_alone",
+      "signature": "int not_alone(object ob)",
+      "documentation": "Liefert 1 zurueck, wenn sich weitere Objekte mit derselben Id wie ob",
+      "source": "deklin.c"
+    },
+    {
+      "name": "notify_fail",
+      "signature": "varargs int notify_fail(mixed fail, int priority, int dont_overwrite)",
+      "documentation": "Mit notify_fail() wird eine Fehlermeldung gesetzt, die der Spieler",
+      "source": "notify_fail.inc"
+    },
+    {
+      "name": "opposite_direction",
+      "signature": "varargs string opposite_direction(string dir, int flags)",
+      "documentation": "Liefert die Richtung, welcher der Richtung im ersten Parameter dir",
+      "source": "map.inc"
+    },
+    {
+      "name": "parse_com",
+      "signature": "varargs mixed *parse_com(string command, mixed where, string *trenner, int flag)",
+      "documentation": "parse_com sucht die in einem String angegebenen Gegenstaende in der",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "parse_com_error",
+      "signature": "int parse_com_error(mixed *parsed, string errormsg [, string only_one [, int dont_overwrite]] )",
+      "documentation": "parse_com_error dient der einfachen Behandlung von Fehlermeldungen.",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "parse_com_error_string",
+      "signature": "string parse_com_error_string(mixed *parsed, string errormsg [, string only_one] )",
+      "documentation": "parse_com_error_string dient der einfachen Behandlung von Fehlermeldungen.",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "player_exists",
+      "signature": "int player_exists(string name)",
+      "documentation": "Schaut nach, ob es einen Spieler mit diesem Namen gibt.",
+      "source": "living.inc"
+    },
+    {
+      "name": "player_present",
+      "signature": "varargs object player_present(object room, int flags)",
+      "documentation": "Mit dieser Funktion kann man abfragen, ob ein (interaktiver) Spieler sich",
+      "source": "util.inc"
+    },
+    {
+      "name": "playerp",
+      "signature": "int playerp(mixed ob)",
+      "documentation": "Returned 1, wenn das ob ein Spieler/Engel/Gott ist, ansonsten 0.",
+      "source": "util.inc"
+    },
+    {
+      "name": "plural",
+      "signature": "varargs string plural(string einzahl_str, string plural_str, object|mapping|int ob, int art)",
+      "documentation": "Liefert plural_str, wenn ob im Plural ist, sonst einzahl_str.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "pol2xy",
+      "signature": "int *pol2xy(int grad, int dist)",
+      "documentation": "Transformiert Polar-Koordinaten in kartesische Koordinaten.",
+      "source": "math.inc"
+    },
+    {
+      "name": "printf",
+      "signature": "nomask varargs void printf(varargs mixed *args)",
+      "source": "comm.inc"
+    },
+    {
+      "name": "QUERY",
+      "signature": "mixed QUERY(string what, object ob|mapping vitem)",
+      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab.",
+      "source": "util.inc"
+    },
+    {
+      "name": "query_akkusativ",
+      "signature": "string query_akkusativ()",
+      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_dativ",
+      "signature": "string query_dativ()",
+      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_deklin",
+      "signature": "varargs string query_deklin(object|mapping|int who, int art, int fall, string | <string|int|<string|int>*>* | int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt,",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_deklin_adjektiv",
+      "signature": "varargs string query_deklin_adjektiv(object|mapping who, string|<string|int|<string|int>*>*|int adj, int fall)",
+      "documentation": "Diese Funktion liefert eine fertig deklinierte (gebeugte), komma",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_deklin_ein_adjektiv",
+      "signature": "varargs string query_deklin_ein_adjektiv(string|<string|int>* adj, int fall, string gender_string, int plural)",
+      "documentation": "Diese Funktion liefert ein dekliniertes Adjektiv.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_deklin_name",
+      "signature": "string query_deklin_name(object|mapping who, int fall)",
+      "documentation": "Diese Funktion liefert ein dekliniertes Nomen.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_deklin_owner",
+      "signature": "varargs string query_deklin_owner(object|mapping|int who, int art, int fall, string|<string|int|<string|int>*>*|int adjektiv, <object|mapping|int> owner, int oart, string|<string|int|<string|int>*>*|int oadjektiv)",
+      "documentation": "Liefert die deklinierte Form eines Objektnamens. Dabei wird zusaetzlich",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_dekliniert",
+      "signature": "string query_dekliniert(int fall, object interessent, int flags)",
+      "documentation": "Die Grammatik-Funktionen rufen bei der Deklination des Namens eines",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_editing",
+      "signature": "int|object query_editing(object ob)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "query_genitiv",
+      "signature": "string query_genitiv()",
+      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_idle",
+      "signature": "int query_idle(object ob)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "query_input_pending",
+      "signature": "object query_input_pending(object ob)",
+      "source": "input_to.inc"
+    },
+    {
+      "name": "query_ip_name",
+      "signature": "nomask varargs string query_ip_name(object who)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "query_ip_number",
+      "signature": "nomask varargs string query_ip_number(object who)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "query_limits",
+      "signature": "varargs int* query_limits(int def)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "query_living_name",
+      "signature": "string query_living_name(object ob)",
+      "documentation": "Liefert den mit 'set_living_name' gesetzten Namen.",
+      "source": "living.inc"
+    },
+    {
+      "name": "query_living_name_m",
+      "signature": "mapping query_living_name_m()",
+      "source": "living.inc"
+    },
+    {
+      "name": "query_livings",
+      "signature": "object *query_livings()",
+      "documentation": "Liefert alle Objekte, die einen Living-Namen haben.",
+      "source": "living.inc"
+    },
+    {
+      "name": "query_load_average",
+      "signature": "string query_load_average()",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "query_name_living_m",
+      "signature": "mapping query_name_living_m()",
+      "source": "living.inc"
+    },
+    {
+      "name": "query_once_interactive",
+      "signature": "int query_once_interactive(object ob)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "QUERY_PARS",
+      "signature": "mixed QUERY_PARS(string what, object ob|mapping vitem, mixed *parameter)",
+      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab.",
+      "source": "util.inc"
+    },
+    {
+      "name": "query_pronom",
+      "signature": "varargs string query_pronom(object|mapping who, int art, int fall, object|mapping owner)",
+      "documentation": "Diese Funktion liefert Artikel und Pronomen aller Art.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_real_owner",
+      "signature": "object query_real_owner()",
+      "documentation": "Diese Funktion wird aufgerufen, um den wahren Eigentuemer einer Sache",
+      "source": "deklin.c"
+    },
+    {
+      "name": "query_real_player_level",
+      "signature": "int query_real_player_level(object player)",
+      "documentation": "Liefert den Level eines Spielers (wenn 'ob' einer ist)",
+      "source": "util.inc"
+    },
+    {
+      "name": "query_shadowing",
+      "signature": "object query_shadowing(object ob)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "query_up_time",
+      "signature": "int query_up_time()",
+      "documentation": "Gibt die Zeit in Sekunden seit dem letzten System-Start zurueck.",
+      "source": "time.inc"
+    },
+    {
+      "name": "query_verb_ascii",
+      "signature": "varargs string query_verb_ascii(int flag)",
+      "source": "string.inc"
+    },
+    {
+      "name": "read_bits",
+      "signature": "int read_bits(string str, int start, int length)",
+      "documentation": "Liest aus dem Bitstring eine Zahl ab Bitposition start aus.",
+      "source": "util.inc"
+    },
+    {
+      "name": "real_time_diff",
+      "signature": "int real_time_diff(int zeit_von, int zeit_bis)",
+      "documentation": "Liefert aus zwei Spielzeiten (Format: hhmmss)",
+      "source": "time.inc"
+    },
+    {
+      "name": "remove_interactive",
+      "signature": "void remove_interactive(object ob)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "reset",
+      "signature": "protected void reset()",
+      "source": "simul_efun.c"
+    },
+    {
+      "name": "right",
+      "signature": "string right(string text, int len [,string pattern] )",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text rechtsbuendig",
+      "source": "string.inc"
+    },
+    {
+      "name": "round",
+      "signature": "int round(float op)",
+      "documentation": "Rundet ein Float-Argument und gibt es als Integer zurueck.",
+      "source": "math.inc"
+    },
+    {
+      "name": "say",
+      "signature": "nomask varargs void say(string str, mixed exclude)",
+      "source": "comm.inc"
+    },
+    {
+      "name": "search_file",
+      "signature": "varargs string search_file(string path[, string absolute[, string subdir[, string extension, [string *exclude]]]])",
+      "documentation": "search_file sucht nach der im ersten Parameter 'path' angegebenen Datei.",
+      "source": "paths.inc"
+    },
+    {
+      "name": "search_object",
+      "signature": "mixed search_object(string objekt_string [,int flag] )",
+      "documentation": "Sucht ein Objekt ueber den angegebenen Objektstring. Damit kann man in",
+      "source": "search_object.inc"
+    },
+    {
+      "name": "sein",
+      "signature": "varargs string sein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "seinem",
+      "signature": "varargs string seinem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "seinen",
+      "signature": "varargs string seinen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "seines",
+      "signature": "varargs string seines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "set_buffer_size",
+      "signature": "nomask int set_buffer_size(int size)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "set_combine_charset",
+      "signature": "void set_combine_charset(int *|string charset)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "set_connection_charset",
+      "signature": "nomask void set_connection_charset(mixed a, int i)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "set_environment",
+      "signature": "nomask void set_environment(object ob1, object ob2)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "set_heart_beat",
+      "signature": "int set_heart_beat(int flag)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "set_living_name",
+      "signature": "void set_living_name(string name)",
+      "documentation": "Mit dieser Funktion kann man den Namen eines Lebewesens setzen,",
+      "source": "living.inc"
+    },
+    {
+      "name": "set_prompt",
+      "signature": "mixed set_prompt(mixed prompt, varargs object* args)",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "set_this_player",
+      "signature": "nomask void set_this_player(object ob)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "seteuid",
+      "signature": "int seteuid(string str)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "shadow",
+      "signature": "object shadow(object ob, int flag)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "short_format_seconds",
+      "signature": "string short_format_seconds(int seconds)",
+      "documentation": "Liefert einen String der Form:",
+      "source": "time.inc"
+    },
+    {
+      "name": "short_format_vseconds",
+      "signature": "string short_format_vseconds(int seconds)",
+      "documentation": "Liefert fuer seconds einen String der Form:",
+      "source": "time.inc"
+    },
+    {
+      "name": "shorttimestr",
+      "signature": "varargs string shorttimestr(int clock, int full_year, int only)",
+      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss",
+      "source": "time.inc"
+    },
+    {
+      "name": "shortvtimestr",
+      "signature": "varargs string shortvtimestr(int spiel_zeit, int full_year, int only)",
+      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss,",
+      "source": "time.inc"
+    },
+    {
+      "name": "shout",
+      "signature": "void shout(string str)",
+      "documentation": "Der Aufruf dieser Funktion erzeugt ein Ereignis im Kanal \"Gebruell\",",
+      "source": "util.inc"
+    },
+    {
+      "name": "shutdown",
+      "signature": "nomask void shutdown()",
+      "source": "secure.inc"
+    },
+    {
+      "name": "space",
+      "signature": "string space(string str [,int n [,string pad]] )",
+      "documentation": "Loescht alle ueberschuessigen Spaces, und Tabs zwischen den Woertern",
+      "source": "string.inc"
+    },
+    {
+      "name": "str2int",
+      "signature": "int str2int(string str, int &value, int base = 10)",
+      "documentation": "str2int wandelt einen String in einen Integer um, und liefert in der",
+      "source": "math.inc"
+    },
+    {
+      "name": "strfvtime",
+      "signature": "string strftime([string fmt] [, int clock] [, int localized])",
+      "documentation": "Liefert die Spielzeit als formatierten String zurueck. Das Format kann",
+      "source": "time.inc"
+    },
+    {
+      "name": "string_create",
+      "signature": "protected void string_create()",
+      "source": "string.inc"
+    },
+    {
+      "name": "string_parser",
+      "signature": "varargs mixed string_parser(string str, int tp_flag, int|symbol use_tp, mapping functions)",
+      "documentation": "Der uebergebene String str wird nach Funktionen durchsucht und ein Array",
+      "source": "deklin.c"
+    },
+    {
+      "name": "strip",
+      "signature": "string strip(string text)",
+      "documentation": "Entfernt vorangestellte und nachfolgende Spaces und Tabs aus text.",
+      "source": "string.inc"
+    },
+    {
+      "name": "strlen",
+      "signature": "int strlen(string str)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "substr",
+      "signature": "string substr(string text, int n[, int len [,string pattern]] )",
+      "documentation": "Gibt den Teil von text zurueck, der mit dem n'ten Zeichen beginnt",
+      "source": "string.inc"
+    },
+    {
+      "name": "swap",
+      "signature": "nomask void swap(object ob)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "sys_log",
+      "signature": "void sys_log(string file_name, string message)",
+      "documentation": "Haengt den String 'message' an das file /log/sys/<file_name> an.",
+      "source": "log.inc"
+    },
+    {
+      "name": "tail",
+      "signature": "varargs int tail(string file)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "tell_object",
+      "signature": "nomask void tell_object(object ob, string str)",
+      "source": "deprecated.inc"
+    },
+    {
+      "name": "tell_room",
+      "signature": "nomask varargs void tell_room(mixed ob, string str, object *exclude)",
+      "source": "comm.inc"
+    },
+    {
+      "name": "this_interactive",
+      "signature": "object this_interactive()",
+      "source": "interactive.inc"
+    },
+    {
+      "name": "time_to_vtime",
+      "signature": "int time_to_vtime(int time)",
+      "documentation": "Rechnet Realzeit (time(), sec seit 1970) in Spielzeit (vtime(), sec seit 0) um.",
+      "source": "time.inc"
+    },
+    {
+      "name": "timearray",
+      "signature": "int* timearray(int clock)",
+      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche clock entspricht.",
+      "source": "time.inc"
+    },
+    {
+      "name": "timestr",
+      "signature": "varargs string timestr(int clock, int only)",
+      "documentation": "Gibt einen deutschsprachigen String mit dem Datum und der Uhrzeit zurueck,",
+      "source": "time.inc"
+    },
+    {
+      "name": "touch",
+      "signature": "object touch(string|object ob [,int flag] )",
+      "documentation": "Laedt einen File und gibt bei Erfolg einen Pointer darauf zurueck,",
+      "source": "map.inc"
+    },
+    {
+      "name": "transpose_array",
+      "signature": "mixed * transpose_array(mixed *arr)",
+      "source": "compat.inc"
+    },
+    {
+      "name": "unliste",
+      "signature": "string * unliste(string str [, string pad, ...])",
+      "documentation": "Versucht aus einer Aufzaehlung wieder ein String-Array zu machen.",
+      "source": "string.inc"
+    },
+    {
+      "name": "valid_file_name",
+      "signature": "int valid_file_name(string name)",
+      "documentation": "Liefert 1, wenn name ein gueltiger Dateiname ist, sonst 0.",
+      "source": "paths.inc"
+    },
+    {
+      "name": "vclock",
+      "signature": "int vclock()",
+      "documentation": "Liefert einen Integer im Format: hhmmss mit der Spieluhrzeit",
+      "source": "time.inc"
+    },
+    {
+      "name": "vtime",
+      "signature": "int vtime()",
+      "documentation": "Liefert die Anzahl der Sekunden seit dem UNItopia besteht.",
+      "source": "time.inc"
+    },
+    {
+      "name": "vtime_to_time",
+      "signature": "int vtime_to_time(int vtime)",
+      "documentation": "Rechnet Spielzeit (vtime(), sec seit 0) in Realzeit (time(), sec seit 1970) um.",
+      "source": "time.inc"
+    },
+    {
+      "name": "vtimearray",
+      "signature": "int* vtimearray(int clock)",
+      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche der in clock",
+      "source": "time.inc"
+    },
+    {
+      "name": "vtimestr",
+      "signature": "varargs string vtimestr(int vtime, int only)",
+      "documentation": "Liefert einen String der Form Mittwoch 31. Maerz 12 18:47:15",
+      "source": "time.inc"
+    },
+    {
+      "name": "wem",
+      "signature": "varargs string wem(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert im Dativ deklinierte Form eines Objektnamens.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "wen",
+      "signature": "varargs string wen(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert im Akkusativ deklinierte Form eines Objektnamens.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "wer",
+      "signature": "varargs string wer(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "wessen",
+      "signature": "varargs string wessen(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
+      "documentation": "Liefert im Genitiv deklinierte Form eines Objektnamens.",
+      "source": "deklin.c"
+    },
+    {
+      "name": "wizardshellp",
+      "signature": "int wizardshellp()",
+      "documentation": "Gibt den Level des Wiz-Shell-Besitzers zurueck, FALLS es sich bei",
+      "source": "util.inc"
+    },
+    {
+      "name": "wrap",
+      "signature": "string wrap(string str [, int len [, int left]])",
+      "documentation": "wrap bricht einen String um. Leere Strings werden nicht umgebrochen.",
+      "source": "string.inc"
+    },
+    {
+      "name": "wrap_say",
+      "signature": "string wrap_say(string str1, string str2 [, int len [, int left]])",
+      "documentation": "wrap_say() erzeugt einen String, der etwa so aussieht:",
+      "source": "string.inc"
+    },
+    {
+      "name": "write",
+      "signature": "nomask void write(string str)",
+      "source": "comm.inc"
+    },
+    {
+      "name": "write_bits",
+      "signature": "string write_bits(string str, int start, int length, int number)",
+      "documentation": "Schreibt die Zahl number in den Bitspring an Position start",
+      "source": "util.inc"
+    },
+    {
+      "name": "xy2pol",
+      "signature": "int *xy2pol(int x, int y)",
+      "documentation": "Transformiert kartesische Koordinaten in Polar-Koordinaten.",
+      "source": "math.inc"
+    }
   ]
 }

@@ -1,12 +1,59 @@
+# --- Repos & IDE-Konfiguration ---
+.git/**
+.github/**
+.gitignore
+.gitattributes
 .vscode/**
 .vscode-test/**
+.claude/**
+
+# --- TypeScript-Sourcen und Build-Konfig ---
 src/**
-.gitignore
-.eslintrc.json
-tsconfig.json
-**/*.map
 **/*.ts
-node_modules/**
+**/*.tsbuildinfo
+**/*.map
+tsconfig.json
+.eslintrc.json
+
+# --- Dev-Workspace und Lock-Files ---
+*.code-workspace
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# --- Interne / veraltete Dokumente ---
 PLUGIN_PLAN.md
-*.vsix
+README_old.md
 .efun-alternation.txt
+
+# --- Eigene VSIX-Builds nicht ins nächste Paket schleppen ---
+*.vsix
+
+# --- node_modules: Runtime-Deps WERDEN gebraucht (dynamic imports
+#     auf basic-ftp und ssh2-sftp-client), daher NICHT komplett
+#     ausschließen — nur Müll innerhalb der Pakete entfernen. ---
+node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/docs/**
+node_modules/**/doc/**
+node_modules/**/examples/**
+node_modules/**/example/**
+node_modules/**/sample/**
+node_modules/**/samples/**
+node_modules/**/.github/**
+node_modules/**/*.md
+node_modules/**/*.markdown
+node_modules/**/CHANGELOG*
+node_modules/**/HISTORY*
+node_modules/**/AUTHORS*
+node_modules/**/CONTRIBUTORS*
+node_modules/**/CONTRIBUTING*
+node_modules/**/.eslintrc*
+node_modules/**/.travis.yml
+node_modules/**/.nvmrc
+node_modules/**/karma.conf.js
+node_modules/**/tsconfig*.json
+node_modules/**/.npmignore
+node_modules/**/.editorconfig
+node_modules/**/*.ts
+node_modules/**/*.map
