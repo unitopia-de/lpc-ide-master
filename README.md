@@ -19,7 +19,7 @@ Im Ende gibt es zwei Workspaces, eine für das Plugin und eine für die Ausführ
 
 ```bash
 git clone https://github.com/unitopia-de/lpc-ide-master.git
-cd lpc-ude-master
+cd lpc-ide-master
 npm install
 npm run compile      # oder: npm run watch
 ```
@@ -27,6 +27,7 @@ npm run compile      # oder: npm run watch
 2. Suche das Unterverzeichnis für die Ausführung ggf mit optionalen homemmud
 3. lege dort die lpc-config.json ab und passe sie an (Pfade, user)
 4. Falls ohne homemud, lösche den Abschnitt homemud aus dem json File!
+5. Führe per F5 das Plugin aus und navigiere dort zum 2. Workspace
 
 `lpc-config.json` im Workspace-Root:
 
