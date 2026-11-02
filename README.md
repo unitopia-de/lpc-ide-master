@@ -10,7 +10,9 @@ VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 * Optionaler lokaler Entwicklungs-MUD („homemud“) mit Herunterladen, Hochladen und Vergleichen
 * Telnet-Konsole für Magier-Befehle (`update`/`destruct`), standardmäßig aus
 * LPC-Syntax-Highlighting und Editor-Unterstützung (Hover, Completion, Outline,
-  Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns
+  Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 229 UNItopia-Sfuns
+* Mit homemud zusätzlich: geerbte Funktionen über die ganze `inherit`-Kette, Efun-Hilfe aus
+  `doc/efun` und Sfuns direkt aus der `simul_efun`
 
 ## Installation
 
@@ -42,7 +44,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.1.vsix`.
+z. B. `lpc-ide-master-0.2.2.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -191,6 +193,19 @@ lpc-ftp://unitopia.de/std/room.c   ⇄   MeinMUD/lib/std/room.c
 
 Vor dem Überschreiben fragt das Plugin jeweils nach.
 
+**Was das homemud zusätzlich im Editor bringt:** Weil die Mudlib lokal vorliegt, kann das Plugin
+sie lesen, ohne den Server zu fragen:
+
+| Funktion | Beispiel |
+| --- | --- |
+| **Geerbte Funktionen** in Vorschlägen, Hover, Strg+Klick und Parameterhilfe – über die ganze `inherit`-Kette, auch bei `inherit "%room";` und Makros wie `inherit CPR;` | In einem Raum zeigt `set_sh…` die Funktion `set_short` aus `/i/item/description.c` samt Beschreibung |
+| **Efun-Hilfe** aus `lib/doc/efun/` (deutsche Fassung bevorzugt) | Hover über `allocate` zeigt Synopsis, Beschreibung und Beispiele |
+| **Sfuns direkt aus der `simul_efun`** statt aus einer festen Liste – neue Sfuns sind sofort bekannt | Strg+Klick auf `file_path` springt nach `/secure/simul_efun/paths.inc` |
+
+Welche Datei als `simul_efun` gelesen wird, legt `mudlib.simulEfunFile` fest, z. B.
+`"/secure/simul_efun/simul_efun.c"`. Wie viele Sfuns gefunden wurden, steht im Ausgabefenster
+**LPC-IDE-Master**.
+
 ### Optional: Telnet-Konsole für `update`/`destruct`
 
 Standardmäßig ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`)
@@ -248,7 +263,8 @@ Erreichbar über `Strg+,` → Suche „lpc“.
 ## Bekannte Einschränkungen
 
 - **FTP** – kein automatischer Reconnect bei Timeout, keine SSH-Key-Anmeldung (nur Passwort)
-- **Outline** – erkennt nur Funktionen mit ausdrücklichem Rückgabetyp
+- **Präprozessor** – `#if`-Bedingungen werden nicht ausgewertet; bei `#if … #else` gilt der `#else`-Zweig
+- **Ohne homemud** – keine geerbten Funktionen, keine Efun-Hilfe, Sfuns nur aus der mitgelieferten Liste
 - **Syntax-Highlighting** – Sonderfälle bei Heredocs, kein semantisches Highlighting für lokale Funktionen
 - **Multi-Root-Workspace** – nur der erste Ordner wird ausgewertet
 - **uploadOnSave** – Setting existiert, Funktion folgt

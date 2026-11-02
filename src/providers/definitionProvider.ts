@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { LpcConfigService, LpcConfig } from '../config/lpcConfig';
 import { HomeMudService } from '../homemud/homeMudService';
+import { EfunProvider } from '../dialect/efunProvider';
+import { LpcIndex, bestPerName } from '../analysis/lpcIndex';
+import { parseDocument } from '../analysis/documentCache';
 
 const LPC_SELECTOR: vscode.DocumentSelector = [
     { language: 'lpc', scheme: 'file' },
@@ -10,11 +13,19 @@ const LPC_SELECTOR: vscode.DocumentSelector = [
 export function registerDefinitionProvider(
     context: vscode.ExtensionContext,
     config: LpcConfigService,
-    homemud: HomeMudService
+    homemud: HomeMudService,
+    index: LpcIndex,
+    efuns: EfunProvider
 ): void {
     const provider: vscode.DefinitionProvider = {
         async provideDefinition(document, position) {
             const line = document.lineAt(position.line).text;
+
+            // Mit homemud: inherit-Zeilen wie der Master auflösen ("%room", Makros, Verkettung).
+            const indexed = await index.resolveInheritAtLine(document, position.line);
+            if (indexed) {
+                return new vscode.Location(indexed, new vscode.Position(0, 0));
+            }
 
             const inheritUri = await resolveInherit(line, document, config, homemud);
             if (inheritUri) {
@@ -26,7 +37,24 @@ export function registerDefinitionProvider(
                 return new vscode.Location(includeUri, new vscode.Position(0, 0));
             }
 
-            return resolveLocalFunction(document, position);
+            const range = document.getWordRangeAtPosition(position, /[A-Za-z_]\w*/);
+            if (!range) return undefined;
+            const word = document.getText(range);
+
+            const local = resolveLocalFunction(document, word);
+            if (local) return local;
+
+            const inherited = await index.findInherited(document, word);
+            if (inherited) {
+                return new vscode.Location(inherited.uri, new vscode.Position(inherited.line, inherited.character));
+            }
+
+            // Sfun aus der homemud-simul_efun: direkt zur Quelle springen.
+            const location = efuns.lookup(word)?.location;
+            if (location) {
+                return new vscode.Location(location.uri, new vscode.Position(location.line, location.character));
+            }
+            return undefined;
         }
     };
 
@@ -157,31 +185,14 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
     }
 }
 
-// Sucht die Definition einer Funktion innerhalb des aktuellen Dokuments.
-// Erkennt: `[modifier*] type [*] funcname(`
+// Sucht die Definition einer Funktion innerhalb des aktuellen Dokuments
+// (Definition vor Prototyp).
 function resolveLocalFunction(
     document: vscode.TextDocument,
-    position: vscode.Position
+    word: string
 ): vscode.Location | undefined {
-    const range = document.getWordRangeAtPosition(position, /[A-Za-z_]\w*/);
-    if (!range) return undefined;
-    const word = document.getText(range);
-
-    const text = document.getText();
-    const pattern = new RegExp(
-        `^[ \\t]*(?:(?:private|protected|public|static|nomask|varargs|virtual|nosave|deprecated|noshadow)\\s+)*` +
-            `(?:void|int|float|string|bytes|object|lwobject|mapping|mixed|status|closure|symbol|struct\\s+\\w+|array|function|funcall|unknown|coroutine|lpctype)` +
-            `(?:\\s*\\*)?\\s+(${escapeRegex(word)})\\s*\\(`,
-        'm'
-    );
-    const m = pattern.exec(text);
-    if (!m) return undefined;
-    const offset = (m.index ?? 0) + m[0].lastIndexOf(word);
-    const start = document.positionAt(offset);
-    const end = start.translate(0, word.length);
-    return new vscode.Location(document.uri, new vscode.Range(start, end));
-}
-
-function escapeRegex(s: string): string {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fn = bestPerName(parseDocument(document).functions).find((f) => f.name === word);
+    if (!fn) return undefined;
+    const start = document.positionAt(fn.offset);
+    return new vscode.Location(document.uri, new vscode.Range(start, start.translate(0, word.length)));
 }

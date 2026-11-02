@@ -1,13 +1,13 @@
 {
   "dialect": "ldmud-unitopia",
   "driverVersion": "3.6.8",
-  "_comment": "LDMud-Efuns (efuns.alpha) und UNItopia-Sfuns (secure/simul_efun/*), aus der UNItopia-Mudlib extrahiert. Eingebautes Profil; per lpc-config.json -> mudlib.efunDefinitions lassen sich weitere Eintraege ergaenzen oder ueberschreiben.",
+  "_comment": "LDMud-Efuns (efuns.alpha) und UNItopia-Sfuns aus /secure/simul_efun/simul_efun.c samt Includes und inherits (deklin.c, parse_com.c). Sfuns = alle oeffentlichen Funktionen (nicht private/protected/static). Mit homemud liest das Plugin die simul_efun direkt und ueberschreibt diese Liste.",
   "_sources": [
     "lib/doc/efun/efuns.alpha",
-    "lib/secure/simul_efun/*.{c,inc}"
+    "lib/secure/simul_efun/simul_efun.c (+ *.inc, deklin.c, parse_com.c)"
   ],
   "_efun_count": 322,
-  "_sfun_count": 201,
+  "_sfun_count": 229,
   "efuns": [
     {
       "name": "abs",
@@ -1302,37 +1302,37 @@
     {
       "name": "abs_path",
       "signature": "string abs_path(string path, [string absolute_path])",
-      "documentation": "abs_path liefert den absoluten Pfad zu dem relativen Pfad path, bezogen auf",
+      "documentation": "abs\\_path liefert den absoluten Pfad zu dem relativen Pfad path, bezogen auf den absoluten Pfad absolute\\_path zurueck. Hmmm, kompliziert ausgedrueckt... Wenn absolute\\_path nicht mit angegeben ist, wird der Pfad genommen, in dem this\\_object() steht.\n\nBeispiel:\n\n```\nabs_path(\"../../obj\")\n    liefert \"/d/Vaniorh/obj\", wenn es von einem Objekt in\n    /d/Vaniorh/monty/obj aufgerufen wird.\nabs_path(\"../../obj\",\"/w/monty/zeug/krempel\")\n    liefert /w/monty/obj. Vorsicht, der relative Pfad darf nicht\n    mit einem \"/\" anfangen, wenn abs_path etwas machen soll,\nabs_path(\"/room/rathaus\", \"scheiss/egal/was\")\n    liefert /room/rathaus!\n```\n\nEs wird keinerlei Pruefung auf das Vorhandensein des Pfades gemacht!\n\n*Siehe auch:* file\\_path, object\\_name, search\\_file",
       "source": "paths.inc"
     },
     {
       "name": "add_dot_to_msg",
       "signature": "string add_dot_to_msg(string msg)",
-      "documentation": "Haengt an <msg> einen Punkt an, wenn <msg> kein Satzzeichen !?.,;:",
+      "documentation": "Haengt an \\<msg\\> einen Punkt an, wenn \\<msg\\> kein Satzzeichen !?.,;: am Ende enthaelt. Hat \\<msg\\> ein '$' am Ende, so wird dieses abgeschnitten.",
       "source": "string.inc"
     },
     {
       "name": "arr_delete",
       "signature": "mixed *arr_delete(mixed *array, int index)",
-      "documentation": "Loescht aus dem Array <array> das Feld mit dem Index <index> und",
+      "documentation": "Loescht aus dem Array \\<array\\> das Feld mit dem Index \\<index\\> und returned das neue Array.\n\n*Siehe auch:* m\\_delete",
       "source": "util.inc"
     },
     {
       "name": "array_to_time",
       "signature": "int array_to_time(int* arr)",
-      "documentation": "Liefert zu einem Array (wie es von timearray() geliefert wurde)",
+      "documentation": "Liefert zu einem Array (wie es von timearray() geliefert wurde) die zugehoerige Anzahl an Sekunden seit 1970.\n\n*Siehe auch:* time, timestr, timearray, array\\_to\\_vtime",
       "source": "time.inc"
     },
     {
       "name": "array_to_vtime",
       "signature": "int array_to_vtime(int* arr)",
-      "documentation": "Liefert zu einem Array (wie es von vtimearray() geliefert wurde)",
+      "documentation": "Liefert zu einem Array (wie es von vtimearray() geliefert wurde) die zugehoerige Anzahl an Sekunden, seit UNItopia besteht.\n\n*Siehe auch:* vtime, vtimestr, vtimearray, array\\_to\\_time",
       "source": "time.inc"
     },
     {
       "name": "auto_owner_search",
       "signature": "object auto_owner_search(object|mapping ob)",
-      "documentation": "Liefert das naechst-umgebende lebende Objekt von ob zurueck",
+      "documentation": "Liefert das naechst-umgebende lebende Objekt von ob zurueck oder 0 falls kein lebendes Objekt gefunden.\n\nMit anderen Worten: Es wird der Besitzer eines Objekts zurueckgeliefert, sprich derjenige, der es mit sich rumtraegt.\n\n*Siehe auch:* sein, seines, seinem, seinen, ihr, ihres, ihrem, ihren",
       "source": "deklin.c"
     },
     {
@@ -1353,13 +1353,13 @@
     {
       "name": "call_proved",
       "signature": "mixed call_proved(string fn|object ob|object *ob, string fun|mapping fun|mixed *fun, varargs mixed *par)",
-      "documentation": "call_proved ist eine Erweiterung von call_other, welche einen Fehler wirft,",
+      "documentation": "call\\_proved ist eine Erweiterung von call\\_other, welche einen Fehler wirft, wenn die Funktion fun nicht aufrufbar ist (d.h. entweder existiert sie nicht oder ist static oder private, und ein Shadow mit dieser Funktion ist auch nicht uebergeworfen).\n\nGegenueber call\\_other kann man als Funktion auch Mappings der Form:\n\n```\n([\n    \"funktion1\": ({ arg1, arg2, ...}), // Bei mehreren Argumenten\n    \"funktion2\": arg1,                 // Bei einem nicht-Array-Parameter\n])\n```\n\noder Arrays der Form:\n\n```\n({\n    ({ \"funktion1\", arg1, arg2, ... }),\n    ...\n})\n```\n\nuebergeben.\n\nDas Ergebnis fuer jedes Objekt ist ein Mapping (\\[ \"funktionsname\": ergebnis \\]) bzw. ein Array mit den Ergebnissen jeder Funktion.\n\n*Siehe auch:* call\\_other, call\\_resolved, call\\_with\\_this\\_player",
       "source": "util.inc"
     },
     {
       "name": "call_with_this_player",
       "signature": "mixed call_with_this_player(string fun|closure cl, varargs mixed *args)",
-      "documentation": "call_with_this_player ruft die Funktion 'fun' im aktuellen Objekt oder",
+      "documentation": "call\\_with\\_this\\_player ruft die Funktion 'fun' im aktuellen Objekt oder die Closure cl mit den angegebenen Parametern auf. Dabei wird fuer diesen Aufruf this\\_player() auf das aktuelle Objekt (falls es lebt) oder 0 (falls es nicht lebt) gesetzt.\n\n*Siehe auch:* call\\_other, call\\_proved, funcall, apply",
       "source": "util.inc"
     },
     {
@@ -1375,45 +1375,40 @@
     {
       "name": "center",
       "signature": "string center(string text, int len [,string pad] )",
-      "documentation": "Gibt einen String der Breite len zurueck, in dem text zentriert wurde.",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text zentriert wurde. Wenn noetig wird mit dem Zeichen pad aufgefuellt. Voreinstellung fuer pad ist das Leerzeichen.\n\nBeispiele:\n\n```\ncenter(\"abc\",7)                 ->      \"  abc  \"\ncenter(\"abc\",8,\"-\")             ->      \"--abc---\"\ncenter(\"Der blaue Himmel\",7)    ->      \"laue Hi\"\n```\n\n*Siehe auch:* sprintf, copies, left, right, wrap",
       "source": "string.inc"
     },
     {
       "name": "choose_by_gender",
       "signature": "mixed choose_by_gender(string gender|object ob|mapping vitem, mixed *values|mapping values|string str)",
-      "documentation": "Diese Funktion waehlt entsprechend gender (\"maennlich\",\"weiblich\" oder",
+      "documentation": "Diese Funktion waehlt entsprechend gender (\"maennlich\",\"weiblich\" oder \"saechlich\") bzw. dem Geschlecht des Objektes ob oder des V-Items vitem einen Wert aus values aus. Man kann ebenfalls die Defines OBJ\\_TP und andere OBJ-Defines aus deklin.h nutzen. values kann entweder ein Array Groesse 3 sein (Reihenfolge \"saechlich\", \"maennlich\", \"weiblich\"), ein Mapping (die Geschlechter als Schluessel) oder einfach ein String (der wird dann nur zurueck gegeben). Wenn values als Array ein viertes Element oder als Mapping einen weiteren Eintrag \"plural\" hat, dann wird im Falle des Plurals dieser Eintrag genommen.\n\nBeispiel:\n\n```\nchoose_by_gender(OBJ(croft), ({ \"Erschaffendes\",\n    \"Erschaffender\", \"Erschaffende\" })) -> \"Erschaffende\"\n\nchoose_by_gender(([\"gender\":\"weiblich\"]), ([\n    \"saechlich\" : \"Testendes\",\n    \"maennlich\" : \"Testender\",\n    \"weiblich\"  : \"Testende\" ])) -> \"Testende\"\n```\n\nOder in einer Pseudoclosure:\n\n```\n\"Hallo, $choose_by_gender(OBJ_TP,\" // <- Achtung, kein Leerzeichen!\n\"([maennlich:Meister,weiblich:Meisterin,saechlich:Meisterliches]))!\"\n```\n\n*Siehe auch:* query\\_gender",
       "source": "deklin.c"
     },
     {
       "name": "clock",
       "signature": "int clock()",
-      "documentation": "Liefert einen Integer im Format: hhmmss mit der Realuhrzeit",
+      "documentation": "Liefert einen Integer im Format: hhmmss mit der Realuhrzeit\n\n*Siehe auch:* vclock, time, timestr, vtime, vtimestr",
       "source": "time.inc"
     },
     {
       "name": "clone_object",
-      "signature": "object clone_object(string|object toclone, varargs mixed* args)",
-      "source": "clone_object.inc"
-    },
-    {
-      "name": "clone_object_create",
-      "signature": "protected void clone_object_create()",
-      "source": "clone_object.inc"
-    },
-    {
-      "name": "clone_object_reset",
-      "signature": "protected void clone_object_reset()",
+      "signature": "object clone_object(string|object toclone, varargs mixed *args)",
       "source": "clone_object.inc"
     },
     {
       "name": "clonep",
       "signature": "int clonep( [object ob] )",
-      "documentation": "Returned 1, falls das Objekt ob mit clone_object() erschafft (gecloned) wurde,",
+      "documentation": "Returned 1, falls das Objekt ob mit clone\\_object() erschafft (gecloned) wurde, und 0, falls es mit touch() geladen wurde. Default fuer ob ist this\\_object()\n\nACHTUNG: clonep() bedeutet hierbei, dass geschaut wird, ob der Filename\n\n```\nin der Art '/dir/file#nummer' ist. clonep() liefert also bei\nMAP-Raeumen 0, obwohl diese von /map/map gecloned werden, und\ndann umbenannt werden.\nefun::clonep() liefert in diesem Fall (clone und rename) 1\nclonep() liefert hierbei 0\n```\n\nBeschreibung von efun::clonep()\n\n```\nThe efun returns 1 if <obj> is a clone, and 0 if it is not.\nThe <obj> can be given as the object itself, or by its name.\nIf <obj> is omitted, the current object is tested.\n```\n\n*Siehe auch:* playerp, objectp, load\\_name, clone\\_object",
       "source": "util.inc"
     },
     {
       "name": "command",
       "signature": "nomask int command(string str)",
+      "source": "secure.inc"
+    },
+    {
+      "name": "command_stack",
+      "signature": "nomask mixed *command_stack()",
       "source": "secure.inc"
     },
     {
@@ -1429,37 +1424,32 @@
     {
       "name": "cond_deep_present",
       "signature": "varargs object cond_deep_present(string was, object wo, int flags, mixed fun, varargs mixed args)",
-      "documentation": "cond_deep_present (conditional deep present) sucht im Objekt 'wo' und in",
+      "documentation": "cond\\_deep\\_present (conditional deep present) sucht im Objekt 'wo' und in allen darin enthaltenen Objekten nach dem ersten Objekt ob mit der id 'was', welches beim Aufruf von ob-\\>fun(arg1, arg2, ...) einen Wert != 0 zurueckgibt.\n\nargs koennen beliebig viele Parameter arg1, arg2, ... sein. fun kann auch eine Closure sein, die dann mit ob als erstem Parameter und arg1, arg2, ... als restliche Parameter aufgerufen wird. Ist fun weder ein String noch eine Closure, liefert es einfach das erste gefundene Objekt mit der id 'was' zurueck. Ist die id 'was' 0 oder \"\", dann wird nicht auf die id geachtet.\n\nIn flags kann angegeben werden, in welcher Reihenfolge die Suche stattfinden soll (Defines in simul\\_efuns.h):\n\n```\nCDP_DEPTH_FIRST                Zuerst in die Tiefe gehen.\nCDP_BREADTH_FIRST        Das Objekt mit der geringsten Tiefe nehmen.\nCDP_FLAT                Nicht in die Tiefe gehen. (gleiche Verhalten\n                        wie cond_present.)\n```\n\nWurde weder CDP\\_DEPTH\\_FIRST, CDP\\_BREADTH\\_FIRST noch CDP\\_FLAT gewaehlt, so wird der Suchalgorithmus von deep\\_present genutzt: Erst in allen Objekten innerhalb von 'wo' suchen, dann rekursiv in den einzelnen Containern von 'wo' suchen.\n\n*Siehe auch:* cond\\_present, present",
       "source": "util.inc"
     },
     {
       "name": "cond_present",
       "signature": "object cond_present(string was, object wo, mixed fun, [ mixed args])",
-      "documentation": "cond_present (conditional present) sucht im Objekt 'wo' nach dem ersten",
+      "documentation": "cond\\_present (conditional present) sucht im Objekt 'wo' nach dem ersten Objekt ob mit der id 'was', welches beim Aufruf von ob-\\>fun(arg1, arg2, ...) einen Wert != 0 zurueckgibt. args koennen beliebig viele Parameter arg1, arg2, ... sein. fun kann auch eine Closure sein, die dann mit ob als erstem Parameter und arg1, arg2, ... als restliche Parameter aufgerufen wird. Ist fun weder ein String noch eine Closure, liefert es present(was, wo) zurueck. Ist die id 'was' 0 oder \"\", dann wird nicht auf die id geachtet.\n\nAnwendungsbeispiele:\n\nEine Fackel im Fackelhalter, hidden\\_until\\_next\\_move Ist eine Fackel im Fackelhalter:\n\n```\nif (cond_present(\"fackel\",this_object(),\"query_invis\"))\n```\n\n(In den Raum gelegte sichtbare Fackeln stoeren so nicht.) Besser noch den Fackelhalter zum echten Container machen ...\n\nHat der Spieler einen bestimmten Schutzmantel angezogen (!) gegen Hitze/Kaelte/Saeure ... ?\n\n```\nif (cond_present(\"schutzmantel\",this_player(),\"query_worn\"))\n```\n\nInkorrekt ist das naheliegende\n\n```\nif ((mantel = present(\"schutzmantel\", this_player())) &&\n         mantel->query_worn())\n```\n\nes koennte ja von zwei Maenteln erst der zweite angezogen sein.\n\nHat ein Spieler ein reissfestes Seil aus Leder?\n\n```\ncond_present(\"seil\", player, \"material\", \"leder\")\n```\n\nHat ein Spieler eine Waffe mit Wirkung gegen das Monster dabei?\n\n```\ncond_present(\"waffe\", this_player(), \"query_extra_damage\", monster, player)\n```\n\nIst hier jemand oder etwas im Raum aggressiv ?\n\n```\ncond_present(0, room, \"query_aggressive\")\n```\n\nGibts ein Lebewesen im Raum?\n\n```\ncond_present(0, room, #'living)\n```\n\nDies und noch mehr kann cond\\_deep\\_present. cond\\_deep\\_present(was, wo, CDP\\_FLAT, fun, ...) verhaelt sich voellig identisch.\n\n*Siehe auch:* cond\\_deep\\_present, present",
       "source": "util.inc"
     },
     {
       "name": "convert_message",
       "signature": "deprecated mixed convert_message(mixed str)",
-      "documentation": "ACHTUNG: convert_message() fÃ¼hrt keine Konvertierung mehr durch, sondern",
+      "documentation": "ACHTUNG: convert\\_message() führt keine Konvertierung mehr durch, sondern\n\n```\nliefert den String im Original zurück.\n```\n\nFrüher hat es Meldungen alten Typs in Pseudoclosures umgewandelt, in dem dort \"$Der(OBJ\\_TP) \" vorne angehängt wurde, falls kein $ in str enthalten war.\n\n*Siehe auch:* mixed\\_to\\_closure, string\\_parser, convert\\_message",
       "source": "deklin.c"
     },
     {
       "name": "convert_umlaute",
       "signature": "string convert_umlaute(string str)",
-      "documentation": "Konvertiert alle (einbuchstabigen) Umlaute in die zweibuchstabige",
+      "documentation": "Konvertiert alle (einbuchstabigen) Umlaute in die zweibuchstabige Darstellung (\"o -\\> oe) und loescht alle Zeichen aus dem String, die nicht darstellbar sind (ASCII \\< 32 und ASCII \\> 126 (ausser \\\\t und \\\\n))",
       "source": "string.inc"
     },
     {
       "name": "copies",
       "signature": "string copies(string pattern, int times)",
-      "documentation": "Gibt 'times' aneinandergesetzte Kopien von 'pattern' zurueck.",
+      "documentation": "Gibt 'times' aneinandergesetzte Kopien von 'pattern' zurueck.\n\nBeispiele:\n\n```\ncopies(\"*\",10)          ->      \"**********\"\ncopies(\"hu\",2)          ->      \"huhu\"\ncopies(\"tra\",0)         ->      \"\"\n```\n\n*Siehe auch:* sprintf, wrap, left, right, center",
       "source": "string.inc"
-    },
-    {
-      "name": "create",
-      "signature": "protected void create()",
-      "source": "simul_efun.c"
     },
     {
       "name": "debug_info",
@@ -1469,79 +1459,139 @@
     {
       "name": "deep_present",
       "signature": "object deep_present(mixed was, object wo)",
-      "documentation": "deep_present sucht im Objekt 'wo' und in allen darin enthaltenen Objekten",
+      "documentation": "deep\\_present sucht im Objekt 'wo' und in allen darin enthaltenen Objekten nach 'was', wobei 'was' eine ID oder ein Objekt sein kann.\n\ndeep\\_present wird wie present aufgerufen, benoetigt aber immer den zweiten Parameter.\n\nDies und noch mehr kann cond\\_deep\\_present. Wenn es nur mit diesen beiden Parametern aufgerufen wird, verhaelt es sich genauso wie deep\\_present.\n\n*Siehe auch:* cond\\_deep\\_present, present",
       "source": "util.inc"
     },
     {
       "name": "dein",
       "signature": "varargs string dein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Dein",
+      "signature": "varargs string Dein(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "deinem",
       "signature": "varargs string deinem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Deinem",
+      "signature": "varargs string Deinem(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "deinen",
       "signature": "varargs string deinen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Deinen",
+      "signature": "varargs string Deinen(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "deines",
       "signature": "varargs string deines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Deines",
+      "signature": "varargs string Deines(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "dem",
       "signature": "varargs string dem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Dem",
+      "signature": "varargs string Dem(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "den",
       "signature": "varargs string den(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Den",
+      "signature": "varargs string Den(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "der",
       "signature": "varargs string der(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens mit bestimmten Artikel",
+      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens mit bestimmten Artikel Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat (query\\_personal()==1).\n\n```\nwho   Das Objekt dessen deklinierte Form im Nominativ gewuenscht ist.\n\n      ODER eine virtuelles Objekt in der Form:\n         ([ \"name\" : \"...\", \"gender\" : \"...\" ])\n      oder bei Plural\n         ([ \"name\" : \"...\", \"gender\" : \"...\", \"plural\": 1 ])\n\nadjektiv\n   string  ->  Grundform eines Adjektivs\n               \"\" bedeutet kein Adjektiv\n   string* ->  ({ unregelm.Grundform, Deklinationsstamm }) eines Adjektivs\n               ({ adjektiv1, adjektiv2, ...}) mehrere Adjektive\n   int i   ->  i == 0   Alle Adjektive des Objekts who.\n               i >  0   Die ersten i Adjektive des Objekts who.\n               i <  0   Das -i. te Adjektiv des Objekts who.\n   int*    ->  ({ a, b }) Die a bis b. Adjektive des Objekts who.\n```\n\nMit Hilfe von adjektiv koennen alle oder bestimmte Adjektive des Objekts oder ein fremdes Adjektiv in den Ergebnisstring zwischen Artikel und Substantiv gestellt werden. (Adjektive eines Objekts setzt man mit set\\_adjektiv, siehe dort.)\n\nAlle Parameter sind optional. Defaultwerte sind dann\n\n```\nwho:      this_object()\nadjektiv: 0  (alle Adjektive des Objekts who)\n```\n\n**Beispiel:**\n\n```\nfuer  der, dem, den, einen, einem, einen, dein, deinem, deinen,\n      sein, seinem, seinen, dieser, diesem, diesen, er, ihm, ihn\n\nobject Spieler, Ork, Gegenstand;\nSpieler    sei eine Person NAMENS Laura  (also mit personal_name)\nOrk        sei ein Ork ohne Namen mit Adjektiv boese (ohne personal_name)\nGegenstand sei eine Jacke, die Laura bei sich traegt.\n\nDer(Spieler)+\" zieht \"+einem(Ork)+\" \"+seinen(Gegenstand)+\" an.\"\n   liefert:\n\"Laura zieht einem boesen Ork ihre Jacke an.\"\n\nDieser(Ork,\"frech\")+\" laesst sich das von \"+dem(Spieler)+\" nicht gefallen.\"\n   liefert:\n\"Dieser freche Ork laesst sich das von Laura nicht gefallen.\"\n\nEr(Ork)+\" haette \"+ihn(Spieler)+\" am liebsten davongejagt.\"\n   liefert:\n\"Er haette sie am liebsten davongejagt.\"\n\nEin(Ork)+\" schaut sich neugierig \"+\nseinen(([\"name\":\"ausruestung\",\n         \"gender\":\"weiblich\"]),\"gut\",Spieler)+\" an.\"\n   liefert:\n\"Ein Ork schaut sich neugierig ihre gute Ausruestung an.\"\n```\n\nHINWEIS:\n\n```\nSaemtliche Funktionen existieren nur in MAENNLICHER Form im\nSingular.\nDie Funktionen erzeugen daraus abhaengig vom Geschlecht und\nZahl des Objekts die RICHTIGE Form.\nDie Funktionen existieren jeweils in Gross- und Kleinschrift.\n( der und Der, den und Den,... )\n```\n\nANMERKUNG:\n\n```\nKeine Diskriminierung beabsichtigt. Die maennlichen Deklinations-\nformen sind die einzigen die sich im Nominativ und Akkusativ\nvoneinander unterscheiden, und nur darauf kommt's hier an. :-)\n```\n\nSaemtliche aufgefuehrte Funktionen sind Spezialfaelle von\n\n```\nwer, wen, wem, Wer, Wen, Wem.\n```\n\n*Siehe auch:* der, dem, den, einen, einem, einen, dein, deinem, deinen, sein, seinem, seinen, dieser, diesem, diesen, er, ihn, ihm, Der, Dem, Den, Einen, Einem, Einen, Dein, Deinem, Deinen, Sein, Seinem, Seinen, Dieser, Diesem, Diesen, Er, Ihn, Ihm, wer, wen, wem, Wer, Wen, Wem, ihr, ihren, ihrem, Ihr, Ihren, Ihrem, set\\_adjektiv",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Der",
+      "signature": "varargs string Der(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "des",
       "signature": "varargs string des(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Des",
+      "signature": "varargs string Des(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "diesem",
       "signature": "varargs string diesem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Diesem",
+      "signature": "varargs string Diesem(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "diesen",
       "signature": "varargs string diesen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Diesen",
+      "signature": "varargs string Diesen(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "dieser",
       "signature": "varargs string dieser(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Dieser",
+      "signature": "varargs string Dieser(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "dieses",
       "signature": "varargs string dieses(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Dieses",
+      "signature": "varargs string Dieses(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
@@ -1552,7 +1602,7 @@
     {
       "name": "domain2map",
       "signature": "string domain2map(string file_name)",
-      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen",
+      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen Koordinaten gekennzeichnet:\n\n/d/Domain/mx\\_y /d/Domain/mitglied/mx\\_y /d/Domain/mitglied/bereich/mx\\_y\n\nSobald sie in der Map geladen werden, bekommen sie einen File-Namen mit absoluten Koordinaten:\n\n/map/mx\\_y\n\nMit dieser Routine kann der Map-File-Name eines Domain-Files erfragt werden.\n\nBeispiel:\n\n```\ndomain2map(\"/d/Arktis/uluji/schelfweg/m0_4\") --> \"/map/m3_1024\"\n```\n\n*Siehe auch:* map2domain",
       "source": "map.inc"
     },
     {
@@ -1568,25 +1618,45 @@
     {
       "name": "ein",
       "signature": "varargs string ein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ein",
+      "signature": "varargs string Ein(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "einem",
       "signature": "varargs string einem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Einem",
+      "signature": "varargs string Einem(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "einen",
       "signature": "varargs string einen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Einen",
+      "signature": "varargs string Einen(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "eines",
       "signature": "varargs string eines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Eines",
+      "signature": "varargs string Eines(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv)",
       "source": "deklin.c"
     },
     {
@@ -1597,67 +1667,70 @@
     {
       "name": "er",
       "signature": "varargs string er(object|mapping|int who)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Anders als bei der fehlt der Parameter adjektiv, Personalpronomina haben keine Adjektive.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Er",
+      "signature": "varargs string Er(object|mapping|int who)",
       "source": "deklin.c"
     },
     {
       "name": "escape_string",
       "signature": "varargs string escape_string(string str, int mode)",
-      "documentation": "Die Funktion fuegt Escape-Zeichen (\\) nach verschiedenen Regeln in",
+      "documentation": "Die Funktion fuegt Escape-Zeichen (\\\\) nach verschiedenen Regeln in den Eingabestring 'str' ein und liefert das Ergebnis zurueck. Die verwendeten Regeln haengen von 'mode' ab.\n\nMit dieser Funktion lassen sich beliebige Strings in Regular Expressions einbauen, auch wenn diese Sonderzeichen enthalten. Damit eignet sich diese Funktion zum Beispiel auch fuer beliebige Spielereingaben.\n\nDie Bestandteile des Bitflags 'mode' fuer Regular Expressions:\n\n```\n ESCAPE_REGEXP:       (Default)\n     Der zurueckgelieferte String ist ein regexp-Muster, das auf\n     den Eingabestring 'str' passt.\n\n ESCAPE_PCRE:\n     Anstelle von ESCAPE_REGEXP fuer PCRE-kompatible Patterns.\n\n ESCAPE_ANY:          (Default)\n     Das zurueckgelieferte Muster passt auf beliebige Teilstrings.\n\n ESCAPE_EXACT:\n     Das zurueckgelieferte Muster muss auf den kompletten String passen.\n\n ESCAPE_WORD:\n     Das zurueckgelieferte Muster muss auf ein Wort passen.\n\n ESCAPE_CASE:         (Default)\n     Das zurueckgelieferte Muster beachtet Gross- und Kleinschreibung.\n\n ESCAPE_NOCASE:\n     Das zurueckgelieferte Muster ignoriert Gross- und Kleinschreibung.\n\n ESCAPE_LISTE:\n     Das zurueckgelieferte Muster beachtet durch Kommata getrennte Listen.\n     Wenn man sich selbst um die Trennung kuemmern moechte, kann man statt\n     einem String auch ein String-Array uebergeben.\n\n ESCAPE_WILDCARD:\n     Das zurueckgelieferte Muster beachtet einfache Wildcards:\n\n         ?   steht fuer ein beliebiges einzelnes Zeichen\nsteht fuer beliebig viele (oder keine) Zeichen\n\n     Die Wildcards duerfen im Eingabestring selbst escaped werden.\n\n        \\?   steht fuer ?\n        \\*   steht fuer *\n```\n\nWeitere Werte fuer 'mode', die nicht kombinierbar sind:\n\n```\nESCAPE_REPLACE:\n    Es wird kein Muster, sondern ein Replacepattern zurueckgeliefert.\n    Damit setzt regreplace() genau den Eingabestring ein, auch wenn\n    dieser Sonderzeichen enthaelt.\n\nESCAPE_GETDIR:\n    Der zurueckgelieferte String matcht Dateien bei get_dir()\n    exakt der Eingabe, Wildcards und Escapes werden ignoriert.\n```\n\n**Beispiel:**\n\nescape\\_string(\"(foo\\|bar)\")\n\n```\n-> Das Muster passt auf \"(foo|bar)\", \"bla (foo|bar) bla\"\n```\n\nescape\\_string(\"(foo\\|bar)\", ESCAPE\\_PCRE)\n\n```\n-> Dasselbe, jedoch fuer PCRE.\n```\n\nescape\\_string(\"(foo\\|bar)\", ESCAPE\\_EXACT)\n\n```\n-> Das Muster passt ausschliesslich auf \"(foo|bar)\".\n```\n\nescape\\_string(\"bla\\*\", ESCAPE\\_WILDCARD)\n\n```\n-> Das Muster passt auf \"bla\", \"blafasel\", \"/pfad/zum/blablubb\"\n```\n\nescape\\_string(\"bla\\*\", ESCAPE\\_WILDCARD\\|ESCAPE\\_EXACT)\n\n```\n-> Jetzt passt das Muster nicht mehr auf \"/pfad/zum/blablubb\"\n```\n\nescape\\_string(\"\\\\\\\\1&\\\\\\\\2&\\\\\\\\3\", ESCAPE\\_REPLACE)\n\n```\n-> Als replacepattern verwendet, wird \\1&\\2&\\3 eingesetzt.\n```\n\nescape\\_string(\"tisch, stuhl, sofa\", ESCAPE\\_LISTE)\n\n```\n-> Das Muster passt auf tisch oder stuhl oder sofa,\n   aber auch auf holztisch, stuhlbein und ledersofa.\n```\n\nescape\\_string(\"tisch, stuhl, sofa\", ESCAPE\\_LISTE\\|ESCAPE\\_CASE\\|ESCAPE\\_WORD)\n\n```\n-> Das Muster passt auf Tisch oder Stuhl oder Sofa,\n   jedoch nicht mehr auf Holztisch, Stuhlbein und dergleichen.\n   Zudem ist die Gross- und Kleinschreibung in diesem Beispiel egal.\n```\n\nescape\\_string(\"\", ESCAPE\\_LISTE) escape\\_string(\" \", ESCAPE\\_LISTE) escape\\_string(\" , ,,,\", ESCAPE\\_LISTE)\n\n```\n-> Es handelt sich um leere Listen, der Rueckgabewert ist 0.\n```\n\n*Siehe auch:* regexp, regreplace, get\\_dir",
       "source": "string.inc"
     },
     {
       "name": "expand_direction",
       "signature": "varargs string expand_direction(string dir, int flags)",
-      "documentation": "Loest Abkuerzungen von Richtungen auf (z.B. expand_direction(\"no\") liefert",
+      "documentation": "Loest Abkuerzungen von Richtungen auf (z.B. expand\\_direction(\"no\") liefert \"nordosten\".) Falls diese Abkuerzung unbekannt ist, wird 0 zurueckgeliefert. Der zweite Parameter flags kann eine Oder-Kombination aus folgenden Konstanten (definiert in simul\\_efuns.h) sein:\n\n```\nDIR_NUR_HIMMELSRICHTUNGEN   Nur Himmelsrichtungen erweitern.\nDIR_ALS_DEFAULT             Wenn nichts gefunden wurde, dir zurueckliefern.\n```\n\n*Siehe auch:* is\\_direction, opposite\\_direction",
       "source": "map.inc"
     },
     {
       "name": "file_path",
       "signature": "string file_path([object file])",
-      "documentation": "file_path liefert das Directory zurueck, in dem das File von ob steht. Wenn",
+      "documentation": "file\\_path liefert das Directory zurueck, in dem das File von ob steht. Wenn ob nicht angegeben wird, dann wird this\\_object() genommen. Sollte ob ein Raum einer Subdomain sein, wird der richtige Pfad der Subdomain errechnet.\n\n*Siehe auch:* object\\_name, abs\\_path",
       "source": "paths.inc"
     },
     {
       "name": "file_time",
       "signature": "int file_time(string file)",
-      "documentation": "Liefert das File-Datum des Files <file>",
+      "documentation": "Liefert das File-Datum des Files \\<file\\>\n\n*Siehe auch:* file\\_size, timestr, ctime",
       "source": "time.inc"
     },
     {
       "name": "find_living",
       "signature": "object find_living(string name)",
-      "documentation": "Diese Funktion sucht das Lebewesen mit dem Namen 'name' und liefert",
+      "documentation": "Diese Funktion sucht das Lebewesen mit dem Namen 'name' und liefert dessen Objekt-Pointer. 'name' muss hierbei der Name sein, der mit set\\_living\\_name() gesetzt murde.\n\nBeispiel:\n\n```\nobject ob;\nob = find_living(\"detlef\");\n```\n\n*Siehe auch:* set\\_living\\_name, find\\_player, find\\_object, query\\_living\\_name",
       "source": "living.inc"
     },
     {
       "name": "find_player",
       "signature": "object find_player(string name)",
-      "documentation": "Findet den Spieler mit dem Namen 'name'",
+      "documentation": "Findet den Spieler mit dem Namen 'name' Die Funktion liefert das Player-Objekt des Spielers. 'name' muss dabei der Name sein, der mit set\\_living\\_name() gesetzt wurde.\n\n*Siehe auch:* set\\_living\\_name, find\\_living, find\\_object",
       "source": "living.inc"
     },
     {
       "name": "foldl",
       "signature": "mixed foldl(mixed *array, mixed startwert, closure funktion, ...)",
-      "documentation": "Diese Funktion geht das Array von links nach rechts durch, ruft",
+      "documentation": "Diese Funktion geht das Array von links nach rechts durch, ruft\n\n```\nfunktion(startwert, element, ...)\n```\n\nfuer jedes Element auf und uebernimmt das Ergebnis als Startwert fuer das naechste Element. Der letzte ermittelte Wert wird zurueckgeliefert.\n\n**Beispiel:**\n\nUm die Summe aller Gegenstaende in 'ob' zu ermitteln:\n\n```\nfoldl(all_inventory(ob), 0, (: $1 + $2->query_weight() :))\n```\n\nAls Array werden alle Gegenstaende uebermittelt, Startwert ist 0, als neuer Wert wird immer das Gewicht das jeweiligen Gegenstands ermittelt.\n\nHinweis: Bei foldr() wird das Array nicht nur in der Gegenrichtung durchlaufen, sondern auch die ersten beiden Parameter an die Closure vertauscht.\n\n*Siehe auch:* foldr, map, filter, funcall, apply",
       "source": "util.inc"
     },
     {
       "name": "foldr",
       "signature": "mixed foldr(mixed *array, mixed startwert, closure funktion, ...)",
-      "documentation": "Diese Funktion geht das Array von rechts nach links durch, ruft",
+      "documentation": "Diese Funktion geht das Array von rechts nach links durch, ruft\n\n```\nfunktion(element, startwert, ...)\n```\n\nfuer jedes Element auf und uebernimmt das Ergebnis als Startwert fuer das naechste Element. Der letzte ermittelte Wert wird zurueckgeliefert.\n\n**Beispiel:**\n\nUm die Summe aller Gegenstaende in 'ob' zu ermitteln:\n\n```\nfoldr(all_inventory(ob), 0, (: $1->query_weight() + $2 :))\n```\n\nAls Array werden alle Gegenstaende uebermittelt, Startwert ist 0, als neuer Wert wird immer das Gewicht das jeweiligen Gegenstands ermittelt.\n\nHinweis: Bei foldl() wird das Array nicht nur in der Gegenrichtung durchlaufen, sondern auch die ersten beiden Parameter an die Closure vertauscht.\n\n*Siehe auch:* foldl, map, filter, funcall, apply",
       "source": "util.inc"
     },
     {
       "name": "format_seconds",
-      "signature": "string format_seconds(int seconds)",
-      "documentation": "Liefert einen String der Form:",
+      "signature": "string format_seconds(int rest)",
       "source": "time.inc"
     },
     {
       "name": "format_vseconds",
       "signature": "string format_vseconds(int seconds)",
-      "documentation": "Liefert fuer seconds einen String der Form:",
       "source": "time.inc"
     },
     {
@@ -1668,7 +1741,7 @@
     {
       "name": "get_align_string",
       "signature": "string get_align_string(int align)",
-      "documentation": "Liefert einen String zurueck, welcher Gesinnung ein Lebewesen ist.",
+      "documentation": "Liefert einen String zurueck, welcher Gesinnung ein Lebewesen ist. (von \"heilig\" bis \"daemonisch\")",
       "source": "util.inc"
     },
     {
@@ -1679,55 +1752,90 @@
     {
       "name": "get_genitiv",
       "signature": "string get_genitiv(string name)",
-      "documentation": "Liefert die Genitiv-Form eines (Personal)-Namens zurueck.",
+      "documentation": "Liefert die Genitiv-Form eines (Personal)-Namens zurueck. Bsp: Francis  -\\> Francis'\n\n```\nDetlef   -> Detlefs\n```\n\n*Siehe auch:* ihr, ihres, ihrem, ihren",
       "source": "deklin.c"
     },
     {
       "name": "get_unique_string",
       "signature": "string get_unique_string()",
-      "documentation": "Funktion liefert einen einmaligen String.",
+      "documentation": "Funktion liefert einen einmaligen String. Jeder spaetere Aufruf dieser Funktion liefert garantiert einen anderen String, auch nach Neustart des Systems.",
       "source": "util.inc"
     },
     {
       "name": "HAS_ID",
       "signature": "int HAS_ID(object ob|mapping vitem, string id)",
-      "documentation": "Liefert 1 zurueck, wenn das Objekt ob bzw. das V-Item vitem auf die ID id",
+      "documentation": "Liefert 1 zurueck, wenn das Objekt ob bzw. das V-Item vitem auf die ID id reagieren, ansonsten 0. Die als Objekt uebergebene Variable muss vom Typ mixed sein, ansonsten gibt es einen Compile-Fehler.\n\n*Siehe auch:* id, QUERY, QUERY\\_PARS, query\\_v\\_item, parse\\_com",
       "source": "util.inc"
+    },
+    {
+      "name": "heart_beat_info",
+      "signature": "nomask object *heart_beat_info()",
+      "source": "secure.inc"
     },
     {
       "name": "ihm",
       "signature": "varargs string ihm(object|mapping|int who)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Anders als bei der fehlt der Parameter adjektiv, Personalpronomina haben keine Adjektive.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihm",
+      "signature": "varargs string Ihm(object|mapping|int who)",
       "source": "deklin.c"
     },
     {
       "name": "ihn",
       "signature": "varargs string ihn(object|mapping|int who)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Anders als bei der fehlt der Parameter adjektiv, Personalpronomina haben keine Adjektive.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihn",
+      "signature": "varargs string Ihn(object|mapping|int who)",
       "source": "deklin.c"
     },
     {
       "name": "ihr",
       "signature": "varargs string ihr(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe der().",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe der().\n\nDer zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\nZum eigentlichen Objekt who bzw. zum Besitzer owner kann man zusaetzlich noch Adjektive (who\\_adjektiv bzw. owner\\_adjektiv) angeben, die statt der tatsaechlich gesetzten Adjektive genommen werden. Ebenso kann man bei beiden die Auswahl der Pronomen mit who\\_art bzw. owner\\_art bestimmen (genaue Beschreibung siehe query\\_deklin).\n\nWICHTIG\\*\\*\\*: ihr() liefert NICHT 'ihr Testobjekt' (das macht ja sein() schon automatisch), SONDERN 'Stellas Testobjekt'. Also NICHT das POSSESIVPRONOMEN, sondern den NAMEN des Besitzers selbst. Ist der Besitzer nicht 'personal', dann liefert ihr() beispielsweise: 'das Testobjekt des Orks'.\n\n*Siehe auch:* ihres, ihren, ihrem, der, sein, query\\_deklin",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihr",
+      "signature": "varargs string Ihr(<object|mapping|int> who, <string|string *|int|int *> who_adjektiv, <object|mapping|int> owner, <string|string *|int|int *> owner_adjektiv, int who_art, int owner_art, int old_who_art)",
       "source": "deklin.c"
     },
     {
       "name": "ihrem",
       "signature": "varargs string ihrem(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().\n\n*Siehe auch:* ihr, sein, der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihrem",
+      "signature": "varargs string Ihrem(<object|mapping|int> who, <string|string *|int|int *> who_adjektiv, <object|mapping|int> owner, <string|string *|int|int *> owner_adjektiv, int who_art, int owner_art, int old_who_art)",
       "source": "deklin.c"
     },
     {
       "name": "ihren",
       "signature": "varargs string ihren(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().\n\n*Siehe auch:* ihr, sein, der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihren",
+      "signature": "varargs string Ihren(<object|mapping|int> who, <string|string *|int|int *> who_adjektiv, <object|mapping|int> owner, <string|string *|int|int *> owner_adjektiv, int who_art, int owner_art, int old_who_art)",
       "source": "deklin.c"
     },
     {
       "name": "ihres",
       "signature": "varargs string ihres(<object|mapping|int> who, <string|string*|int|int*> who_adjektiv, <object|mapping|int> owner, <string|string*|int|int*> owner_adjektiv, int who_art, int owner_art)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Siehe ihr().\n\n*Siehe auch:* ihr, sein, der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Ihres",
+      "signature": "varargs string Ihres(<object|mapping|int> who, <string|string *|int|int *> who_adjektiv, <object|mapping|int> owner, <string|string *|int|int *> owner_adjektiv, int who_art, int owner_art, int old_who_art)",
       "source": "deklin.c"
     },
     {
@@ -1736,8 +1844,13 @@
       "source": "input_to.inc"
     },
     {
+      "name": "input_to_info",
+      "signature": "nomask mixed *input_to_info(object ob)",
+      "source": "secure.inc"
+    },
+    {
       "name": "interactive",
-      "signature": "int interactive(varargs mixed* args)",
+      "signature": "int interactive(varargs mixed *args)",
       "source": "interactive.inc"
     },
     {
@@ -1748,13 +1861,13 @@
     {
       "name": "is_direction",
       "signature": "varargs int is_direction(string dir, int flags)",
-      "documentation": "Liefert 1, wenn der erste Parameter dir eine Richtung ist, sonst 0.",
+      "documentation": "Liefert 1, wenn der erste Parameter dir eine Richtung ist, sonst 0. Der zweite Parameter flags kann eine Oder-Kombination aus folgenden Konstanten (definiert in simul\\_efuns.h) sein:\n\n```\nDIR_NUR_HIMMELSRICHTUNGEN   Nur Himmelsrichtungen beachten\n```\n\n*Siehe auch:* expand\\_direction, opposite\\_direction",
       "source": "map.inc"
     },
     {
       "name": "ist",
       "signature": "varargs string ist(object|mapping|int ob, int spaces)",
-      "documentation": "Liefert \"sind\", wenn ob im Plural ist, sonst \"ist\".",
+      "documentation": "Liefert \"sind\", wenn ob im Plural ist, sonst \"ist\". ob kann hierbei ein v-item oder ein Objekt sein. Wenn ob nicht angegeben wird, wird this\\_object() angenommen. Diese Funktion ist ein Spezialfall der Funktion 'plural' Wenn spaces == IST\\_SPACE\\_BEFORE ist, wird ein Leerzeichen vorangestellt, bei spaces == IST\\_SPACE\\_AFTER angehaengt, und bei spaces == IST\\_SPACE\\_BEFORE\\|IST\\_SPACE\\_AFTER beides. Diese Konstanten sind in simul\\_efuns.h definiert.\n\n**Beispiel:**\n\nDer(ob) + ist(ob, IST\\_SPACE\\_BEFORE) + \" nicht zu gebrauchen.\"\n\n*Siehe auch:* plural",
       "source": "deklin.c"
     },
     {
@@ -1778,55 +1891,50 @@
       "source": "string.inc"
     },
     {
+      "name": "last_instructions",
+      "signature": "nomask varargs string *last_instructions(int len, int verbose)",
+      "source": "secure.inc"
+    },
+    {
       "name": "left",
       "signature": "string left(string text, int len [,string pattern] )",
-      "documentation": "Gibt einen String der Breite len zurueck, in dem text linksbuendig",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text linksbuendig enthalten ist. Wenn noetig wird mit dem Zeichen pad aufgefuellt. Voreinstellung fuer pad ist das Leerzeichen.\n\nBeispiele:\n\n```\nleft(\"abc d\",8)         -->     \"abc d   \"\nleft(\"abc d\",8,\".\")     -->     \"abc d...\"\nleft(\"abc  def\",7)      -->     \"abc  de\"\n```\n\n*Siehe auch:* sprintf, copies, center, right, wrap",
       "source": "string.inc"
     },
     {
       "name": "liste",
       "signature": "string liste(string *str [, string pad])",
-      "documentation": "Macht aus einem Stringarray eine normale Aufzaehlung:",
+      "documentation": "Macht aus einem Stringarray eine normale Aufzaehlung:\n\n```\nliste(({\"bla\",\"schnack\",\"sabbel\"})) ->\n    \"bla, schnack und sabbel\"\nliste() -> \"\"\nliste(({\"bla\",\"schnack\",\"sabbel\"}), \" oder \") ->\n    \"bla, schnack oder sabbel\"\n```\n\n*Siehe auch:* unliste",
       "source": "string.inc"
-    },
-    {
-      "name": "living_create",
-      "signature": "protected void living_create()",
-      "source": "living.inc"
-    },
-    {
-      "name": "living_reset",
-      "signature": "protected void living_reset()",
-      "source": "living.inc"
     },
     {
       "name": "log_file",
       "signature": "int log_file(string file_name, string message)",
-      "documentation": "Haengt den String <message> an das File <file_name> an.",
+      "documentation": "Haengt den String \\<message\\> an das File \\<file\\_name\\> an. Wenn man keinen vollstaendigen Filenamen angibt, wird in das File /log/\\<file\\_name\\> geschrieben. Ein vollstaendig angegebener Filename muss '.../log/...' beinhalten, sonst wird nicht gelogged. Man kann auch lokale Pfade angeben. Diese muessen aber mindestens einen '/' enthalten, sonst wird nach /log/\\<file\\_name\\> gelogged. Die Datei wird, wenn sie groesser als 50000 Bytes wird, nach \\<file\\_name\\>.old umbenannt. Ist fuer Debuggingzwecke oder zum Mitloggen. Rueckgabewert: 1 wenn das Schreiben geklappt hat, sonst 0\n\nBeispiele:\n\n```\nlog_file(\"testlog\",\"Meldung\\n\");        logged nach /log/testlog\nlog_file(\"/d/Doerrland/log/testlog\",\"Meldung\\n\");\nlog_file(\"../log/testlog\",\"Meldung\\n\");\nlog_file(\"log/testlog\",\"Meldung\\n\");\n```\n\n*Siehe auch:* write\\_file",
       "source": "log.inc"
     },
     {
       "name": "map_object",
       "signature": "int map_object(string file_name)",
-      "documentation": "Liefert 1, wenn es sich bei dem Raum 'file_name' um einen Map-Raum handelt.",
+      "documentation": "Liefert 1, wenn es sich bei dem Raum 'file\\_name' um einen Map-Raum handelt. (z.B. bei /map/m1\\_1 oder auch bei /d/Doerrland/m0\\_0)",
       "source": "map.inc"
     },
     {
       "name": "map2domain",
       "signature": "string map2domain(string file_name, int flag)",
-      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen",
+      "documentation": "Ein Map-Raum innerhalb einer Domain ist durch seine lokalen Koordinaten gekennzeichnet:\n\n/d/Domain/mx\\_y /d/Domain/mitglied/mx\\_y /d/Domain/mitglied/bereich/mx\\_y\n\nSobald sie in der Map geladen werden, bekommen sie einen File-Namen mit absoluten Koordinaten:\n\n/map/mx\\_y\n\nMit dieser Routine kann der Domain-File-Name eines Map-Files erfragt werden. Gibt es die Datei nicht, so wird 0 zurueckgegeben, es sei denn flag==1, dann wird naemlich der berechnete Dateiname zurueckgeliefert.\n\nBeginnt der Dateiname nicht mit einem /, so wird das Ergebnis auch nicht mit einem ebensolchen beginnen.\n\nBeispiel:\n\n```\nmap2domain(\"/map/m3_1024\")   --> \"/d/Arktis/uluji/schelfweg/m0_4.c\"\nmap2domain(\"map/m3_1024\")    --> \"d/Arktis/uluji/schelfweg/m0_4.c\"\nmap2domain(\"/map/m3_1025\")   --> 0\nmap2domain(\"/map/m3_1025\",1) --> \"/d/Arktis/m503_25.c\"\n```\n\n*Siehe auch:* domain2map",
       "source": "map.inc"
     },
     {
       "name": "mixed_to_closure",
       "signature": "varargs closure mixed_to_closure(closure|mixed*|string mix, symbol* symbols, int tp_flag, int|symbol use_tp, mapping functions)",
-      "documentation": "Eine vollstaendige Dokumentation dazu ist /doc/funktionsweisen/pseudoclosures.",
+      "documentation": "Eine vollstaendige Dokumentation dazu ist /doc/funktionsweisen/pseudoclosures.\n\nDiese Funktion verhaelt sich je nach mix unterschiedlich:\n\n```\n- Ist mix bereits eine Closure, so wird diese einfach zurueckgeliefert.\n- Ist mix ein Array, so wird angenommen, dass seine Elemente entweder\n  Strings (welche dann als Pseudoclosures behandelt werden) oder\n  Lambda-Ausdruecke (also die Sachen, die man lambda als 2. Parameter gibt)\n  sind. Die Ergebnisclosure addiert dann im Endeffekt die Ergebnisse der\n  einzelnen Array-Elemente zusammen und liefert den Gesamttext zurueck.\n- Ist mix ein String, so wird dieser als Pseudoclosure behandelt und von\n  string_parser in einen Lambda-Ausdruck umgewandelt.\n```\n\nDie Parameter tp\\_flag, use\\_tp und functions werden direkt an string\\_parser weitergegeben. Der zurueckgelieferte Lambda-Ausdruck wird in eine ungebundene Lambda-Closure mit symbols als Parameter der Closure in der angegebenen Reihenfolge (symbols ist ein Array von Symbolen) umgewandelt und zurueckgeliefert.\n\n*Siehe auch:* closure\\_to\\_string, string\\_parser",
       "source": "deklin.c"
     },
     {
       "name": "mixed2str",
       "signature": "string mixed2str(mixed arr)",
-      "documentation": "Wandelt einen beliebigen Datentyp in einen String um.",
+      "documentation": "Wandelt einen beliebigen Datentyp in einen String um. Gut fuer Debuggingzwecke.\n\n*Siehe auch:* to\\_string, to\\_int, to\\_float",
       "source": "convert.inc"
     },
     {
@@ -1837,43 +1945,42 @@
     {
       "name": "Name",
       "signature": "string Name(object ob)",
-      "documentation": "Liefert einen Cap-Namen des Objektes ob. (fuer Debugzwecke geeignet)",
+      "documentation": "Liefert einen Cap-Namen des Objektes ob. (fuer Debugzwecke geeignet) Entweder query\\_real\\_name, oder query\\_name oder query\\_short, ansonsten den Filenamen des Objektes",
       "source": "util.inc"
     },
     {
       "name": "not_alone",
       "signature": "int not_alone(object ob)",
-      "documentation": "Liefert 1 zurueck, wenn sich weitere Objekte mit derselben Id wie ob",
+      "documentation": "Liefert 1 zurueck, wenn sich weitere Objekte mit derselben Id wie ob in der Umgebung von ob befinden. (wird beispielsweise zur Automatischen Artikel Auswahl (ART\\_AAA) in der Grammatik/Deklination verwendet.",
       "source": "deklin.c"
     },
     {
       "name": "notify_fail",
       "signature": "varargs int notify_fail(mixed fail, int priority, int dont_overwrite)",
-      "documentation": "Mit notify_fail() wird eine Fehlermeldung gesetzt, die der Spieler",
       "source": "notify_fail.inc"
     },
     {
       "name": "opposite_direction",
       "signature": "varargs string opposite_direction(string dir, int flags)",
-      "documentation": "Liefert die Richtung, welcher der Richtung im ersten Parameter dir",
+      "documentation": "Liefert die Richtung, welcher der Richtung im ersten Parameter dir entgegengesetzt ist. Ist diese Richtung unbekannt, so wird 0 zurueckgeliefert. Der zweite Parameter flags kann eine Oder-Kombination aus folgenden Konstanten (definiert in simul\\_efuns.h) sein:\n\n```\nDIR_NUR_HIMMELSRICHTUNGEN   Nur bei Himmelsrichtungen beachten.\nDIR_ALS_DEFAULT             Anstatt 0 dir zurueckliefern.\n```\n\n*Siehe auch:* expand\\_direction, is\\_direction",
       "source": "map.inc"
     },
     {
       "name": "parse_com",
       "signature": "varargs mixed *parse_com(string command, mixed where, string *trenner, int flag)",
-      "documentation": "parse_com sucht die in einem String angegebenen Gegenstaende in der",
+      "documentation": "parse\\_com sucht die in einem String angegebenen Gegenstaende in der Umgebung des aktuellen Spielers (this\\_player()) und in seinem Inventar.\n\nBeispiel:\n\n```\n#include <parse_com.h>\n\nint brutzle_fun(string str)\n{\n    mixed parsed;\n    object ob;\n\n    parsed = parse_com(str);\n    if(parse_com_error(parsed, \"Was willst Du brutzeln?\\n\", 1))\n        return 0;\n\n    ob = parsed[PARSE_OBS][0];\n\n    write(wrap(\"Du brutzelst \"+den(ob)+\".\"));\n\n    return 1;\n}\n```\n\nIn den allermeisten Faellen braucht man parse\\_com nur den zu analysierenden String zu uebergeben und parse\\_com liefert das Ergebnis in einem mixed-Feld zurueck. parse\\_com beachtet dabei Artikel, Adjektive, Zahl-Angaben (1.) und Pronomen wie 'alle', 'meine', 'mich' etc.\n\nBis auf den ersten Parameter sind alle weiteren optional. Folgende Parameter kann man uebergeben:\n\n```\nstring command\n    Der zu analyisierende String, etwas wie \"die gruene Tasche\"\n\nmixed where\n    Ein Container oder eine Liste von Containern, in denen\n    gesucht werden soll. Falls weggelassen (oder 0), so wird\n    in der Umgebung von this_player() und in this_player()\n    selbst gesucht.\n\nstring* trenner\n    Hier kann man Trennwoerter angeben, bis zu denen geparst\n    werden soll. Zum Beispiel beim Befehl 'brutzle A mit B'\n    kann ({\"mit\"}) als Trenner angegeben werden, so dass\n    parse_com zu \"A mit B\" spaetestens beim \"mit\" abbricht.\n\n    Das gefundene Trennwort wird in parsed[PARSE_TRENNER]\n    gespeichert (\"\", wenn keines gefunden wurde), der\n    Text hinter dem Trennwort in parsed[PARSE_BEYOND_TRENNER].\n    Diesen Text kann man dann in einem zweiten parse_com-Aufruf\n    parsen.\n\nint flag\n    Hier kann man Steuerflags angeben, die die Auswertung\n    von parse_com beeinflussen. Mehrere Flags werden durch Oder\n    (|-Operator) getrennt.\n\n    PARSE_ALL_MATCHES\n            Ist im Kommando KEIN Zahlwort (1. oder 2.) angegeben,\n            werden statt nur dem ERSTEN Objekt ALLE darauf passenden\n            Objekte (welche sich im gleichen Container befinden)\n            zurueckgeliefert.\n\n    PARSE_NO_V_ITEMS\n            Verhindert, dass V_Items mitgeparsed werden, und somit\n            in parsed[PARSE_OBS] erscheinen.\n\n    PARSE_AFTER_TRENNER\n            Hiermit beginnt der Parser erst nach einem der gegebenen\n            Trenner zu parsen.\n\n    PARSE_NOT_WITHOUT_TRENNER\n            Das Parsing wird abgebrochen, falls keiner der angegeben\n            Trenner im String command zu finden ist.\n            Ist dies der Fall, wird PARSE_NOT_SEARCHED zurueckgegeben.\n\n    PARSE_DONT_SPLIT\n            Normalerweise zerteilt parse_com Count-Obs automatisch.\n            Dies kann mit diesem Flag unterbunden werden.\n\n    PARSE_NOSHIMMER_INVIS\n            Beachtet auch invis-15-Dinge. (Nur fuer Goettertools!)\n```\n\nparse\\_com liefert als Ergebnis ein Array mit folgenden Elementen zurueck:\n\n```\nparsed[PARSE_NUM_OBS]\n    Anzahl der gefundenen Objekte. Im Fehlerfalle ist dies 0.\n\nparsed[PARSE_OBS]\n    Dies ist ein Array mit den gefundenen Objekten.\n\nparsed[PARSE_REST]\n    Dies ist der Reststring, also der Text hinter den gefundenen\n    Gegenstaenden (z.B. \"durch\" bei \"knuddle emma durch\").\n\nparsed[PARSE_RET_CODE]\n    Ein Code, der die Art eines Fehlers angibt. Folgende\n    Werte kann er annehmen:\n        PARSE_OK                Alles klar (kein Fehler)\n        PARSE_NO_ARG        Es wurde nichts uebergeben.\n        PARSE_NO_OB                Objekt nicht gefunden.\n        PARSE_NO_MY_OB        Objekt nicht gefunden, \"mein\" war angegeben.\n        PARSE_NO_ALL_OB        Objekt nicht gefunden, \"alle\" war angegeben.\n        PARSE_NO_ALL_MY_OB        Objekt nicht gefunden, \"mein\" und \"alles\"\n                            war angegeben.\n        PARSE_WRONG_ID        Syntaxfehler. Parse_com konnte nicht erkennen,\n                            wo ein Gegenstand bezeichnet wurde.\n            PARSE_NOT_SEARCHED        Es sollte nach dem Trenner geparst werden,\n                            dieser war allerdings nicht vorhanden.\n\nparsed[PARSE_ID]\n    Die in dem Text gefundene ID (sowas wie \"tasche\", wenn nach\n    \"eine gruene Tasche\" gesucht wurde). Falls keine ID erkannt\n    wurde, so ist dies in leerer String.\n\nparsed[PARSE_TRENNER]\n    Das Trennwort, welches gefunden wurde.\n\nparsed[PARSE_BEYOND_TRENNER]\n    Alles, was nach dem gefundenen Trennwort im String steht.\n```\n\nBeispiel: parse\\_com(\"eine gruene Tasche umher\") wuerde beispielsweise folgendes Ergebnis bringen:\n\n```\nparsed[PARSE_NUM_OBS]                1\nparsed[PARSE_OBS]                ({ OBJ(/obj/tasche#947270) })\nparsed[PARSE_REST]                \"umher\"\nparsed[PARSE_RET_CODE]                PARSE_OK\nparsed[PARSE_ID]                \"eine gruene tasche\"\nparsed[PARSE_TRENNER]           \"\"\nparsed[PARSE_BEYOND_TRENNER]        \"\"\n```\n\nDie Auswertung von Fehlern kann die Routine parse\\_com\\_error() uebernehmen. (Siehe obiges Beispiel und die Dokumentation zu parse\\_com\\_error bzw. parse\\_com\\_error\\_string.)\n\nACHTUNG:\n\n```\n- Falls nicht mit PARSE_NO_V_ITEMS explizit angegeben, werden auch\n  virtuelle Objekte im Feld PARSE_OBS zurueckgegeben. Deshalb muss das\n  Programm in diesem Falle in der Lage sein, Mappings zu verarbeiten!\n- Wird ein kurz vorher zerteiltes CountOb gefunden, so werden beide\n  Teile erstmal wiedervereinigt, bevor sie von parse_com genutzt\n  werden. Dies kann bei doppelten Aufrufen von parse_com ein ggf.\n  vorher gefundenes Objekt zerstoeren. Man entkommt dem, indem\n  das vorher gefundene Objekt wegbewegt wird.\n```\n\n*Siehe auch:* parse\\_com\\_error, present, deep\\_present",
       "source": "parse_com.c"
     },
     {
       "name": "parse_com_error",
       "signature": "int parse_com_error(mixed *parsed, string errormsg [, string only_one [, int dont_overwrite]] )",
-      "documentation": "parse_com_error dient der einfachen Behandlung von Fehlermeldungen.",
+      "documentation": "parse\\_com\\_error dient der einfachen Behandlung von Fehlermeldungen. Liefert parse\\_com einen Fehler zurueck, kreiert parse\\_com\\_error eine entsprechende Fehlermeldung dazu und setzt sie via notify\\_fail(). parse\\_com\\_error() liefert in diesem Falle dann 1 zurueck, so dass in der eigentlichen Action daraufhin ein 'return 0' folgenden sollte, so dass die notify\\_fail()-Meldung aktiv wird.\n\nParameter:\n\n```\nmixed *parsed\n    ist das Resultat eines vorhergehenden parse_com-Aufrufs.\n\nstring errormsg\n    ist ein String, der dann genommen wird, wenn kein Objekt gefunden\n    wurde (z.B. ein Tippfehler im Kommando) und keine passendere\n    Fehlermeldung generiert werden kann. (Normalerweise wird z.B.\n    bei 'trete xy' eine Fehlermeldung \"Xy nicht gefunden.\" erzeugt.)\n    Wurde keine solche Fehlermeldung angegeben, wird \"\" geliefert.\n\nstring only_one\n    Dieser Parameter ist optional.\n    Findet parse_com mehr als nur ein Objekt, auf dass die Beschreibung\n    passt, funktioniert aber das eigene Programm nur mit EINEM Objekt,\n    so wird dieser String als Fehlermeldung ausgegeben. Ist only_one\n    0, so beklagt sich parse_com_error_string nicht darueber.\n    (Zum Beispiel bei \"alle fackeln\" koennen mehrere Objekte gefunden\n    werden. Sie werden dann alle in parsed[PARSE_OBS] aufgelistet.)\n```\n\nBeispiel:\n\n```\nmixed *parsed;\n\nparsed = parse_com(command);\nif (parse_com_error(parsed,\"Nimm was?\\n\", \"Immer nur eines nehmen.\\n\"))\n    return 0;\nnimm(parsed[PARSE_OBS][0]);\n```\n\n*Siehe auch:* parse\\_com, parse\\_com\\_error\\_string",
       "source": "parse_com.c"
     },
     {
       "name": "parse_com_error_string",
       "signature": "string parse_com_error_string(mixed *parsed, string errormsg [, string only_one] )",
-      "documentation": "parse_com_error_string dient der einfachen Behandlung von Fehlermeldungen.",
+      "documentation": "parse\\_com\\_error\\_string dient der einfachen Behandlung von Fehlermeldungen. Liefert parse\\_com einen Fehler zurueck, kreiert parse\\_com\\_error\\_string eine entsprechende Fehlermeldung dazu und liefert sie zurueck. Falls kein Fehler auftrat, wird 0 geliefert.\n\nParameter:\n\n```\nmixed *parsed\n    ist das Resultat eines vorhergehenden parse_com-Aufrufs.\n\nstring errormsg\n    ist ein String, der dann genommen wird, wenn kein Objekt gefunden\n    wurde (z.B. ein Tippfehler im Kommando) und keine passendere\n    Fehlermeldung generiert werden kann. (Normalerweise wird z.B.\n    bei 'trete xy' eine Fehlermeldung \"Xy nicht gefunden.\" erzeugt.)\n    Wurde keine solche Fehlermeldung angegeben, wird \"\" geliefert.\n\nstring only_one\n    Dieser Parameter ist optional.\n    Findet parse_com mehr als nur ein Objekt, auf dass die Beschreibung\n    passt, funktioniert aber das eigene Programm nur mit EINEM Objekt,\n    so wird dieser String als Fehlermeldung ausgegeben. Ist only_one\n    0, so beklagt sich parse_com_error_string nicht darueber.\n    (Zum Beispiel bei \"alle fackeln\" koennen mehrere Objekte gefunden\n    werden. Sie werden dann alle in parsed[PARSE_OBS] aufgelistet.)\n```\n\n*Siehe auch:* parse\\_com, parse\\_com\\_error",
       "source": "parse_com.c"
     },
     {
@@ -1885,25 +1992,25 @@
     {
       "name": "player_present",
       "signature": "varargs object player_present(object room, int flags)",
-      "documentation": "Mit dieser Funktion kann man abfragen, ob ein (interaktiver) Spieler sich",
+      "documentation": "Mit dieser Funktion kann man abfragen, ob ein (interaktiver) Spieler sich in einem Raum befindet. Wenn kein Argument uebergeben wird, wird this\\_object() genommen. Die Funktion liefert den 1. Spieler, der gefunden wird (ansonsten 0) Mit dem Parameter flags kann man die Menge der betroffenen Spieler eingrenzen oder erweitern. Es kann eine Kombination (Veroderung) aus den folgenden in simul\\_efuns.h definierten Konstanten sein:\n\n```\nPPRESENT_NO_WIZARDS   Goetter nicht beachten\nPPRESENT_ONLY_LISTED        Spieler mit V_NOLIST-Unsichtbarkeit nicht beachten.\nPPRESENT_NO_HIDDEN        Spieler mit V_HIDDEN-Unsichtbarkeit nicht beachten.\nPPRESENT_NO_SHIMMER   Spieler mit V_SHIMMER-Unsichtbarkeit (z.B. Engel)\n                      nicht beachten\nPPRESENT_NO_INVIS     Spieler mit V_INVIS-Unsichtbarkeit (meist Goetter)\n                      nicht beachten\nPPRESENT_STATUES      Auch Statuen beachten.\n```\n\nStandardmaessig werden alle interaktiven Spieler (keine Statuen) unabhaengig von ihrem Level und Sichtbarkeit beachtet. Das \\#include \\<simul\\_efuns.h\\> nicht vergessen.",
       "source": "util.inc"
     },
     {
       "name": "playerp",
       "signature": "int playerp(mixed ob)",
-      "documentation": "Returned 1, wenn das ob ein Spieler/Engel/Gott ist, ansonsten 0.",
+      "documentation": "Returned 1, wenn das ob ein Spieler/Engel/Gott ist, ansonsten 0.\n\n*Siehe auch:* clonep",
       "source": "util.inc"
     },
     {
       "name": "plural",
       "signature": "varargs string plural(string einzahl_str, string plural_str, object|mapping|int ob, int art)",
-      "documentation": "Liefert plural_str, wenn ob im Plural ist, sonst einzahl_str.",
+      "documentation": "Liefert plural\\_str, wenn ob im Plural ist, sonst einzahl\\_str. ob kann hierbei ein v-item, ein Objekt sein oder OBJ\\_TO/PO/TP/OW/TI sein. Wenn ob nicht angegeben wird, wird this\\_object() angenommen. art hat die gleiche Bedeutung wie der zweite Parameter von query\\_deklin.\n\n**Beispiel:**\n\nDer(ob) + plural(\" braucht\",\" brauchen\",ob) + \" nichts.\"\n\n*Siehe auch:* ist, query\\_deklin",
       "source": "deklin.c"
     },
     {
       "name": "pol2xy",
       "signature": "int *pol2xy(int grad, int dist)",
-      "documentation": "Transformiert Polar-Koordinaten in kartesische Koordinaten.",
+      "documentation": "Transformiert Polar-Koordinaten in kartesische Koordinaten. Der Nullpunkt fuer den Winkel ist hierbei die Nord-Richtung.\n\nDie Funktion gibt ein Feld mit zwei Elementen zurueck, die die X- und die Y-Koordinate enthalten.\n\nIst der Radius kleiner Null bzw uebersteigt er den Werte-Bereich der Integer-Variablen, so wird statt einem Feld einfach der Wert 0 zurueckgeliefert.\n\n*Siehe auch:* xy2pol",
       "source": "math.inc"
     },
     {
@@ -1914,67 +2021,46 @@
     {
       "name": "QUERY",
       "signature": "mixed QUERY(string what, object ob|mapping vitem)",
-      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab.",
+      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab. Beim Objekt wird ob-\\>query\\_\\<what\\>() aufgerufen, beim V-Item wird vitem\\[what\\] ausgewertet. Falls letzteres eine Closure ist, so wird sie mit dem V-Item als 1. Parameter ausgefuehrt und dessen Ergebnis geliefert.\n\n*Siehe auch:* QUERY\\_PARS, query\\_v\\_item, parse\\_com",
       "source": "util.inc"
     },
     {
-      "name": "query_akkusativ",
-      "signature": "string query_akkusativ()",
-      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
-      "source": "deklin.c"
-    },
-    {
-      "name": "query_dativ",
-      "signature": "string query_dativ()",
-      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
-      "source": "deklin.c"
+      "name": "query_actions",
+      "signature": "nomask mixed *query_actions(mixed ob, mixed flag)",
+      "source": "secure.inc"
     },
     {
       "name": "query_deklin",
       "signature": "varargs string query_deklin(object|mapping|int who, int art, int fall, string | <string|int|<string|int>*>* | int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt,",
+      "documentation": "Liefert deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat (query\\_personal()==1).\n\n```\nwho   Das Objekt dessen deklinierte Form gewuenscht ist.\n\n      ODER eine virtuelles Objekt in der Form:\n         ([ \"name\" : \"...\", \"gender\" : \"...\" ])\n      oder bei Plural\n         ([ \"name\" : \"...\", \"gender\" : \"...\", \"plural\": 1 ])\n\n      ODER eine Zahl:\n         OBJ_TO  0   this_object()  (default)\n         OBJ_PO  1   previous_object()\n         OBJ_TP  2   this_player()\n         OBJ_OW  3   auto_owner_search  (sonst this_player())\n         OBJ_TI  4   this_interactive()\n\n\nart\n   ART_EIN            unbest. Artikel    (ein) + Adjektive + Nomen\n   ART_DER            bestimmter Artikel (der) + Adjektive + Nomen\n   ART_DIESER         demonstrativ       (dieser)  + Adjektive + Nomen\n   ART_MEIN           possesiv 1.Person  (mein) + Adjektive + Nomen\n   ART_DEIN           possesiv 2.Person  (dein) + Adjektive + Nomen\n   ART_SEIN           possesiv 3.Person  (sein) + Adjektive + Nomen\n   ART_ICH            personal 1.Person  (ich)\n   ART_DU             personal 2.Person  (du)\n   ART_ER             personal 3.Person  (er)\n   ART_KEIN           negiert            (kein)\n   ART_JENER      \\\n   ART_MANCHER     > Selbsterklaerend :)\n   ART_WELCHER    /\n\n   ART_KEINS          Kein Artikel, nur die Adjektive und das Nomen.\n   ART_KEINS_BEST     Kein Artikel, nur die Adjektive und das Nomen.\n   ART_KEINS_UNBEST   Kein Artikel, nur Adjketive(unbestimmte Form) und\n                      das Nomen.\n   ART_NUR_DER        nur bestimmter Artikel   (keine Adj., kein Nomen)\n                      (ART_DER | ART_NO_ADJEKTIV | ART_NO_NOMEN)\n   ART_NUR_EIN        nur unbest. Artikel      (keine Adj., kein Nomen)\n                      (ART_EIN | ART_NO_ADJEKTIV | ART_NO_NOMEN)\n   ART_NUR_DEIN       nur Possesivpronomen 2.P.(keine Adj., kein Nomen)\n   ART_NUR_SEIN       nur Possesivpronomen 3.P.(keine Adj., kein Nomen)\n   ART_NUR_DIESER     nur demonstr. Artikel (keine Adj., kein Nomen)\n   ART_NUR_KEIN       (ART_KEIN | ART_NO_ADJEKTIV | ART_NO_NOMEN)\n\n   ART_AAA            Automatische Artikelauswahl (ein/der) + Adj + Nomen\n   ART_NUR_AAA        Nur Artikel nach automatischer Auswahl (k.Adj.,k.Nomen)\n                      (Je nach Anzahl gleicher Objekte in der Umgebung wird\n                       ein oder der benutzt.)\n   ART_CAPITALIZE     Im Falle eines Pronoms wird jenes grossgeschrieben,\n                      im Falle einer pronomenlosen Konstruktion mit\n                      Adjektiven wird das erste Adjektiv gross geschrieben.\n\nfall\n   FALL_DEF   0   Nominativ\n   FALL_NOM   1   Nominativ\n   FALL_GEN   2   Genitiv\n   FALL_DAT   3   Dativ\n   FALL_AKK   4   Akkusativ\n\n\nadjektiv\n   string  ->  Grundform eines Adjektivs\n               \"\"         KEINE Adjektive\n   string* ->  ({ unregelm.Grundform, Deklinationsstamm }) eines Adjektivs\n               ({ adjektiv1, adjektiv2, ...}) mehrere Adjektive\n   int i   ->  i == 0   ALLE Adjektive des Objekts who.\n               i >  0   Die ersten i Adjektive des Objekts who.\n               i <  0   Das -i. te Adjektiv des Objekts who.\n   int*    ->  ({ a, b }) Die a bis b. Adjektive des Objekts who.\n               ({})       KEINE Adjektive\n\n\nowner Besitzer des Objekts. Falls 0 wird es aus dem environment berechnet.\n      (nur fuer art == ART_SEIN bzw. ART_NUR_SEIN verwendet)\n```\n\nDie Konstanten ART\\_..., FALL\\_..., OBJ\\_... werden in deklin.h definiert.\n\nMit Hilfe von adjektiv koennen alle oder bestimmte Adjektive des Objekts oder ein fremdes Adjektiv in den Ergebnisstring zwischen Artikel/Pronom und Substantiv gestellt werden. (Adjektive eines Objekts setzt man mit set\\_adjektiv, siehe dort.)\n\nAlle Parameter sind optional. Defaultwerte sind dann\n\n```\nwho:      this_object()\nart:      0  (bestimmter Artikel)\nfall:     0  (Nominativ)\nadjektiv: 0  (alle Adjektive des Objekts who)\nowner:    0  (auto owner search: living environment object)\n```\n\n**Beispiel:**\n\n```\nwho sei eine Person namens Anton\n  query_deklin(who);                   liefert: \"Anton\"\nwho sei ein Ork\n  query_deklin(who,ART_EIN,3,\"boesen\");      liefert: \"einem boesen Ork\"\nwhat sei ein Auto und who eine weibliche Person\n  query_deklin(what,ART_SEIN,4,0,who);        liefert: \"ihr Auto\"\n```\n\nquery\\_deklin verwendet:\n\n```\nauto_owner_search\nparse_deklin_object\n\nquery_pronom\nquery_deklin_adjektiv\nquery_deklin_name\n\nquery_personal\nquery_plural\nquery_eigen\n```\n\nDie Verwendung von der, dem, den, ... anstelle von query\\_deklin wird empfohlen!!! Siehe dort.\n\n*Siehe auch:* wer, der, ihr, query\\_pronom, set\\_adjektiv",
       "source": "deklin.c"
     },
     {
       "name": "query_deklin_adjektiv",
       "signature": "varargs string query_deklin_adjektiv(object|mapping who, string|<string|int|<string|int>*>*|int adj, int fall)",
-      "documentation": "Diese Funktion liefert eine fertig deklinierte (gebeugte), komma",
+      "documentation": "Diese Funktion liefert eine fertig deklinierte (gebeugte), komma getrennte Liste von Adjektiven eines Objekts oder ein fremdes, vorher uebergegebenes, dekliniertes Adjektiv.\n\nwho\n\n```\nDas Objekt dessen Adjektive dekliniert werden.\n```\n\nadj\n\n```\nhat ENTWEDER die Syntax eines ELEMENTS der Adjektivliste:\n   string    Grundform eines Adjektivs  (\"gruen\", \"blau\",...)\n   string *  Ein zweielementiges Feld:\n             ({ grundform, unregelmaessiger_wortstamm })\n             oder ein Feld aus mehreren Adjektiven:\n             ({ \"jung\", \"gruen\", \"gut riechend\" })\n             (Bei 2 Adjektiven muss eines als Array\n             z.B. ({\"jung\"}) angegeben werden)\nODER folgende Syntax zur AUSWAHL bestimmter Adjektive des Objekts\n   int i :  i == 0 : ALLE Adjektive des Objekts\n            i >  0 : die ERSTEN i Adjektive des Objekts\n            i <  0 : das -i. Adjektiv des Objekts\n   int *ip: ip == ({ a, b }) Alle Adjektive vom a. bis zum b.\n            Ist a, b negativ oder 0 dann wird von hinten gezaehlt.\n            ( 1 ist das erste Adjektiv,\n              0 ist das letzte Adjektiv,\n             -1 das vorletzte,...)\n```\n\nfall  0,1   Nominativ\n\n```\n2     Genitiv\n3     Dativ\n4     Akkusativ\n5     Nominativ unbestimmte Form\n6     Genitiv unbestimmte Form\n7     Dativ  unbestimmte Form\n8     Akkusativ unbestimmte Form\n```\n\n**Beispiel:**\n\nDas Objekt ob habe folgende Adjektivliste mit set\\_adjektiv definiert und sei maennlich.\n\nset\\_adjektiv( (\\{\"offen\", (\\{ \"lila\", \"lilan\" \\}), \"voll\"\\}) );\n\nDann liefert         (wenn zweites Argument fehlt, dann Nominativ)\n\n```\nquery_deklin_adjektiv(ob)               \"offene, lilane, volle\"\nquery_deklin_adjektiv(ob,0)             \"offene, lilane, volle\"\nquery_deklin_adjektiv(ob,1)             \"offene\"\nquery_deklin_adjektiv(ob,2)             \"offene, lilane\"\nquery_deklin_adjektiv(ob,3,4)           \"offenen, lilanen, vollen\"\nquery_deklin_adjektiv(ob,-1)            \"offene\"\nquery_deklin_adjektiv(ob,-2,4)          \"lilanen\"\nquery_deklin_adjektiv(ob,-3)            \"vollen\"\nquery_deklin_adjektiv(ob,({1,2})        \"offene, lilane\"\nquery_deklin_adjektiv(ob,({2,3})        \"lilane, volle\"\nquery_deklin_adjektiv(ob,({2,2})        \"lilane\"\nquery_deklin_adjektiv(ob,({2,0})        \"lilane, volle\"\nquery_deklin_adjektiv(ob,({2,-1})       \"lilane\"\n\nquery_deklin_adjektiv(\"rote\",3)      \"roten\"\nquery_deklin_adjektiv(({\"rosa\",\"rosan\"}),3) \"rosanen\"\n```\n\n*Siehe auch:* set\\_adjektiv, query\\_adjektiv, adjektiv, add\\_adjektiv, delete\\_adjektiv, set\\_id, query\\_id, id, add\\_id, delete\\_id, query\\_deklin, wer, der",
       "source": "deklin.c"
     },
     {
       "name": "query_deklin_ein_adjektiv",
       "signature": "varargs string query_deklin_ein_adjektiv(string|<string|int>* adj, int fall, string gender_string, int plural)",
-      "documentation": "Diese Funktion liefert ein dekliniertes Adjektiv.",
+      "documentation": "Diese Funktion liefert ein dekliniertes Adjektiv.\n\nadj\n\n```\nhat die Syntax eines ELEMENTS der Adjektivliste:\n   string        Grundform eines Adjektivs           \"gruen\", \"blau\",...\n      ODER\n   string *      Ein zweielementiges Feld:           ({\"lila\", \"lilan\"})\n                 ({ grundform, unregelmaessiger_wortstamm })\n      ODER\n   string|int*   Ein zweielementiges Feld:           ({\"rosa\",\n                                                       ADJ_NICHT_DEKLIN })\n                 ({ grundform, art })\n      ODER\n   string *      Ein einelementiges Feld:            ({\"blau\"})\n```\n\nfall  (default 1)\n\n```\n 1            Nominativ (mit bestimmtem Artikel davor)\n 2            Genitiv        \"          \"\n 3            Dativ          \"          \"\n 4            Akkusativ      \"          \"\n 5            Nominativ (mit unbestimmtem Artikel davor)\n 6            Genitiv        \"          \"\n 7            Dativ          \"          \"\n 8            Akkusativ      \"          \"\n 9            Nominativ (ohne Artikel davor)\n10            Genitiv        \"          \"\n11            Dativ          \"          \"\n12            Akkusativ      \"          \"\n```\n\ngender\\_string   (default saechlich)\n\n```\n\"saechlich\"\n\"maennlich\"\n\"weiblich\"\n```\n\nplural   (default 0)\n\n```\n0            Singularform\n1            Pluralform\n```\n\nAn sich braucht man diese Funktion nie direkt, da man alles auch mit den Funltionen wer,wessen,wem,wen und dessen Spezialformen erreichen kann.\n\n**Beispiel:**\n\nquery\\_deklin\\_ein\\_adjektiv(\"gross\", FALL\\_DAT, \"maennlich\")   --\\> \"grossen\"\n\n*Siehe auch:* set\\_adjektiv, query\\_adjektiv, adjektiv, add\\_adjektiv, delete\\_adjektiv, query\\_deklin\\_adjektiv, query\\_deklin, wer, der",
       "source": "deklin.c"
     },
     {
       "name": "query_deklin_name",
       "signature": "string query_deklin_name(object|mapping who, int fall)",
-      "documentation": "Diese Funktion liefert ein dekliniertes Nomen.",
       "source": "deklin.c"
     },
     {
       "name": "query_deklin_owner",
-      "signature": "varargs string query_deklin_owner(object|mapping|int who, int art, int fall, string|<string|int|<string|int>*>*|int adjektiv, <object|mapping|int> owner, int oart, string|<string|int|<string|int>*>*|int oadjektiv)",
-      "documentation": "Liefert die deklinierte Form eines Objektnamens. Dabei wird zusaetzlich",
-      "source": "deklin.c"
-    },
-    {
-      "name": "query_dekliniert",
-      "signature": "string query_dekliniert(int fall, object interessent, int flags)",
-      "documentation": "Die Grammatik-Funktionen rufen bei der Deklination des Namens eines",
+      "signature": "varargs string query_deklin_owner(<object|mapping|int> who, int art, int fall, string | <string|int|<string|int> *> *| int adjektiv, <object|mapping|int> owner, int oart, string | <string|int|<string|int> *> *| int oadjektiv)",
       "source": "deklin.c"
     },
     {
       "name": "query_editing",
       "signature": "int|object query_editing(object ob)",
       "source": "deprecated.inc"
-    },
-    {
-      "name": "query_genitiv",
-      "signature": "string query_genitiv()",
-      "documentation": "Ist diese Funktion in einem Objekt implementiert, so rufen die Grammatik-",
-      "source": "deklin.c"
     },
     {
       "name": "query_idle",
@@ -1998,35 +2084,25 @@
     },
     {
       "name": "query_limits",
-      "signature": "varargs int* query_limits(int def)",
+      "signature": "varargs int *query_limits(int def)",
       "source": "deprecated.inc"
     },
     {
       "name": "query_living_name",
       "signature": "string query_living_name(object ob)",
-      "documentation": "Liefert den mit 'set_living_name' gesetzten Namen.",
-      "source": "living.inc"
-    },
-    {
-      "name": "query_living_name_m",
-      "signature": "mapping query_living_name_m()",
+      "documentation": "Liefert den mit 'set\\_living\\_name' gesetzten Namen.\n\nACHTUNG: Nicht verwenden, sondern stattdessen query\\_npc\\_name() verwenden.\n\n*Siehe auch:* query\\_npc\\_name, set\\_living\\_name, find\\_living, find\\_player, find\\_object",
       "source": "living.inc"
     },
     {
       "name": "query_livings",
       "signature": "object *query_livings()",
-      "documentation": "Liefert alle Objekte, die einen Living-Namen haben.",
+      "documentation": "Liefert alle Objekte, die einen Living-Namen haben.\n\n*Siehe auch:* set\\_living\\_name",
       "source": "living.inc"
     },
     {
       "name": "query_load_average",
       "signature": "string query_load_average()",
       "source": "deprecated.inc"
-    },
-    {
-      "name": "query_name_living_m",
-      "signature": "mapping query_name_living_m()",
-      "source": "living.inc"
     },
     {
       "name": "query_once_interactive",
@@ -2036,25 +2112,39 @@
     {
       "name": "QUERY_PARS",
       "signature": "mixed QUERY_PARS(string what, object ob|mapping vitem, mixed *parameter)",
-      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab.",
+      "documentation": "Fragt die Eigenschaft what des Objektes ob oder V-Items vitem ab. Beim Objekt wird ob-\\>query\\_\\<what\\>(parameter) aufgerufen, wobei die Elemente aus parameter als einzelne Parameter uebergeben werden. Beim V-Item wird vitem\\[what\\] ausgewertet. Falls letzteres eine Closure ist, so wird sie mit dem V-Item als 1. Parameter und den Elementen aus parameter als weitere Parameter ausgefuehrt und dessen Ergebnis geliefert.\n\n*Siehe auch:* QUERY, query\\_v\\_item, parse\\_com",
       "source": "util.inc"
+    },
+    {
+      "name": "query_pc_alles",
+      "signature": "string *query_pc_alles()",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "query_pc_artikel",
+      "signature": "string *query_pc_artikel()",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "query_pc_dinge",
+      "signature": "string *query_pc_dinge()",
+      "source": "parse_com.c"
+    },
+    {
+      "name": "query_pc_meinesgleichen",
+      "signature": "string *query_pc_meinesgleichen()",
+      "source": "parse_com.c"
     },
     {
       "name": "query_pronom",
       "signature": "varargs string query_pronom(object|mapping who, int art, int fall, object|mapping owner)",
-      "documentation": "Diese Funktion liefert Artikel und Pronomen aller Art.",
-      "source": "deklin.c"
-    },
-    {
-      "name": "query_real_owner",
-      "signature": "object query_real_owner()",
-      "documentation": "Diese Funktion wird aufgerufen, um den wahren Eigentuemer einer Sache",
+      "documentation": "Diese Funktion liefert Artikel und Pronomen aller Art.\n\n```\nwho   Das Objekt dessen Pronomen oder Artikel gewuenscht ist.\n\n      ODER eine virtuelles Objekt in der Form:\n         ([ \"name\" : \"...\", \"gender\" : \"...\" ])\n      oder bei Plural\n         ([ \"name\" : \"...\", \"gender\" : \"...\", \"plural\": 1 ])\n\nart\n   ART_EIN        unbest. Artikel    (ein)\n   ART_DER        bestimmter Artikel (der)\n   ART_DIESER     demonstrativ       (dieser)\n   ART_MEIN       possesiv 1.Person  (mein)\n   ART_DEIN       possesiv 2.Person  (dein)\n   ART_SEIN       possesiv 3.Person  (sein)  Besitzerangabe moeglich\n   ART_ICH        personal 1.Person  (ich)\n   ART_DU         personal 2.Person  (du)\n   ART_ER         personal 3.Person  (er)\n   ART_KEIN       negiert            (kein)\n   ART_JENER      \\\n   ART_MANCHER     > Selbsterklaerend :)\n   ART_WELCHER    /\n\nfall\n   FALL_DEF   0   Nominativ\n   FALL_NOM   1   Nominativ\n   FALL_GEN   2   Genitiv\n   FALL_DAT   3   Dativ\n   FALL_AKK   4   Akkusativ\n\nowner Besitzer des Objekts. Falls 0 wird es aus dem environment berechnet.\n      (nur fuer art == ART_SEIN bzw. ART_NUR_SEIN verwendet)\n```\n\nDie Konstanten ART\\_..., FALL\\_... werden in deklin.h definiert.\n\nAlle Parameter sind optional. Defaultwerte sind dann\n\n```\nwho:      this_object()\nart:      0  (bestimmter Artikel)\nfall:     0  (Nominativ)\nowner:    0  (auto owner search: living environment object)\n```\n\nDie Verwendung von der, dem, den,... wird empfohlen!!! Siehe dort.\n\n*Siehe auch:* query\\_deklin, wer, der",
       "source": "deklin.c"
     },
     {
       "name": "query_real_player_level",
       "signature": "int query_real_player_level(object player)",
-      "documentation": "Liefert den Level eines Spielers (wenn 'ob' einer ist)",
+      "documentation": "Liefert den Level eines Spielers (wenn 'ob' einer ist) ansosnten 0\n\n*Siehe auch:* playerp",
       "source": "util.inc"
     },
     {
@@ -2065,7 +2155,7 @@
     {
       "name": "query_up_time",
       "signature": "int query_up_time()",
-      "documentation": "Gibt die Zeit in Sekunden seit dem letzten System-Start zurueck.",
+      "documentation": "Gibt die Zeit in Sekunden seit dem letzten System-Start zurueck.\n\n*Siehe auch:* time",
       "source": "time.inc"
     },
     {
@@ -2082,7 +2172,7 @@
     {
       "name": "real_time_diff",
       "signature": "int real_time_diff(int zeit_von, int zeit_bis)",
-      "documentation": "Liefert aus zwei Spielzeiten (Format: hhmmss)",
+      "documentation": "Liefert aus zwei Spielzeiten (Format: hhmmss) die Differenz in realen Sekunden zurueck. Ist der zweite Parameter kleiner als der erste, so wird ein Spieltag (!) hinzuaddiert. Anwendung zB bei call\\_outs.\n\nBeispiel:\n\n```\nreal_time_diff(11259,20011)  -->  314\n```\n\n*Siehe auch:* vtime, vclock, clock",
       "source": "time.inc"
     },
     {
@@ -2091,20 +2181,15 @@
       "source": "interactive.inc"
     },
     {
-      "name": "reset",
-      "signature": "protected void reset()",
-      "source": "simul_efun.c"
-    },
-    {
       "name": "right",
       "signature": "string right(string text, int len [,string pattern] )",
-      "documentation": "Gibt einen String der Breite len zurueck, in dem text rechtsbuendig",
+      "documentation": "Gibt einen String der Breite len zurueck, in dem text rechtsbuendig enthalten ist. Wenn noetig wird mit dem Zeichen pad aufgefuellt. Voreinstellung fuer pad ist das Leerzeichen.\n\nBeispiele:\n\n```\nright(\"abc d\",8)        -->     \"   abc d\"\nright(\"abc d\",8,\".\")    -->     \"...abc d\"\nright(\"abc  def\",7)     -->     \"bc  def\"\n```\n\n*Siehe auch:* sprintf, copies, center, right, wrap",
       "source": "string.inc"
     },
     {
       "name": "round",
       "signature": "int round(float op)",
-      "documentation": "Rundet ein Float-Argument und gibt es als Integer zurueck.",
+      "documentation": "Rundet ein Float-Argument und gibt es als Integer zurueck.\n\nBeispiele:\n\n```\nround(36.8)             -->      37\nround(-45.4)            -->     -45\n```\n\n*Siehe auch:* abs",
       "source": "math.inc"
     },
     {
@@ -2115,37 +2200,57 @@
     {
       "name": "search_file",
       "signature": "varargs string search_file(string path[, string absolute[, string subdir[, string extension, [string *exclude]]]])",
-      "documentation": "search_file sucht nach der im ersten Parameter 'path' angegebenen Datei.",
+      "documentation": "search\\_file sucht nach der im ersten Parameter 'path' angegebenen Datei.\n\n```\n- path kann ein absolute Dateiname sein. Dazu muss er mit einem\n  Schraegstrich beginnen.\n\n- path kann ein relativer Dateiname sein. Hierbei sind '../' nur am\n  Anfang erlaubt.\n\n- Beginnt path mit einem '%' so wird vom lokalen Verzeichnis ausgehend in\n  allen uebergeordneten Verzeichnissen nach dieser Datei gesucht. Wurde\n  der Parameter subdir angegeben, so muss diese Datei im Unterverzeichnis\n  subdir liegen.\n```\n\nDer Parameter absolute gibt das lokale Verzeichnis an. Wurde er weggelassen oder ist er 0, so wird das Verzeichnis des Objektes, welches diese simul-efun aufruft, genommen. Die Erweiterung extension wird sofern nicht schon in path vorhanden, automatisch angehaengt.\n\nIn exclude kann man absolute Dateinamen (mit Endung) angeben, welche von der Suche ausgeschlossen werden.\n\nsearch\\_file liefert den gefundenen Dateinamen zurueck, sofern diese Datei wirklich existiert, ansonsten 0.\n\nBeispiele:\n\n```\nsearch_file(\"../../../map.c\")\n    liefert \"/d/Vaniorh/map.c\", wenn es von einem Objekt in\n    /d/Vaniorh/Tadmor/Stadtwache/room aufgerufen wird.\n\nsearch_file(\"../../../map\", 0, 0, \".c\")\n    liefert das gleiche wie oben, hier duerfte man nur das .c\n    im Dateinamen weglassen.\n\nsearch_file(\"%map.c\")\n    schaut ausgehend von /d/Vaniorh/Tadmor/Stadtwache/room nach folgenden\n    Dateien:\n      /d/Vaniorh/Tadmor/Stadtwache/room/map.c\n      /d/Vaniorh/Tadmor/Stadtwache/map.c\n      /d/Vaniorh/Tadmor/map.c\n      /d/Vaniorh/map.c\n    wo es schliesslich fuendig wird und letzteres zurueckliefert.\n\nsearch_file(\"%master\", \"/d/Vaniorh/Tadmor/Stadtwache\", \"apps\", \".c\")\n    sucht nach folgenden Dateien:\n      /d/Vaniorh/Tadmor/Stadtwache/apps/master.c\n      /d/Vaniorh/Tadmor/apps/master.c\n      /d/Vaniorh/apps/master.c\n      /d/apps/master.c\n      /apps/master.c\n    und liefert den ersten gefundenen Dateinamen oder 0.\n\nsearch_file(\"/room/church.c\",\"/scheiss/egal/was\")\n    liefert /room/church.c\n```\n\n*Siehe auch:* file\\_path, object\\_name, abs\\_path",
       "source": "paths.inc"
     },
     {
       "name": "search_object",
       "signature": "mixed search_object(string objekt_string [,int flag] )",
-      "documentation": "Sucht ein Objekt ueber den angegebenen Objektstring. Damit kann man in",
+      "documentation": "Sucht ein Objekt ueber den angegebenen Objektstring. Damit kann man in eigenen Goettertools, Plugins usw. die vom Zauberstab gewohnte Syntax zur Angabe von Objekten benutzen.\n\nInfos zum Objektstring siehe /doc/hilfe/goetter/zauberstab/objektstring.\n\nMit dem optionalen Flag kann man beeinflussen, was wie gesucht wird:\n\n```\nSO_V_ITEM    (1)    Auch nach V-Items suchen\nSO_DONT_LOAD (2)    Objekt in der Zauberstab-Markierung nicht laden\nSO_ENV_FIRST (4)    Zuerst in der Umgebung suchen, dann im Player.\n                    (Diese Reihenfolge ist bei den Spielern ueblich.)\n```\n\nDiese Flags kann man mit dem Operator \\| verknuepfen. Die Defines stammen aus /sys/simul\\_efuns.h",
       "source": "search_object.inc"
     },
     {
       "name": "sein",
       "signature": "varargs string sein(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (ein/der) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Sein",
+      "signature": "varargs string Sein(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "seinem",
       "signature": "varargs string seinem(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (einem/dem) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Seinem",
+      "signature": "varargs string Seinem(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "seinen",
       "signature": "varargs string seinen(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (einen/den) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Seinen",
+      "signature": "varargs string Seinen(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "seines",
       "signature": "varargs string seines(object|mapping|int who, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert deklinierte Form eines Objektnamens. siehe der",
+      "documentation": "Liefert deklinierte Form eines Objektnamens.   siehe der Zusaetzlicher Parameter owner gibt den Besitzer von who an. Fehlt owner, dann wird das naechste living environment von who genommen. Hat who kein living environment, so wird auf automatische Artikelauswahl (eines/des) umgeschaltet.\n\n*Siehe auch:* der",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Seines",
+      "signature": "varargs string Seines(object|mapping|int who, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
@@ -2176,12 +2281,12 @@
     {
       "name": "set_living_name",
       "signature": "void set_living_name(string name)",
-      "documentation": "Mit dieser Funktion kann man den Namen eines Lebewesens setzen,",
+      "documentation": "Mit dieser Funktion kann man den Namen eines Lebewesens setzen, so dass das Lebewesen spaeter mit find\\_living(name) gefunden werden kann. Der Name wird in einen Hash-Table eingetragen. Die Funktion kann nur auf Lebewesen angewandt werden, die mit enable\\_commands() als solche gekennzeichnet wurden. In /i/monster/monster und /obj/monster wird dies bei NPCs automatisch gemacht.\n\nJedes Lebewesen kann nur einen Namen bekommen, der im Hash-Table eingetragen wird. Der Name sollte klein geschrieben sein, da es sonst zu Fehlern kommen kann.\n\nACHTUNG: Nicht verwenden, sondern stattdessen set\\_npc\\_name() verwenden.\n\n*Siehe auch:* lfun::set\\_npc\\_name, find\\_living, enable\\_commands, find\\_player, query\\_living\\_name",
       "source": "living.inc"
     },
     {
       "name": "set_prompt",
-      "signature": "mixed set_prompt(mixed prompt, varargs object* args)",
+      "signature": "mixed set_prompt(mixed prompt, varargs object *args)",
       "source": "interactive.inc"
     },
     {
@@ -2201,32 +2306,30 @@
     },
     {
       "name": "short_format_seconds",
-      "signature": "string short_format_seconds(int seconds)",
-      "documentation": "Liefert einen String der Form:",
+      "signature": "string short_format_seconds(int rest)",
       "source": "time.inc"
     },
     {
       "name": "short_format_vseconds",
       "signature": "string short_format_vseconds(int seconds)",
-      "documentation": "Liefert fuer seconds einen String der Form:",
       "source": "time.inc"
     },
     {
       "name": "shorttimestr",
       "signature": "varargs string shorttimestr(int clock, int full_year, int only)",
-      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss",
+      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss clock ist dabei die Anzahl der Sekunden seit 1970 (time()). Wenn full\\_year ungleich 0 ist, wird die Jahreszahl nicht auf die letzten zwei Stellen gekuerzt. Wenn only == TIMESTR\\_ONLY\\_TIME, wird lediglich die Uhrzeit geliefert. Wenn only == TIMESTR\\_ONLY\\_DATE, wird nur das Datum geliefert. Mit only == TIMESTR\\_ALL oder wenn dieser Parameter weggelassen wird, wird beides geliefert. Diese Werte sind in simul\\_efuns.h definiert. Das Analogon fuer Spielzeit ist shortvtimestr().\n\n*Siehe auch:* time, timestr, strftime, vtime, vtimestr, shortvtimestr",
       "source": "time.inc"
     },
     {
       "name": "shortvtimestr",
       "signature": "varargs string shortvtimestr(int spiel_zeit, int full_year, int only)",
-      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss,",
+      "documentation": "Liefert einen String mit dem Datum in der Form: TT.MM.JJ hh.mm.ss, spiel\\_zeit ist dabei die Anzahl der Sekunden seit 0, in Spielzeit (vtime()). Wenn full\\_year ungleich 0 ist, wird die Jahreszahl nicht auf zwei Ziffern gekuerzt. Wenn only == TIMESTR\\_ONLY\\_TIME, wird lediglich die Uhrzeit geliefert. Wenn only == TIMESTR\\_ONLY\\_DATE, wird nur das Datum geliefert. Mit only == TIMESTR\\_ALL oder wenn dieser Parameter weggelassen wird, wird beides geliefert. Diese Werte sind in simul\\_efuns.h definiert. Das Analogon fuer Realzeit ist shorttimestr().\n\n*Siehe auch:* time, vtime, vtimestr, strfvtime, shorttimestr",
       "source": "time.inc"
     },
     {
       "name": "shout",
       "signature": "void shout(string str)",
-      "documentation": "Der Aufruf dieser Funktion erzeugt ein Ereignis im Kanal \"Gebruell\",",
+      "documentation": "Der Aufruf dieser Funktion erzeugt ein Ereignis im Kanal \"Gebruell\", welcher ueber den Kurier (EVENT\\_MASTER) verteilt wird.",
       "source": "util.inc"
     },
     {
@@ -2237,36 +2340,30 @@
     {
       "name": "space",
       "signature": "string space(string str [,int n [,string pad]] )",
-      "documentation": "Loescht alle ueberschuessigen Spaces, und Tabs zwischen den Woertern",
+      "documentation": "Loescht alle ueberschuessigen Spaces, und Tabs zwischen den Woertern und fuellt die Zwischenraeume durch den String \\<pad\\> auf\n\nBeispiele:\n\n```\nspace(\"   hallo  wie gehts   \") -> \"hallo wie gehts\"\nspace(\"hallo  wie gehts\",2)     -> \"hallo  wie  gehts\"\nspace(\"hallo  wie gehts\",1,\"\")  -> \"hallowiegehts\"\nspace(\"hallo  wie gehts\",3,\"+\") -> \"hallo+++wie+++gehts\"\n```\n\n*Siehe auch:* trim",
       "source": "string.inc"
     },
     {
       "name": "str2int",
       "signature": "int str2int(string str, int &value, int base = 10)",
-      "documentation": "str2int wandelt einen String in einen Integer um, und liefert in der",
+      "documentation": "str2int wandelt einen String in einen Integer um, und liefert in der Referenz 'value' diesen Integerwert. Wenn ein Wert \\> 0 returned wird, konnte der String nicht vollstaendig umgewandelt werden wobei der Wert die Stelle anzeigt, an der der Fehler liegt (1. Buchstabe = 1). Bsp:\n\n```\nfehler=str2int(\"123\", &i)    -> i==123; fehler==0;\nfehler=str2int(\"123abc\", &i) -> i==123; fehler==4;\nfehler=str2int(\"abc\", &i)    -> i==0;   fehler==1;\n```\n\nAls Basis wird sofern nicht angegeben 10 genommen.\n\n*Siehe auch:* to\\_int, to\\_float, to\\_string",
       "source": "math.inc"
     },
     {
       "name": "strfvtime",
       "signature": "string strftime([string fmt] [, int clock] [, int localized])",
-      "documentation": "Liefert die Spielzeit als formatierten String zurueck. Das Format kann",
+      "documentation": "Liefert die Spielzeit als formatierten String zurueck. Das Format kann vom Benutzer mit Hilfe von Platzhaltern im Formatstring angegeben werden. clock ist dabei die Anzahl der Sekunden seit 0, in Spielzeit (vtime()).\n\nAlle moeglichen Platzhalter im Formatstring sind in der Hilfe zu strftime() dokumentiert.\n\n*Siehe auch:* strftime, vtime, vtimestr, vtimearray, array\\_to\\_vtime",
       "source": "time.inc"
-    },
-    {
-      "name": "string_create",
-      "signature": "protected void string_create()",
-      "source": "string.inc"
     },
     {
       "name": "string_parser",
       "signature": "varargs mixed string_parser(string str, int tp_flag, int|symbol use_tp, mapping functions)",
-      "documentation": "Der uebergebene String str wird nach Funktionen durchsucht und ein Array",
       "source": "deklin.c"
     },
     {
       "name": "strip",
       "signature": "string strip(string text)",
-      "documentation": "Entfernt vorangestellte und nachfolgende Spaces und Tabs aus text.",
+      "documentation": "Entfernt vorangestellte und nachfolgende Spaces und Tabs aus text.\n\nBeispiele:\n\n```\nstrip(\"   abc   \")              -->     \"abc\"\n```\n\n*Siehe auch:* trim, sprintf, copies, center, left, right, wrap",
       "source": "string.inc"
     },
     {
@@ -2277,7 +2374,7 @@
     {
       "name": "substr",
       "signature": "string substr(string text, int n[, int len [,string pattern]] )",
-      "documentation": "Gibt den Teil von text zurueck, der mit dem n'ten Zeichen beginnt",
+      "documentation": "Gibt den Teil von text zurueck, der mit dem n'ten Zeichen beginnt und len lang ist. Wenn noetig wird mit dem Zeichen pad aufgefuellt. Voreinstellung fuer pad ist das Leerzeichen. Wird len nicht angegeben, so wird der Rest von text zurueckgegeben.\n\nBeispiele:\n\n```\nsubstr(\"abc\",2)         -->     \"bc\"\nsubstr(\"abc\",2,4)       -->     \"bc  \"\nsubstr(\"abc\",2,6,\".\")   -->     \"bc....\"\n```\n\n*Siehe auch:* sprintf, copies, center, right, wrap",
       "source": "string.inc"
     },
     {
@@ -2288,7 +2385,7 @@
     {
       "name": "sys_log",
       "signature": "void sys_log(string file_name, string message)",
-      "documentation": "Haengt den String 'message' an das file /log/sys/<file_name> an.",
+      "documentation": "Haengt den String 'message' an das file /log/sys/\\<file\\_name\\> an. Ist fuer Debuggingzwecke oder zum Mitloggen von Systemdaten. Steht nicht fuer normale Objekte zur Verfuegung.\n\n*Siehe auch:* write\\_file, log\\_file",
       "source": "log.inc"
     },
     {
@@ -2299,7 +2396,7 @@
     {
       "name": "tell_object",
       "signature": "nomask void tell_object(object ob, string str)",
-      "source": "deprecated.inc"
+      "source": "comm.inc"
     },
     {
       "name": "tell_room",
@@ -2314,114 +2411,143 @@
     {
       "name": "time_to_vtime",
       "signature": "int time_to_vtime(int time)",
-      "documentation": "Rechnet Realzeit (time(), sec seit 1970) in Spielzeit (vtime(), sec seit 0) um.",
+      "documentation": "Rechnet Realzeit (time(), sec seit 1970) in Spielzeit (vtime(), sec seit 0) um.\n\n*Siehe auch:* vtime\\_to\\_time, time, vtime",
       "source": "time.inc"
     },
     {
       "name": "timearray",
       "signature": "int* timearray(int clock)",
-      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche clock entspricht.",
+      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche clock entspricht. Dabei ist clock die Zahl der Sekunden seit dem 1. Januar 1970 00:00:00 (wird durch time() geliefert). Das Array enthaelt folgende Elemente:\n\n```\ntimearray(clock)[TM_SEC]:   Sekunden (0-59)\ntimearray(clock)[TM_MIN]:   Minuten (0-59)\ntimearray(clock)[TM_HOUR]:  Stunden (0-23)\ntimearray(clock)[TM_MDAY]:  Tag des Monats (1-31)\ntimearray(clock)[TM_MON]:   Monat (1-12)\ntimearray(clock)[TM_YEAR]:  Jahr\ntimearray(clock)[TM_WDAY]:  Tag in der Woche (Sonntag:0, Montag: 1,...)\ntimearray(clock)[TM_YDAY]:  Tag im Jahr (0-365)\n```\n\nDiese Defines gibt es in time.h.\n\n*Siehe auch:* time, timestr, strftime, array\\_to\\_time, vtimearray",
       "source": "time.inc"
     },
     {
       "name": "timestr",
       "signature": "varargs string timestr(int clock, int only)",
-      "documentation": "Gibt einen deutschsprachigen String mit dem Datum und der Uhrzeit zurueck,",
+      "documentation": "Gibt einen deutschsprachigen String mit dem Datum und der Uhrzeit zurueck, welchem clock entspricht. Das Argument clock sollte die Anzahl an Sekunden seit dem 1. Januar 1970 00:00:00 sein (wird von time() geliefert). Das Wenn only == TIMESTR\\_ONLY\\_TIME, wird lediglich die Uhrzeit geliefert. Wenn only == TIMESTR\\_ONLY\\_DATE, wird nur das Datum geliefert. Mit only == TIMESTR\\_ALL oder wenn dieser Parameter weggelassen wird, wird Uhrzeit und Datum geliefert. Diese Werte sind in simul\\_efuns.h definiert. Analogon fuer Spielzeit ist vtimestr().\n\n*Siehe auch:* time, ctime, strftime, vtimestr, shorttimestr, timearray, array\\_to\\_time",
       "source": "time.inc"
     },
     {
       "name": "touch",
-      "signature": "object touch(string|object ob [,int flag] )",
-      "documentation": "Laedt einen File und gibt bei Erfolg einen Pointer darauf zurueck,",
+      "signature": "varargs object touch(mixed ob, int flag)",
       "source": "map.inc"
     },
     {
       "name": "transpose_array",
-      "signature": "mixed * transpose_array(mixed *arr)",
+      "signature": "mixed *transpose_array(mixed *arr)",
       "source": "compat.inc"
     },
     {
       "name": "unliste",
       "signature": "string * unliste(string str [, string pad, ...])",
-      "documentation": "Versucht aus einer Aufzaehlung wieder ein String-Array zu machen.",
+      "documentation": "Versucht aus einer Aufzaehlung wieder ein String-Array zu machen. Es ist auch moeglich, mehrere pad anzugeben. Gibt man pad als 0 an, so wird gar nicht erst nach einem solchen gesucht.\n\n```\nunliste(\"eins, zwei und drei\")\n    -> ({\"eins\", \"zwei\", \"drei\"})\n\nunliste(\"gruen, rot oder blau\", \" und \", \" oder \")\n    -> ({\"gruen\", \"rot\", \"blau\"})\n```\n\n*Siehe auch:* liste",
       "source": "string.inc"
+    },
+    {
+      "name": "users",
+      "signature": "object *users()",
+      "source": "interactive.inc"
     },
     {
       "name": "valid_file_name",
       "signature": "int valid_file_name(string name)",
-      "documentation": "Liefert 1, wenn name ein gueltiger Dateiname ist, sonst 0.",
+      "documentation": "Liefert 1, wenn name ein gueltiger Dateiname ist, sonst 0. Dabei wird geprueft, ob dieser Name nur gueltige Zeichen enthaelt und ob das Verzeichnis, in welchem diese Datei sein sollte, existiert.\n\n*Siehe auch:* abs\\_path, search\\_file",
       "source": "paths.inc"
+    },
+    {
+      "name": "variable_list",
+      "signature": "nomask varargs mixed *variable_list(object ob, int flag)",
+      "source": "secure.inc"
     },
     {
       "name": "vclock",
       "signature": "int vclock()",
-      "documentation": "Liefert einen Integer im Format: hhmmss mit der Spieluhrzeit",
+      "documentation": "Liefert einen Integer im Format: hhmmss mit der Spieluhrzeit\n\n*Siehe auch:* clock, time, timestr, vtime, vtimestr",
       "source": "time.inc"
     },
     {
       "name": "vtime",
       "signature": "int vtime()",
-      "documentation": "Liefert die Anzahl der Sekunden seit dem UNItopia besteht.",
+      "documentation": "Liefert die Anzahl der Sekunden seit dem UNItopia besteht.\n\n*Siehe auch:* time, vtime\\_to\\_time, time\\_to\\_vtime",
       "source": "time.inc"
     },
     {
       "name": "vtime_to_time",
       "signature": "int vtime_to_time(int vtime)",
-      "documentation": "Rechnet Spielzeit (vtime(), sec seit 0) in Realzeit (time(), sec seit 1970) um.",
+      "documentation": "Rechnet Spielzeit (vtime(), sec seit 0) in Realzeit (time(), sec seit 1970) um.\n\n*Siehe auch:* time\\_to\\_vtime, time, vtime",
       "source": "time.inc"
     },
     {
       "name": "vtimearray",
       "signature": "int* vtimearray(int clock)",
-      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche der in clock",
+      "documentation": "Gibt das Datum und die Uhrzeit in einem Array zurueck, welche der in clock dargestellten Spielzeit entspricht. (clock wird durch vtime() geliefert.) Das Array enthaelt folgende Elemente:\n\n```\nvtimearray(clock)[TM_SEC]:   Sekunden (0-59)\nvtimearray(clock)[TM_MIN]:   Minuten (0-59)\nvtimearray(clock)[TM_HOUR]:  Stunden (0-23)\nvtimearray(clock)[TM_MDAY]:  Tag des Monats (1-31)\nvtimearray(clock)[TM_MON]:   Monat (1-12)\nvtimearray(clock)[TM_YEAR]:  Jahr\nvtimearray(clock)[TM_WDAY]:  Tag in der Woche (Sonntag:0, Montag: 1,...)\nvtimearray(clock)[TM_YDAY]:  Tag im Jahr (0-365)\n```\n\nDiese Defines gibt es in time.h.\n\n*Siehe auch:* vtime, vtimestr, strfvtime, array\\_to\\_vtime, timearray",
       "source": "time.inc"
     },
     {
       "name": "vtimestr",
       "signature": "varargs string vtimestr(int vtime, int only)",
-      "documentation": "Liefert einen String der Form Mittwoch 31. Maerz 12 18:47:15",
+      "documentation": "Liefert einen String der Form Mittwoch 31. Maerz 12 18:47:15 in Spielzeit, das Analogon fuer Realzeit heisst timestr(). Wenn only == TIMESTR\\_ONLY\\_TIME, wird lediglich die Uhrzeit geliefert. Wenn only == TIMESTR\\_ONLY\\_DATE, wird nur das Datum geliefert. Mit only == TIMESTR\\_ALL oder wenn dieser Parameter weggelassen wird, wird Uhrzeit und Datum geliefert. Diese Werte sind in simul\\_efuns.h definiert.\n\n*Siehe auch:* vtime, strfvtime, timestr, ctime, time, vtimearray, array\\_to\\_vtime",
       "source": "time.inc"
     },
     {
       "name": "wem",
       "signature": "varargs string wem(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert im Dativ deklinierte Form eines Objektnamens.",
+      "documentation": "Liefert im Dativ deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat. Weitere Beschreibung -\\>wer\n\n*Siehe auch:* wer, wen",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Wem",
+      "signature": "varargs string Wem(object|mapping|int who, int art, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "wen",
       "signature": "varargs string wen(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert im Akkusativ deklinierte Form eines Objektnamens.",
+      "documentation": "Liefert im Akkusativ deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat. Weitere Beschreibung -\\>wer\n\n*Siehe auch:* wer, wem",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Wen",
+      "signature": "varargs string Wen(object|mapping|int who, int art, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "wer",
       "signature": "varargs string wer(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens.",
+      "documentation": "Liefert im Nominativ deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat (query\\_personal()==1).\n\n```\nwho   Das Objekt dessen deklinierte Form im Nominativ gewuenscht ist.\n\n      ODER eine virtuelles Objekt in der Form:\n         ([ \"name\" : \"...\", \"gender\" : \"...\" ])\n      oder bei Plural\n         ([ \"name\" : \"...\", \"gender\" : \"...\", \"plural\": 1 ])\n\n      ODER eine Zahl:\n         OBJ_TO  0   this_object()  (default)\n         OBJ_PO  1   previous_object()\n         OBJ_TP  2   this_player()\n         OBJ_OW  3   auto_owner_search  (sonst this_player())\n         OBJ_TI  4   this_interactive()\n\nart\n   ART_EIN            unbest. Artikel    (ein) + Adjektive + Nomen\n   ART_DER            bestimmter Artikel (der) + Adjektive + Nomen\n   ART_DIESER         demonstrativ       (dieser)  + Adjektive + Nomen\n   ART_MEIN           possesiv 1.Person  (mein) + Adjektive + Nomen\n   ART_DEIN           possesiv 2.Person  (dein) + Adjektive + Nomen\n   ART_SEIN           possesiv 3.Person  (sein) + Adjektive + Nomen\n   ART_ICH            personal 1.Person  (ich)\n   ART_DU             personal 2.Person  (du)\n   ART_ER             personal 3.Person  (er)\n   ART_KEIN           negiert            (kein)\n   ART_JENER      \\\n   ART_MANCHER     > Selbsterklaerend :)\n   ART_WELCHER    /\n\n   ART_VIS            Zeigt die sichtbare Deklination, unabhaengig,\n                      ob das Objekt/Lebewsen sichtbar ist oder nicht.\n   ART_INVIS          Zeigt die unsichtbare Deklination.\n\n   ART_KEINS          Kein Artikel, nur die Adjektive und das Nomen.\n   ART_KEINS_BEST     Kein Artikel, nur die Adjektive und das Nomen.\n   ART_KEINS_UNBEST   Kein Artikel, nur Adjketive(unbestimmte Form) und\n                      das Nomen.\n   ART_NUR_EIN        nur unbest. Artikel      (keine Adj., kein Nomen)\n   ART_NUR_DER        nur bestimmter Artikel   (keine Adj., kein Nomen)\n   ART_NUR_DIESER     nur demonstr. Artikel (keine Adj., kein Nomen)\n   ART_NUR_MEIN       nur Possesivpronomen 1.P.(keine Adj., kein Nomen)\n   ART_NUR_DEIN       nur Possesivpronomen 2.P.(keine Adj., kein Nomen)\n   ART_NUR_SEIN       nur Possesivpronomen 3.P.(keine Adj., kein Nomen)\n   ART_NUR_KEIN       nur Negationspronomen kein (keine Adj., kein Nomen)\n   ART_CAPITALIZE     Im Fall eines Pronoms wird dieses grossgeschrieben\n                      im Falle einer pronomenlosen Konstruktion mit\n                      Adjektiven wird das erste Adjektiv gross geschrieben.\n\n   ART_AAA            Automatische Artikelauswahl (ein/der) + Adj + Nomen\n   ART_NUR_AAA        Nur Artikel nach automatischer Auswahl (k.Adj.,k.Nomen)\n                      (Je nach Anzahl gleicher Objekte in der Umgebung wird\n                       ein oder der benutzt.)\n\nadjektiv\n   string  ->  Grundform eines Adjektivs\n               \"\"         KEINE Adjektive\n   string* ->  ({ unregelm.Grundform, Deklinationsstamm }) eines Adjektivs\n               ({ adjektiv1, adjektiv2, ...}) mehrere Adjektive\n   int i   ->  i == 0     ALLE Adjektive des Objekts who.\n               i >  0     Die ersten i Adjektive des Objekts who.\n               i <  0     Das -i. te Adjektiv des Objekts who.\n   int*    ->  ({ a, b }) Die a bis b. Adjektive des Objekts who.\n               ({})       KEINE Adjektive\n\nowner Besitzer des Objekts. Falls 0 wird es aus dem environment berechnet.\n      (nur fuer art == ART_SEIN bzw ART_NUR_SEIN verwendet)\n```\n\nDie Konstanten ART\\_..., FALL\\_..., OBJ\\_... werden in deklin.h definiert.\n\nMit Hilfe von adjektiv koennen alle oder bestimmte Adjektive des Objekts oder ein fremdes Adjektiv in den Ergebnisstring zwischen Artikel/Pronom und Substantiv gestellt werden. (Adjektive eines Objekts setzt man mit set\\_adjektiv, siehe dort.)\n\nAlle Parameter sind optional. Defaultwerte sind dann\n\n```\nwho:      this_object()\nart:      0  (bestimmter Artikel)\nadjektiv: 0  (alle Adjektive des Objekts who)\nowner:    0  (auto owner search: living environment object)\n```\n\nBeispiele fuer wer, wem, wen\n\n```\nwho  sei eine Person namens Anton\nork  sei ein Ork ohne Namen\n\n  Wer(who)+\" zieht \"+wem(ork,ART_EIN)+\" einen Pullover an.\"\n     liefert:\n  \"Anton zieht einem Ork einen Pullover an.\"\n\n  Wer(ork,ART_DIESER,\"boese\")+\n      \" laesst sich das von \"+wem(who)+\" nicht gefallen.\"\n     liefert:\n  \"Dieser boese Ork laesst sich das von Anton nicht gefallen.\"\n\n  Wer(ork)+\" haette \"+wen(who,ART_ER)+\" am liebsten davongejagt.\"\n     liefert:\n  \"Der Ork haette ihn am liebsten davongejagt.\"\n\n  Wer(ork)+\" patscht \"+wem(who)+\" auf \"+\n  wen(([\"name\"  :\"finger\",\n        \"gender\":\"maennlich\",\n        \"plural\":1]), ART_SEIN, 0, who)+\".\"\n     liefert:\n  \"Der Ork patscht Anton auf seine Finger.\"\n```\n\nwer, wem, wen sind Spezialfaelle von query\\_deklin.\n\nANSTELLE VON wer, wen, wem SOLLTEN DIE BEFEHLE:\n\n```\nder, dem, den, ein, einem, einen, dein, deinem, deinen,\nsein, seinem, seinen, dieser, diesem, diesen, er, ihm, ihn, ihr,\nDer, Dem, Den, Ein, Ihr, ...\n```\n\nBENUTZT WERDEN!!!!!  (siehe dort)\n\n*Siehe auch:* der, query\\_pronom, query\\_deklin, set\\_adjektiv",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Wer",
+      "signature": "varargs string Wer(object|mapping|int who, int art, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "wessen",
       "signature": "varargs string wessen(object|mapping|int who, int art, string|<string|int|<string|int>*>*|int adjektiv, object|mapping|int owner)",
-      "documentation": "Liefert im Genitiv deklinierte Form eines Objektnamens.",
+      "documentation": "Liefert im Genitiv deklinierte Form eines Objektnamens. Dabei wird beruecksichtigt, ob das Objekt ein personal\\_name hat. Weitere Beschreibung -\\>wer\n\n*Siehe auch:* wer, wen, wem",
+      "source": "deklin.c"
+    },
+    {
+      "name": "Wessen",
+      "signature": "varargs string Wessen(object|mapping|int who, int art, string|<string|int|<string|int> *> *|int adjektiv, object|mapping|int owner)",
       "source": "deklin.c"
     },
     {
       "name": "wizardshellp",
       "signature": "int wizardshellp()",
-      "documentation": "Gibt den Level des Wiz-Shell-Besitzers zurueck, FALLS es sich bei",
+      "documentation": "Gibt den Level des Wiz-Shell-Besitzers zurueck, FALLS es sich bei dem Objekt um eine Wizard - Shell handelt.\n\n*Siehe auch:* playerp, clonep",
       "source": "util.inc"
     },
     {
       "name": "wrap",
       "signature": "string wrap(string str [, int len [, int left]])",
-      "documentation": "wrap bricht einen String um. Leere Strings werden nicht umgebrochen.",
+      "documentation": "wrap bricht einen String um. Leere Strings werden nicht umgebrochen.\n\n\\<len\\> ist die Gesamtbreite des Textes. Wenn \\<len\\> nicht angegeben wird, wird auf 75 Zeichen ungebrochen. Der Text kann noch um \\<left\\> Zeichen eingerueckt werden; \\<len\\> bleibt dabei die Gesamtbreite inklusive dieser \\<left\\> eingerueckten Zeichen. Will man \\<left\\> angeben, ohne \\<len\\> anzugeben, so gibt man fuer \\<len\\> einfach 0 an.\n\n*Siehe auch:* sprintf, copies, left, right, center, wrap\\_say",
       "source": "string.inc"
     },
     {
       "name": "wrap_say",
       "signature": "string wrap_say(string str1, string str2 [, int len [, int left]])",
-      "documentation": "wrap_say() erzeugt einen String, der etwa so aussieht:",
+      "documentation": "wrap\\_say() erzeugt einen String, der etwa so aussieht: say(wrap\\_say(\"Monty sagt:\",\"blablabla .....\"));-\\>\n\nMonty sagt: blablabla blablabla blablabla blablabla blablabla blablabla\n\n```\nblablabla blablabla blablabla blablabla blablabla blablabla\nblablabla blablabla ...\n```\n\nDer erste optionale Parameter bestimmt die Breite, auf die str2 umgebrochen werden soll.\n\nDer zweite optionale Parameter bestimmt, wie weit links eingerueckt werden soll. Standardwert ist 8 Zeichen. Aus Einheitlichkeitsgruenden sollte hier auch nur in Ausnahmefaellen was anderes angegeben werden.\n\n*Siehe auch:* sprintf, copies, left, right, center, wrap",
       "source": "string.inc"
     },
     {
@@ -2432,13 +2558,13 @@
     {
       "name": "write_bits",
       "signature": "string write_bits(string str, int start, int length, int number)",
-      "documentation": "Schreibt die Zahl number in den Bitspring an Position start",
+      "documentation": "Schreibt die Zahl number in den Bitspring an Position start und liefert den neuen String zurueck.",
       "source": "util.inc"
     },
     {
       "name": "xy2pol",
       "signature": "int *xy2pol(int x, int y)",
-      "documentation": "Transformiert kartesische Koordinaten in Polar-Koordinaten.",
+      "documentation": "Transformiert kartesische Koordinaten in Polar-Koordinaten. Zurueckgegeben wird ein Feld mit zwei Elementen, die den Winkel und den Radius enthalten.\n\nUebersteigt der Wert von   x\\*x+y\\*y   die Grenzen der Integer-Variablen, so wird statt einem Feld einfach nur 0 zurueckgeliefert !\n\n*Siehe auch:* pol2xy",
       "source": "math.inc"
     }
   ]

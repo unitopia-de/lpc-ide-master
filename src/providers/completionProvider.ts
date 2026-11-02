@@ -1,5 +1,13 @@
 import * as vscode from 'vscode';
 import { EfunProvider, EfunDefinition } from '../dialect/efunProvider';
+import { LpcIndex, bestPerName } from '../analysis/lpcIndex';
+import { parseDocument } from '../analysis/documentCache';
+import { LpcFunction } from '../analysis/lpcParser';
+
+// Efun-Vorschlag, dessen Hilfe erst beim Auswählen nachgeladen wird.
+class EfunCompletionItem extends vscode.CompletionItem {
+    efunName?: string;
+}
 
 const LPC_SELECTOR: vscode.DocumentSelector = [
     { language: 'lpc', scheme: 'file' },
@@ -20,10 +28,11 @@ const TYPES = [
 
 export function registerCompletionProvider(
     context: vscode.ExtensionContext,
-    efuns: EfunProvider
+    efuns: EfunProvider,
+    index: LpcIndex
 ): void {
-    const provider: vscode.CompletionItemProvider = {
-        provideCompletionItems(document, position) {
+    const provider: vscode.CompletionItemProvider<EfunCompletionItem> = {
+        async provideCompletionItems(document, position) {
             const linePrefix = document
                 .lineAt(position)
                 .text.substring(0, position.character);
@@ -34,8 +43,24 @@ export function registerCompletionProvider(
             }
 
             const items: vscode.CompletionItem[] = [];
+            const seen = new Set<string>();
 
+            // 1. Funktionen dieser Datei
+            for (const fn of bestPerName(parseDocument(document).functions)) {
+                seen.add(fn.name);
+                items.push(buildFunctionItem(fn, 'Funktion in dieser Datei', '0_'));
+            }
+
+            // 2. Geerbte Funktionen (nur mit homemud)
+            for (const fn of await index.inheritedFunctions(document)) {
+                if (seen.has(fn.name)) continue;
+                seen.add(fn.name);
+                items.push(buildFunctionItem(fn, 'Geerbt aus ' + fn.mudPath, '1_'));
+            }
+
+            // 3. Efuns und Sfuns — außer sie werden von einer eigenen Funktion überdeckt
             for (const def of efuns.list()) {
+                if (seen.has(def.name)) continue;
                 items.push(buildEfunItem(def));
             }
 
@@ -50,6 +75,14 @@ export function registerCompletionProvider(
             }
 
             return items;
+        },
+
+        async resolveCompletionItem(item) {
+            if (item.efunName && !item.documentation) {
+                const doc = await index.efunDocs.get(item.efunName);
+                if (doc) item.documentation = new vscode.MarkdownString(doc.markdown);
+            }
+            return item;
         }
     };
 
@@ -58,32 +91,48 @@ export function registerCompletionProvider(
     );
 }
 
-function buildEfunItem(def: EfunDefinition): vscode.CompletionItem {
-    const item = new vscode.CompletionItem(
+function buildFunctionItem(fn: LpcFunction, origin: string, sortPrefix: string): vscode.CompletionItem {
+    const signature = fn.declaration ?? fn.signature;
+    const item = new vscode.CompletionItem(fn.name, vscode.CompletionItemKind.Function);
+    item.detail = signature;
+    const md = new vscode.MarkdownString();
+    if (fn.documentation) md.appendMarkdown(fn.documentation + '\n\n');
+    md.appendMarkdown('*' + origin + '*');
+    item.documentation = md;
+    item.insertText = snippetFor(fn.name, signature);
+    item.sortText = sortPrefix + fn.name;
+    return item;
+}
+
+function buildEfunItem(def: EfunDefinition): EfunCompletionItem {
+    const item = new EfunCompletionItem(
         def.name,
         def.isSimulated ? vscode.CompletionItemKind.Method : vscode.CompletionItemKind.Function
     );
     item.detail = def.signature;
     if (def.documentation) {
         item.documentation = new vscode.MarkdownString(def.documentation);
+    } else if (!def.isSimulated) {
+        item.efunName = def.name;
     }
+    item.insertText = snippetFor(def.name, def.signature);
+    item.sortText = def.isSimulated ? '3_' + def.name : '2_' + def.name;
+    return item;
+}
 
-    // Snippet-Insertion mit Parameter-Tabstops, falls Signatur Parameter enthält.
-    const params = extractParameters(def.signature);
+// Snippet mit Parameter-Tabstops, falls die Signatur Parameter enthält.
+function snippetFor(name: string, signature: string): vscode.SnippetString | undefined {
+    const params = extractParameters(signature);
     if (params.length > 0) {
-        const snippet = new vscode.SnippetString(`${def.name}(`);
+        const snippet = new vscode.SnippetString(`${name}(`);
         params.forEach((p, i) => {
             if (i > 0) snippet.appendText(', ');
             snippet.appendPlaceholder(p);
         });
         snippet.appendText(')');
-        item.insertText = snippet;
-    } else if (def.signature.includes('(')) {
-        item.insertText = new vscode.SnippetString(`${def.name}($0)`);
+        return snippet;
     }
-
-    item.sortText = def.isSimulated ? '1_' + def.name : '0_' + def.name;
-    return item;
+    return signature.includes('(') ? new vscode.SnippetString(`${name}($0)`) : undefined;
 }
 
 // Extrahiert die Parameter-Namen aus einer Signatur grob heuristisch.

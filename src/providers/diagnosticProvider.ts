@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { LpcConfigService, LpcConfig } from '../config/lpcConfig';
 import { DialectManager } from '../dialect/dialectManager';
 import { HomeMudService } from '../homemud/homeMudService';
+import { LpcIndex } from '../analysis/lpcIndex';
 
 const LPC_SCHEMES = ['file', 'lpc-ftp'];
 const DEBOUNCE_MS = 400;
@@ -10,7 +11,8 @@ export function registerDiagnosticProvider(
     context: vscode.ExtensionContext,
     config: LpcConfigService,
     dialect: DialectManager,
-    homemud: HomeMudService
+    homemud: HomeMudService,
+    index: LpcIndex
 ): void {
     const collection = vscode.languages.createDiagnosticCollection('lpc');
     context.subscriptions.push(collection);
@@ -26,7 +28,7 @@ export function registerDiagnosticProvider(
             key,
             setTimeout(() => {
                 pending.delete(key);
-                void run(doc, collection, config, dialect, homemud);
+                void run(doc, collection, config, dialect, homemud, index);
             }, DEBOUNCE_MS)
         );
     };
@@ -56,7 +58,8 @@ async function run(
     collection: vscode.DiagnosticCollection,
     config: LpcConfigService,
     dialect: DialectManager,
-    homemud: HomeMudService
+    homemud: HomeMudService,
+    index: LpcIndex
 ): Promise<void> {
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
@@ -86,7 +89,13 @@ async function run(
     let im: RegExpExecArray | null;
     while ((im = inheritRe.exec(text))) {
         const path = im[2];
-        const resolved = await resolveLpcPath(path, document, config, homemud, ['.c', '']);
+        // Mit homemud wie der Master auflösen ("%room" → /i/room.c). Ohne homemud lassen sich
+        // %-Pfade nicht prüfen — dann keine Warnung.
+        const local = index.toLocal(document.uri);
+        if (!index.enabled && path.startsWith('%')) continue;
+        const resolved = index.enabled && local
+            ? await index.resolveMudPath(path, local, ['.c', ''])
+            : await resolveLpcPath(path, document, config, homemud, ['.c', '']);
         if (!resolved) {
             const offset = im.index + im[0].indexOf(`"${path}"`);
             const start = document.positionAt(offset);

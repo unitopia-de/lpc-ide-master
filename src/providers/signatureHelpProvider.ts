@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { EfunProvider } from '../dialect/efunProvider';
+import { LpcIndex, bestPerName } from '../analysis/lpcIndex';
+import { parseDocument } from '../analysis/documentCache';
 
 const LPC_SELECTOR: vscode.DocumentSelector = [
     { language: 'lpc', scheme: 'file' },
@@ -8,19 +10,29 @@ const LPC_SELECTOR: vscode.DocumentSelector = [
 
 export function registerSignatureHelpProvider(
     context: vscode.ExtensionContext,
-    efuns: EfunProvider
+    efuns: EfunProvider,
+    index: LpcIndex
 ): void {
     const provider: vscode.SignatureHelpProvider = {
-        provideSignatureHelp(document, position) {
+        async provideSignatureHelp(document, position) {
             const ctx = locateCall(document, position);
             if (!ctx) return undefined;
-            const def = efuns.lookup(ctx.name);
-            if (!def) return undefined;
 
-            const sigLabel = def.signature;
+            // Eigene Funktion vor geerbter vor Efun/Sfun — wie beim Hover.
+            const fn =
+                bestPerName(parseDocument(document).functions).find((f) => f.name === ctx.name) ??
+                (await index.findInherited(document, ctx.name));
+            const def = fn ? undefined : efuns.lookup(ctx.name);
+            if (!fn && !def) return undefined;
+
+            const sigLabel = fn ? fn.declaration ?? fn.signature : def!.signature;
             const sig = new vscode.SignatureInformation(sigLabel);
-            if (def.documentation) {
-                sig.documentation = new vscode.MarkdownString(def.documentation);
+            let documentation = fn ? fn.documentation : def!.documentation;
+            if (!documentation && def && !def.isSimulated) {
+                documentation = (await index.efunDocs.get(def.name))?.description;
+            }
+            if (documentation) {
+                sig.documentation = new vscode.MarkdownString(documentation);
             }
 
             const params = extractParameterRanges(sigLabel);

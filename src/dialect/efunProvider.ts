@@ -7,7 +7,11 @@ export interface EfunDefinition {
     signature: string;
     documentation?: string;
     isSimulated?: boolean;
+    /** Fundstelle im Quelltext (nur bei Sfuns aus der homemud-simul_efun). */
+    location?: { uri: vscode.Uri; line: number; character: number };
 }
+
+export type SimulEfunSource = () => Promise<EfunDefinition[]>;
 
 interface ProfileFile {
     efuns?: EfunDefinition[];
@@ -23,11 +27,19 @@ export class EfunProvider {
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly output: vscode.OutputChannel,
-        private readonly config?: LpcConfigService
+        private readonly config?: LpcConfigService,
+        private readonly simulEfunSource?: SimulEfunSource
     ) {}
 
+    /** Lädt das aktive Profil neu, z. B. nach Änderungen an der simul_efun. */
+    async reload(): Promise<void> {
+        if (this.currentProfile) await this.loadProfile(this.currentProfile);
+    }
+
     async loadProfile(dialect: DialectId): Promise<void> {
-        this.definitions.clear();
+        // Neue Liste getrennt aufbauen, damit Hover/Completion während des Ladens
+        // nicht kurzzeitig eine leere Liste sehen.
+        const definitions = new Map<string, EfunDefinition>();
         this.currentProfile = dialect;
 
         // 1. Eingebautes Profil aus dem Extension-Bundle.
@@ -41,7 +53,7 @@ export class EfunProvider {
             `Profil ${dialect}`
         );
         if (builtIn) {
-            this.merge(builtIn);
+            this.merge(definitions, builtIn);
         }
 
         // 2. Optionales workspace-spezifisches Profil aus lpc-config.json
@@ -55,12 +67,24 @@ export class EfunProvider {
                 `Workspace-Profil ${cfg.mudlib.efunDefinitions}`
             );
             if (userProfile) {
-                this.merge(userProfile);
+                this.merge(definitions, userProfile);
             }
         }
 
+        // 3. Sfuns direkt aus der simul_efun des homemud — aktueller als jede JSON-Datei.
+        if (this.simulEfunSource) {
+            try {
+                for (const def of await this.simulEfunSource()) {
+                    definitions.set(def.name, def);
+                }
+            } catch (err) {
+                this.output.appendLine(`simul_efun nicht lesbar: ${err}`);
+            }
+        }
+
+        this.definitions = definitions;
         this.output.appendLine(
-            `Efun-Profil aktiv: ${dialect} (${this.definitions.size} Symbole).`
+            `Efun-Profil aktiv: ${dialect} (${definitions.size} Symbole).`
         );
         this.emitter.fire();
     }
@@ -81,12 +105,12 @@ export class EfunProvider {
         return this.definitions.size;
     }
 
-    private merge(profile: ProfileFile): void {
+    private merge(target: Map<string, EfunDefinition>, profile: ProfileFile): void {
         for (const e of profile.efuns ?? []) {
-            this.definitions.set(e.name, e);
+            target.set(e.name, e);
         }
         for (const s of profile.sfuns ?? []) {
-            this.definitions.set(s.name, { ...s, isSimulated: true });
+            target.set(s.name, { ...s, isSimulated: true });
         }
     }
 

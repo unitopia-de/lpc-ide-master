@@ -17,6 +17,8 @@ import { registerDocumentSymbolProvider } from './providers/documentSymbolProvid
 import { registerDefinitionProvider } from './providers/definitionProvider';
 import { registerDiagnosticProvider } from './providers/diagnosticProvider';
 import { registerSignatureHelpProvider } from './providers/signatureHelpProvider';
+import { LpcIndex } from './analysis/lpcIndex';
+import { registerDocumentCache } from './analysis/documentCache';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const output = vscode.window.createOutputChannel('LPC-IDE-Master');
@@ -28,7 +30,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(config);
     await config.load();
 
-    const efunProvider = new EfunProvider(context, output, config);
+    const homeMudService = new HomeMudService(config);
+
+    // Index über die lokale homemud-Mudlib: Vererbung, simul_efun, Efun-Hilfe.
+    registerDocumentCache(context);
+    const lpcIndex = new LpcIndex(config, homeMudService, output);
+    context.subscriptions.push(lpcIndex);
+
+    const efunProvider = new EfunProvider(context, output, config, () => lpcIndex.loadSimulEfuns());
+    context.subscriptions.push(lpcIndex.onDidChangeSimulEfuns(() => void efunProvider.reload()));
     const dialectManager = new DialectManager(config, efunProvider, output);
     context.subscriptions.push(dialectManager);
     await dialectManager.initialize();
@@ -93,8 +103,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         })
     );
 
-    const homeMudService = new HomeMudService(config);
-
     const statusBar = createStatusBar(
         dialectManager,
         efunProvider,
@@ -106,12 +114,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
     context.subscriptions.push(statusBar);
 
-    registerHoverProvider(context, efunProvider);
-    registerCompletionProvider(context, efunProvider);
+    registerHoverProvider(context, efunProvider, lpcIndex);
+    registerCompletionProvider(context, efunProvider, lpcIndex);
     registerDocumentSymbolProvider(context);
-    registerDefinitionProvider(context, config, homeMudService);
-    registerDiagnosticProvider(context, config, dialectManager, homeMudService);
-    registerSignatureHelpProvider(context, efunProvider);
+    registerDefinitionProvider(context, config, homeMudService, lpcIndex, efunProvider);
+    registerDiagnosticProvider(context, config, dialectManager, homeMudService, lpcIndex);
+    registerSignatureHelpProvider(context, efunProvider, lpcIndex);
 
     const lspClient = new LpcLanguageClient(context, dialectManager, output);
     context.subscriptions.push({ dispose: () => lspClient.stop() });

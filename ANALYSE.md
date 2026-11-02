@@ -1,6 +1,6 @@
 # Analyse: LPC-IDE-Master (UNItopia Edition)
 
-Stand der Analyse: 2026-10-11 · Branch `master` · letzter Commit `cba287b` („consisntency delivery“)
+Stand der Analyse: 2026-11-02 (erstmals 2026-10-11) · Branch `master`
 
 ## 1. Überblick
 
@@ -56,6 +56,11 @@ src/
 ├── mud/
 │   ├── mudClient.ts             Eigener Telnet/TLS-Client mit Login-Ablauf
 │   └── mudConsole.ts            Output-Channel + Lebenszyklus je Konsole
+├── analysis/
+│   ├── lpcParser.ts             Regex-Parser: Funktionen, Variablen, inherit, #include, #define, Doku-Kommentare
+│   ├── lpcIndex.ts              homemud-Index: Vererbung, simul_efun, Pfadauflösung ("%room", Makros)
+│   ├── efunDocs.ts              Efun-Hilfe aus <homemud>/doc/efun/
+│   └── documentCache.ts         Geparste Editor-Dokumente je Version
 ├── providers/                   Hover, Completion, Outline, Goto-Definition,
 │                                Diagnostics, Signature-Help
 ├── commands/index.ts            Alle 20 Befehle
@@ -84,12 +89,19 @@ Weitere Bestandteile:
 ### 4.1 Sprachunterstützung
 
 - **Sprache `lpc`** für die Endungen `.c`, `.h`, `.lpc`, `.inc`, `.d`
-- **Hover** – Signatur und Beschreibung von Efuns/Sfuns aus dem aktiven Profil
-- **Completion** – Efuns, Sfuns, Keywords und Typen, mit Snippet-Platzhaltern für Parameter
-- **Outline** – Funktionen, `inherit`-Pfade, globale Variablen
-- **Goto-Definition** – auf `inherit "..."`, `#include "..."` und lokale Funktionen; Pfade werden über `baseDir`, `includeDirs` und den HomeMUD aufgelöst
+- **Hover** – Signatur und Beschreibung eigener und geerbter Funktionen sowie von Efuns/Sfuns
+- **Completion** – eigene Funktionen, geerbte Funktionen, Efuns, Sfuns, Keywords und Typen, mit Snippet-Platzhaltern für Parameter
+- **Outline** – Funktionen (auch ohne Rückgabetyp), `inherit`-Pfade, globale Variablen
+- **Goto-Definition** – auf `inherit`, `#include`, eigene und geerbte Funktionen sowie Sfuns (springt in die `simul_efun`)
 - **Diagnostics** (mit 400 ms Verzögerung) – Warnung bei `class` unter LDMud, nicht auflösbare `inherit`-/`#include`-Pfade; funktioniert für `file://` und `lpc-ftp://`
-- **Signature-Help** – Parameterhinweis mit Hervorhebung des aktuellen Arguments
+- **Signature-Help** – Parameterhinweis mit Hervorhebung des aktuellen Arguments, auch für eigene und geerbte Funktionen
+
+**Zusätzlich mit HomeMUD** (lokale Mudlib, Modul [src/analysis/](src/analysis/)):
+
+- **Vererbung:** `inherit`-Ketten werden wie vom UNItopia-Master aufgelöst: `"%room"` → `/i/room.c`, Makros aus `#define`s der Datei und ihrer Includes, Verkettungen wie `SBI+"sb_basis"`, relative Pfade. Geerbte Funktionen (ohne `private`) erscheinen in Completion, Hover, Goto-Definition und Parameterhilfe, mit Doku aus UNItopia-Kommentaren (`FUNKTION:`/`BESCHREIBUNG:`).
+- **Efun-Hilfe:** Beschreibung, Beispiele und Verweise aus `doc/efun/a-m|n-z/<name>.de` (deutsch) bzw. `<name>` (englisch), erst beim ersten Bedarf gelesen.
+- **Sfuns aus der `simul_efun`:** Beim Laden des Profils wird `mudlib.simulEfunFile` samt `"..."`-Includes und inherits gelesen. Alle öffentlichen Funktionen gelten als Sfuns und ergänzen bzw. überschreiben das JSON-Profil. Änderungen an diesen Dateien laden die Liste automatisch neu.
+- **Aufwand:** Getestet gegen die UNItopia-Mudlib: 49.010 Dateien ohne Parserfehler, im Schnitt 0,35 ms pro Datei. Eine Vererbungskette wie `/i/room` (16 Dateien) ist beim ersten Mal in rund 60 ms aufgelöst, danach aus dem Zwischenspeicher in 1–2 ms.
 
 ### 4.2 Remote-Dateisystem (`lpc-ftp://`)
 
@@ -147,7 +159,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.1.vsix
+code --install-extension lpc-ide-master-0.2.2.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -220,7 +232,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 
 ### 6.1 Abweichungen zwischen Dokumentation und Code
 
-1. **Anzahl der Efuns/Sfuns – behoben:** README und CHANGELOG versprechen Hover/Completion für „322 LDMud-Efuns und 201 UNItopia-Sfuns“. Das eingebaute Profil enthielt ursprünglich nur 33 Efuns und 4 Sfuns. Die vollständigen Daten lagen nur im Workspace `C:\_M\mud\lpc-efuns.json`. Sie wurden als [resources/profiles/ldmud-unitopia.json](resources/profiles/ldmud-unitopia.json) ins Plugin übernommen (322 Efuns, 201 Sfuns). Drei alte Einträge ohne Bezug zu UNItopia (`members`, `SetProp`, `QueryProp`) sind dabei entfallen. Offen bleibt: Die Efuns haben noch keine Beschreibungstexte, bei den Sfuns haben 137 von 201 eine. Die Profile für MorgenGrauen und FluffOS enthalten weiterhin nur je 2 Efuns.
+1. **Anzahl der Efuns/Sfuns – behoben:** README und CHANGELOG versprechen Hover/Completion für „322 LDMud-Efuns und 201 UNItopia-Sfuns“. Das eingebaute Profil enthielt ursprünglich nur 33 Efuns und 4 Sfuns. Die vollständigen Daten lagen nur im Workspace `C:\_M\mud\lpc-efuns.json`. Sie wurden als [resources/profiles/ldmud-unitopia.json](resources/profiles/ldmud-unitopia.json) ins Plugin übernommen (322 Efuns, 201 Sfuns). Drei alte Einträge ohne Bezug zu UNItopia (`members`, `SetProp`, `QueryProp`) sind dabei entfallen. Offen bleibt: Die Efuns haben noch keine Beschreibungstexte, bei den Sfuns haben 137 von 201 eine. Die Profile für MorgenGrauen und FluffOS enthalten weiterhin nur je 2 Efuns. **Nachtrag:** Die Sfun-Liste wurde inzwischen direkt aus der `simul_efun` neu erzeugt, mit 229 Sfuns, 123 davon mit Beschreibung. Dazu gehören alle öffentlichen Funktionen aus `deklin.c` (77) und `parse_com.c` (9). 14 Einträge des alten JSON, die keine Sfuns sind, sind entfallen: `protected`-Funktionen wie `create`, Funktionen aus `#if 0` und Hooks wie `query_dativ`, die Objekte selbst implementieren.
 2. **Standard-Protokoll – behoben:** Der Default war `ftp` (unverschlüsselt), obwohl Setting und README `ftps` nahelegten. Wer `protocol` wegließ, übertrug das Passwort im Klartext. Jetzt ist `ftps` der Default, in [connectionManager.ts](src/ftp/connectionManager.ts), [ftpBackend.ts](src/ftp/ftpBackend.ts) und im JSON-Schema. Die Beispielkonfigurationen setzen `"protocol": "ftp"` weiterhin ausdrücklich.
 3. **`mudos` – entfernt:** Der Wert wurde als Dialekt akzeptiert, ohne dass es ein Profil oder eine Erkennung dafür gab. Er ist aus Typ, Validierung, Schema und Doku entfernt. Eine `lpc-config.json` mit `"dialect": "mudos"` gilt jetzt als ungültig.
 4. **`simulEfunFile`** und **`version`** werden gelesen, aber nicht ausgewertet (laut Plan für Phase 4 vorgesehen).
@@ -232,7 +244,9 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 - `uploadOnSave` existiert nur als Setting.
 - Bei Multi-Root-Workspaces wird nur der erste Ordner berücksichtigt.
 - Die Auto-Erkennung ordnet jede `master.c`/`lpctypes.h` dem UNItopia-Profil zu, auch bei anderen LDMud-Mudlibs.
-- Die Outline erkennt nur Funktionen mit ausdrücklichem Rückgabetyp.
+- Präprozessor-Bedingungen werden nicht ausgewertet, sondern per Faustregel entschieden: bei `#if … #else` gilt der `#else`-Zweig, `#if 0` ist inaktiv, Treiber-Makros wie `__LDMUD__` gelten als definiert. Bei `#if __VERSION__ > "…" … #else` kann das den falschen Zweig treffen.
+- Geerbte Funktionen, Efun-Hilfe und Sfuns aus der `simul_efun` gibt es nur mit HomeMUD. Ohne lokale Mudlib wird nichts über FTP nachgeladen.
+- `private inherit` wird wie normales `inherit` behandelt, Funktionen daraus sind in Enkel-Dateien also fälschlich sichtbar.
 - [src/lsp/client.ts](src/lsp/client.ts) ist nur ein Platzhalter. Für die Anbindung eines Language Servers muss `vscode-languageclient` wieder installiert werden.
 
 ### 6.3 Aktivierung und Konflikte
@@ -251,17 +265,78 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 
 ## 7. Einordnung des Entwicklungsstands
 
-Gemessen am Phasenplan in [PLUGIN_PLAN.md](PLUGIN_PLAN.md):
+Gemessen am Plan in [PLUGIN_PLAN.md](PLUGIN_PLAN.md):
 
 | Phase | Inhalt | Stand |
 | --- | --- | --- |
-| 1 | `lpc-config.json`, Profil-Umschaltung | ✅ umgesetzt (UNItopia-Profil vollständig, MorgenGrauen/FluffOS nur Platzhalter) |
-| 2 | FileSystemProvider FTP/SFTP + SecretStorage | ✅ umgesetzt (ohne Reconnect und ohne Upload beim Speichern) |
-| 3 | Remote-Explorer-Baum | ✅ umgesetzt, dazu HomeMUD und Telnet-Konsole |
-| 4 | LSP-Feinabstimmung, simul_efun-Parsing | 🟡 Teilweise: eigene Provider ohne Server; simul_efun-Parsing fehlt |
+| 1 | `lpc-config.json`, Profil-Umschaltung | ✅ vollständig |
+| 2 | FileSystemProvider FTP/SFTP + SecretStorage | 🟡 vollständig bis auf `uploadOnSave` |
+| 3 | Remote-Explorer-Baum | ✅ vollständig |
+| 4 | Feinabstimmung auf UNItopia-Header und simul_efuns | 🟡 weitgehend, mit HomeMUD; ohne echten Language Server |
 
-**Fazit:** Die Extension ist als Version 0.1.0 funktional weitgehend vollständig und kompiliert ohne
-Fehler. Der Code ist klar in Module gegliedert und durchgehend auf Deutsch kommentiert. Das
-UNItopia-Profil enthält jetzt alle 523 Efuns und Sfuns. Vor einer Veröffentlichung sollten noch das
-unverschlüsselte Standard-Protokoll, die fehlenden Tests und die Paketierungsschritte erledigt
-werden. Außerdem fehlen bei den Efuns noch die Beschreibungstexte.
+### Abschnitt 1 – Dialekt-Management
+
+| Punkt | Stand |
+| --- | --- |
+| `lpc-config.json` mit Schema, Prüfung, Live-Reload | ✅ |
+| Efuns/Sfuns als JSON-Definitionen (322 / 229) | ✅ Sfun-Liste aus der `simul_efun` erzeugt, inklusive `deklin.c` und `parse_com.c` |
+| Sfuns aus der `simul_efun.c` parsen | ✅ mit HomeMUD: 229 Sfuns aus 48 Dateien, Neuladen bei Änderungen |
+| `struct`, Closures (`#'`), Symbole (`'`) | ✅ im Syntax-Highlighting |
+| UNIlib-Vererbung (`/i/room.c`, `create()`, `init()`) | ✅ mit HomeMUD: Vererbungskette wird aufgelöst, geerbte Funktionen sind bekannt |
+
+### Abschnitt 2 – Efun-Profile
+
+| Punkt | Stand |
+| --- | --- |
+| Profile für UNItopia, MorgenGrauen, FluffOS | 🟡 UNItopia vollständig, die beiden anderen nur Platzhalter (je 2 Efuns) |
+| Umschalten über Statusleiste und Befehlspalette | ✅ |
+| Auto-Erkennung (`mudlib.name`, `master.c`, `lpctypes.h`) | ✅ |
+
+### Abschnitt 3 – Remote-FTP und Navigationsbaum
+
+| Punkt | Stand |
+| --- | --- |
+| Remote Explorer mit Lazy Loading | ✅ |
+| Kontextmenü Update/Destruct über Telnet | ✅ |
+| `lpc-ftp://`-Dateisystem, Passwörter im OS-Schlüsselbund | ✅ |
+| `uploadOnSave` | ❌ Setting ohne Funktion. Dateien unter `lpc-ftp://` werden ohnehin direkt gespeichert; gemeint wäre der automatische Upload aus dem HomeMUD. |
+
+### Abschnitt 4 – Editor-Funktionen („LSP“)
+
+| Punkt | Stand |
+| --- | --- |
+| Inheritance-Tracking über `baseDir`/`includeDirs` | ✅ mit HomeMUD auch über die ganze Kette, inklusive `"%name"`, Makros und Verkettungen |
+| Hilfetexte beim Hover | ✅ mit HomeMUD: Efuns aus `doc/efun` (deutsch bevorzugt), Sfuns und geerbte Funktionen aus den UNItopia-Doku-Kommentaren. Ohne HomeMUD nur Signaturen. |
+| Fehlerdiagnose (`class`, unauflösbare Pfade) | 🟡 vorhanden; echte Syntaxfehler erkennt erst ein Parser bzw. Compiler |
+| Language Server | ❌ nur Platzhalter in [src/lsp/client.ts](src/lsp/client.ts) |
+
+### Abschnitt 5 – Sichtbarkeitsmodell
+
+Sichtbar sind die Funktionen der (indirekt) geerbten Objekte, die Sfuns und die Efuns.
+
+| Teil | Stand |
+| --- | --- |
+| Efuns | ✅ |
+| Sfuns | ✅ mit HomeMUD direkt aus der `simul_efun`, sonst aus dem JSON-Profil |
+| Funktionen der eigenen Datei | ✅ |
+| Geerbte Funktionen | ✅ mit HomeMUD; `private` wird beachtet, `private inherit` noch nicht |
+
+### Über den Plan hinaus umgesetzt
+
+HomeMUD mit Herunterladen, Hochladen und Vergleichen; zwei Telnet-Konsolen; Statusleiste;
+Parameterhilfe; Outline; FTPS und SFTP mit TLS-Optionen; VSIX-Paketierung.
+
+### Nächste sinnvolle Schritte
+
+1. **Präprozessor besser auswerten**, mindestens `__VERSION__`-Vergleiche gegen `version` aus der
+   `lpc-config.json` und `#ifdef` gegen bekannte `#define`s. Das betrifft vor allem Varianten derselben
+   Funktion.
+2. **Ohne HomeMUD:** Vererbung optional auch über FTP auflösen, mit Zwischenspeicher, weil jede
+   Datei einzeln geladen werden muss.
+3. **`uploadOnSave`** für Dateien im HomeMUD umsetzen.
+4. **Tests** für Parser und Pfadauflösung. Die Prüfungen gegen die echte Mudlib laufen bisher nur
+   als einmalige Skripte.
+
+**Fazit:** Mit HomeMUD deckt das Plugin die Ziele aus dem Plan weitgehend ab: Vererbung, Sfuns
+direkt aus dem Quelltext, Hilfetexte für Efuns und das Sichtbarkeitsmodell. Offen sind vor allem
+ein echter Language Server mit Syntaxprüfung, `uploadOnSave` und automatisierte Tests.

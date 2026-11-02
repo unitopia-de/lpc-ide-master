@@ -4,6 +4,21 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## 0.2.2 – homemud für Inherits, Sfuns und Efun-Doku nutzen
+
+### Hinzugefügt
+- Mit homemud: geerbte Funktionen über die ganze `inherit`-Kette in Completion, Hover, Goto-Definition und Parameterhilfe – inklusive `"%name"` (→ `/i/name.c`), Makros aus `#define`s und Verkettungen. Doku aus UNItopia-Kommentaren (`FUNKTION:`/`BESCHREIBUNG:`).
+- Mit homemud: Efun-Hilfe aus `doc/efun/` (deutsche Fassung bevorzugt) in Hover, Completion und Parameterhilfe.
+- Mit homemud: Sfuns werden direkt aus `mudlib.simulEfunFile` samt Includes und inherits gelesen und bei Änderungen neu geladen. Strg+Klick auf eine Sfun springt in die `simul_efun`.
+- Completion, Hover und Parameterhilfe kennen die Funktionen der eigenen Datei.
+
+### Geändert
+- Sfun-Liste des eingebauten Profils `ldmud-unitopia` neu aus `/secure/simul_efun/simul_efun.c` samt Includes, `deklin.c` und `parse_com.c` erzeugt: 229 statt 201 Sfuns, 123 mit Beschreibung. Neu sind u. a. die Artikel- und Pronomen-Funktionen aus `deklin.c` (`Wer`, `Dem`, `Ein`, `Sein` …) und `query_pc_*` aus `parse_com.c`. Entfernt wurden 14 Einträge, die keine Sfuns sind (`create`, `reset`, `query_dativ` u. a.).
+
+### Behoben
+- Outline: `inherit`-Einträge hatten keinen Namen; Funktionen wie `string *foo()` und Funktionen ohne Rückgabetyp fehlten; lokale Variablen erschienen als globale.
+- Diagnostics meldeten `inherit "%room"` fälschlich als nicht auflösbar.
+
 ## 0.2.1
 
 ### Entfernt
