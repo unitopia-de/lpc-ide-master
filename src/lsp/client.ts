@@ -14,7 +14,8 @@ export class LpcLanguageClient {
     ) {}
 
     async start(): Promise<void> {
-        // Beispielhafter Aufbau (auskommentiert), bis ein Server-Bundle existiert:
+        // Beispielhafter Aufbau (auskommentiert), bis ein Server-Bundle existiert.
+        // Vorher die Abhängigkeit wieder ergänzen: npm install vscode-languageclient
         //
         // const lc = await import('vscode-languageclient/node');
         // const serverModule = this.context.asAbsolutePath('out/lsp/server.js');

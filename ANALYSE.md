@@ -13,7 +13,7 @@ Stand der Analyse: 2026-10-11 · Branch `master` · letzter Commit `cba287b` (�
 | Lizenz | MIT (`LICENSE` noch nicht eingecheckt) |
 | VS-Code-Version | `^1.85.0` |
 | Sprache | TypeScript (strict), ca. 3.350 Zeilen in 23 Dateien unter `src/` |
-| Laufzeit-Abhängigkeiten | `basic-ftp`, `ssh2-sftp-client`, `vscode-languageclient` (derzeit ungenutzt) |
+| Laufzeit-Abhängigkeiten | `basic-ftp`, `ssh2-sftp-client` |
 | Einstiegspunkt | `out/extension.js` (kompiliert aus [src/extension.ts](src/extension.ts)) |
 
 Die Extension ist eine Entwicklungsumgebung für LPC (die Sprache von LP-MUDs), mit Schwerpunkt
@@ -32,7 +32,7 @@ auf der UNItopia-Mudlib (LDMud 3.5/3.6). Sie kombiniert vier Bereiche:
 | `eslint src --ext ts` | ⚠️ 0 Fehler, 72 Warnungen (fast nur die `curly`-Regel; 69 mit `--fix` automatisch behebbar) |
 | Unit-Tests | ❌ keine vorhanden |
 | CI | ❌ keine eingerichtet |
-| VSIX-Paketierung | ✅ `npm run package` erzeugt `lpc-ide-master-0.2.0.vsix` (461 Dateien, 923 KB); `@vscode/vsce` 4.0.0 ist devDependency |
+| VSIX-Paketierung | ✅ `npm run package` erzeugt `lpc-ide-master-0.2.1.vsix` (271 Dateien, 655 KB); `@vscode/vsce` 4.0.0 ist devDependency |
 | Git | 9 Commits; uncommittet: `.vscodeignore`, `language-configuration.json` (`colorizedBracketPairs`), neu: `LICENSE`, `examples/syntax-showcase/` |
 
 ## 3. Architektur
@@ -147,7 +147,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.0.vsix
+code --install-extension lpc-ide-master-0.2.1.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -233,7 +233,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 - Bei Multi-Root-Workspaces wird nur der erste Ordner berücksichtigt.
 - Die Auto-Erkennung ordnet jede `master.c`/`lpctypes.h` dem UNItopia-Profil zu, auch bei anderen LDMud-Mudlibs.
 - Die Outline erkennt nur Funktionen mit ausdrücklichem Rückgabetyp.
-- [src/lsp/client.ts](src/lsp/client.ts) ist nur ein Platzhalter; `vscode-languageclient` wird mitgeliefert, aber nicht genutzt.
+- [src/lsp/client.ts](src/lsp/client.ts) ist nur ein Platzhalter. Für die Anbindung eines Language Servers muss `vscode-languageclient` wieder installiert werden.
 
 ### 6.3 Aktivierung und Konflikte
 

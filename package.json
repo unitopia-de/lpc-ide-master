@@ -2,7 +2,7 @@
   "name": "lpc-ide-master",
   "displayName": "LPC-IDE-Master (UNItopia Edition)",
   "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP/FTPS/SFTP-Sync, Editor-Unterstützung für UNItopia und weitere Mudlibs.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "unitopia-de",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -219,7 +219,6 @@
   },
   "dependencies": {
     "basic-ftp": "6.2.3",
-    "ssh2-sftp-client": "^12.1.1",
-    "vscode-languageclient": "^9.0.1"
+    "ssh2-sftp-client": "^12.1.1"
   }
 }

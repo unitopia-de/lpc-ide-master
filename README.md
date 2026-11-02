@@ -42,7 +42,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.0.vsix`.
+z. B. `lpc-ide-master-0.2.1.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -61,7 +61,7 @@ Unter **Installed** erscheint jetzt **LPC-IDE-Master (UNItopia Edition)**.
 > **Arbeitest du mit VS-Code-Profilen?** Die Extension wird nur in das gerade aktive Profil
 > installiert. Taucht sie in einem anderen Fenster nicht auf, wiederhole Schritt 3 dort
 > oder nutze in der Kommandozeile
-> `code --install-extension lpc-ide-master-0.2.0.vsix --profile <Profilname>`.
+> `code --install-extension lpc-ide-master-<version>.vsix --profile <Profilname>`.
 
 ### Aktualisieren
 

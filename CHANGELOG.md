@@ -4,6 +4,11 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## 0.2.1
+
+### Entfernt
+- Ungenutzte Abhängigkeit `vscode-languageclient` (wird erst für einen externen Language Server gebraucht). Das VSIX schrumpft dadurch von 461 auf 271 Dateien, und die einzige Laufzeit-Schwachstelle (`minimatch`) entfällt.
+
 ## 0.2.0
 
 ### Hinzugefügt
