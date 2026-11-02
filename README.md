@@ -3,33 +3,101 @@
 VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 **UNIlib** (LDMud 3.5.0/3.6.x), erweiterbar für weitere Mudlibs.
 
-## Funktionsumfang: 
-* Remote-Dateisystem über FTP/FTPS/SFTP, 
-* optionaler lokaler Entwicklungs-MUD ("homemud") mit Datei-Sync zur Remote 
-* Telnet-Konsole für Magier-Befehle (`update`/`destruct`)
-* LPC-Syntax-Highlighting und Editor-Unterstützung (Hover, Completion, Outline, Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns.
+## Funktionsumfang
 
-## Einrichtung
-Derzeit ist eine Installation über den workspace noch nicht vorgesehen und ist nur über eine Entwicklungsumgebung zugänglich.
+* Remote-Dateisystem über FTP/FTPS/SFTP – Mudlib-Dateien direkt im Editor bearbeiten
+* Remote Explorer in der Seitenleiste mit Neu, Umbenennen, Löschen, Pfad kopieren
+* Optionaler lokaler Entwicklungs-MUD („homemud“) mit Herunterladen, Hochladen und Vergleichen
+* Telnet-Konsole für Magier-Befehle (`update`/`destruct`), standardmäßig aus
+* LPC-Syntax-Highlighting und Editor-Unterstützung (Hover, Completion, Outline,
+  Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 201 UNItopia-Sfuns
 
-### Entwicklung / Installation
-Im Ende gibt es zwei Workspaces, eine für das Plugin und eine für die Ausführung des Plugins(z.B. inkl eines optionalen Homemuds).
+## Installation
 
-1. Suche ein Unterverzeichnis, wo das Plugin abgelegt werden kann
+Das Plugin ist noch nicht im VS Code Marketplace. Du baust es einmal selbst als
+`.vsix`-Datei und installierst diese Datei in VS Code.
+
+### Voraussetzungen
+
+| Programm | Version | Prüfen mit |
+| --- | --- | --- |
+| [Git](https://git-scm.com/) | beliebig | `git --version` |
+| [Node.js](https://nodejs.org/) (inkl. npm) | **22 oder neuer** | `node --version` |
+| [VS Code](https://code.visualstudio.com/) | 1.85 oder neuer | Hilfe → Info |
+
+### 1. Repository klonen
+
+Wechsle in ein Verzeichnis deiner Wahl, z. B. `C:\Projekte`, und klone das Repository:
 
 ```bash
 git clone https://github.com/unitopia-de/lpc-ide-master.git
 cd lpc-ide-master
-npm install
-npm run compile      # oder: npm run watch
 ```
 
-2. Suche das Unterverzeichnis für die Ausführung ggf mit optionalen homemmud
-3. lege dort die lpc-config.json ab und passe sie an (Pfade, user)
-4. Falls ohne homemud, lösche den Abschnitt homemud aus dem json File!
-5. Führe per F5 das Plugin aus und navigiere dort zum 2. Workspace
+### 2. VSIX-Datei erstellen
 
-`lpc-config.json` im Workspace-Root:
+```bash
+npm install
+npm run package
+```
+
+Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
+z. B. `lpc-ide-master-0.2.0.vsix`.
+
+> Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
+> ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
+> das ist eine optionale Beschleunigung der SSH-Bibliothek, die ohne C++-Compiler entfällt.
+
+### 3. In VS Code installieren
+
+1. VS Code öffnen und die Ansicht **Extensions** aufrufen (`Strg+Shift+X`).
+2. Oben rechts in der Extensions-Ansicht auf **`…`** (Weitere Aktionen) klicken.
+3. **„Install from VSIX…“** („Aus VSIX installieren…“) wählen.
+4. Die Datei `lpc-ide-master-<version>.vsix` aus Schritt 2 auswählen.
+5. Wenn VS Code dazu auffordert, das Fenster neu laden.
+
+Unter **Installed** erscheint jetzt **LPC-IDE-Master (UNItopia Edition)**.
+
+> **Arbeitest du mit VS-Code-Profilen?** Die Extension wird nur in das gerade aktive Profil
+> installiert. Taucht sie in einem anderen Fenster nicht auf, wiederhole Schritt 3 dort
+> oder nutze in der Kommandozeile
+> `code --install-extension lpc-ide-master-0.2.0.vsix --profile <Profilname>`.
+
+### Aktualisieren
+
+```bash
+cd lpc-ide-master
+git pull
+npm install
+npm run package
+```
+
+Anschließend Schritt 3 mit der neuen `.vsix`-Datei wiederholen. Die alte Version wird dabei ersetzt.
+
+## Konfiguration
+
+Das Plugin wird über eine Datei **`lpc-config.json`** gesteuert. Sie liegt im
+Wurzelverzeichnis des Ordners, den du in VS Code öffnest (**Datei → Ordner öffnen…**).
+Dieser Ordner ist dein Arbeits-Workspace. Er ist unabhängig vom geklonten Plugin-Repository.
+
+Sobald VS Code eine `lpc-config.json` im geöffneten Ordner findet, wird das Plugin aktiv.
+Änderungen an der Datei werden sofort übernommen. Beim Bearbeiten hilft VS Code mit
+Autovervollständigung und Fehlermarkierung.
+
+Die Datei enthält **keine Passwörter**. Das FTP-Passwort wird beim ersten Verbinden
+abgefragt und im Schlüsselbund des Betriebssystems gespeichert
+(unter Windows in der Anmeldeinformationsverwaltung).
+
+### Variante A: Ohne homemud (nur Remote-MUD)
+
+Du bearbeitest die Dateien direkt auf dem MUD-Server.
+
+```
+MeinMUD/                   ← diesen Ordner in VS Code öffnen
+└── lpc-config.json
+```
+
+`lpc-config.json`:
 
 ```json
 {
@@ -38,16 +106,58 @@ npm run compile      # oder: npm run watch
   "mudlib": {
     "name": "UNIlib",
     "baseDir": "/sys/unitopia",
-    "simulEfunFile": "/secure/simul_efun/simul_efun.c",
-    "includeDirs": [
-      "/sys/include"
-    ],
-    "efunDefinitions": "lpc-efuns.json"
+    "includeDirs": ["/sys/include"]
   },
   "ftp": {
     "host": "unitopia.de",
     "port": 21,
-    "user": "wizard?",
+    "user": "deinmagiername",
+    "remoteRoot": "/",
+    "protocol": "ftps"
+  }
+}
+```
+
+Anpassen musst du mindestens `ftp.user`. Mit `remoteRoot` legst du fest, welches
+Verzeichnis der Remote Explorer als Startpunkt zeigt, z. B. `"/w/deinmagiername"`.
+
+**Erste Verbindung:**
+
+1. In der linken Leiste das Symbol **Remote MUD** anklicken.
+2. **Verbinden** wählen und das FTP-Passwort eingeben.
+3. Auswählen, ob das Remote-Verzeichnis zusätzlich als Workspace-Ordner eingebunden
+   werden soll („Hinzufügen“) oder nur im Remote Explorer erscheint („Nur Tree zeigen“).
+4. Dateien öffnen, bearbeiten, speichern – das Speichern schreibt direkt auf den Server.
+
+### Variante B: Mit homemud (lokales Entwicklungs-MUD)
+
+Du hast eine lokale Kopie der Mudlib, z. B. für einen eigenen LDMud-Testtreiber.
+Dateien holst du vom Server, entwickelst und testest lokal und lädst sie danach wieder hoch.
+
+```
+MeinMUD/                   ← diesen Ordner in VS Code öffnen
+├── lpc-config.json
+└── lib/                   ← lokale Mudlib (homemud.path + homemud.libPath)
+    ├── secure/
+    ├── std/
+    └── ...
+```
+
+`lpc-config.json` – wie Variante A, ergänzt um den Block `homemud`:
+
+```json
+{
+  "dialect": "ldmud",
+  "version": "3.6.8",
+  "mudlib": {
+    "name": "UNIlib",
+    "baseDir": "/sys/unitopia",
+    "includeDirs": ["/sys/include"]
+  },
+  "ftp": {
+    "host": "unitopia.de",
+    "port": 21,
+    "user": "deinmagiername",
     "remoteRoot": "/",
     "protocol": "ftps"
   },
@@ -58,40 +168,97 @@ npm run compile      # oder: npm run watch
 }
 ```
 
-Das Passwort wird **nicht** in dieser Datei abgelegt, sondern beim ersten
-Verbindungsaufbau abgefragt und in der OS-Keychain (SecretStorage) gespeichert.
-
-Die Verbindungsblöcke und Funktion für direkte Mudverbindungen kommt evtl später.
-
-
-## Konfigurationsdateien
-
-| Datei / Ort | Zweck |
+| Feld | Bedeutung |
 | --- | --- |
-| `lpc-config.json` im Workspace-Root | Dialekt, Mudlib, FTP |
-| OS-Keychain (Windows Credential Manager o. ä.) | FTP-Passwort — automatisch verwaltet |
-| `Strg+,` → "lpc" | VS-Code-User/Workspace-Settings (siehe unten) |
+| `homemud.path` | Verzeichnis des lokalen MUD, relativ zum geöffneten Ordner. `"./"` = der Ordner selbst. |
+| `homemud.libPath` | Mudlib-Verzeichnis innerhalb von `path`. Standard `"/lib"`. |
 
-### Globale Plugin-Settings
+**So werden die Pfade zugeordnet:** Alles unterhalb von `ftp.remoteRoot` auf dem Server
+entspricht 1:1 dem Verzeichnis `<path>/<libPath>` im geöffneten Ordner. Mit der Konfiguration oben:
+
+```
+lpc-ftp://unitopia.de/std/room.c   ⇄   MeinMUD/lib/std/room.c
+```
+
+**Abgleich per Rechtsklick:**
+
+| Wo | Befehl | Wirkung |
+| --- | --- | --- |
+| Remote Explorer | **Nach homemud kopieren** | Datei oder Verzeichnis vom Server ins homemud holen |
+| Explorer oder Editor-Tab (Datei im homemud) | **Zur Remote hochladen** | Lokale Datei bzw. Verzeichnis auf den Server schreiben |
+| Explorer oder Editor-Tab (Datei im homemud) | **Von Remote herunterladen** | Lokale Datei bzw. Verzeichnis mit dem Stand vom Server überschreiben |
+| Explorer oder Editor-Tab (Datei im homemud) | **Mit Remote vergleichen** | Diff-Ansicht: links Server, rechts lokal |
+
+Vor dem Überschreiben fragt das Plugin jeweils nach.
+
+### Optional: Telnet-Konsole für `update`/`destruct`
+
+Standardmäßig ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`)
+nach `lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` einen Block
+`mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B.:
+
+```json
+"mud": {
+  "host": "unitopia.de",
+  "port": 4711,
+  "user": "deinmagiername",
+  "protocol": "telnet"
+}
+```
+
+Danach gibt es im Remote Explorer per Rechtsklick auf eine Datei **Update Object** und
+**Destruct Object**. Eine vollständige Beispielkonfiguration mit allen Feldern, z. B. für
+Login-Prompts und TLS, steht in [examples/unitopia-full/](examples/unitopia-full/).
+
+> `telnet` ist unverschlüsselt – das MUD-Passwort geht im Klartext über die Leitung.
+
+### Weitere Felder in `lpc-config.json`
+
+| Feld | Standard | Bedeutung |
+| --- | --- | --- |
+| `ftp.protocol` | `"ftps"` | `"ftp"` (unverschlüsselt), `"ftps"`, `"ftps-implicit"` oder `"sftp"` |
+| `ftp.port` | 21 / 990 / 22 | je nach Protokoll |
+| `ftp.tls.rejectUnauthorized` | `true` | `false` akzeptiert selbst-signierte Zertifikate |
+| `ftp.allowSeparateTransferHost` | `false` | `true`, wenn der Server für Dateiübertragungen eine andere IP meldet (Fehler „PASV returned another host“) |
+| `mudlib.efunDefinitions` | – | Eigene JSON-Datei mit zusätzlichen Efuns/Sfuns, ergänzt das eingebaute Profil |
+
+## VS-Code-Einstellungen
+
+Erreichbar über `Strg+,` → Suche „lpc“.
 
 | Setting | Default | Wirkung |
 | --- | --- | --- |
-| `lpc.configFile` | `"lpc-config.json"` | Anderer Dateiname für die Workspace-Konfig |
-| `lpc.dialect.autoDetect` | `true` | Auto-Discovery beim Workspace-Öffnen |
-| `lpc.mud.enabled` | `false` | Telnet zu remote MUD und homemud aktivieren |
-| `lpc.ftp.verbose` | `false` | FTP-Protokoll-Trace in eigenem OutputChannel |
-| `lpc.ftp.uploadOnSave` | `false` | *Reserviert für Phase 2.5 (noch nicht aktiv)* |
-| `lpc.ftp.protocol` | `"ftps"` | *Reserviert (echtes Protokoll kommt aus lpc-config.json)* |
+| `lpc.configFile` | `"lpc-config.json"` | Anderer Dateiname für die Workspace-Konfiguration |
+| `lpc.dialect.autoDetect` | `true` | Dialekt beim Öffnen automatisch erkennen |
+| `lpc.mud.enabled` | `false` | Telnet zu Remote-MUD und homemud aktivieren |
+| `lpc.ftp.verbose` | `false` | FTP-Protokoll-Mitschnitt im Ausgabefenster „LPC FTP Trace“ |
+| `lpc.ftp.uploadOnSave` | `false` | *Reserviert, noch ohne Funktion* |
+| `lpc.ftp.protocol` | `"ftps"` | *Reserviert, das Protokoll kommt aus `lpc-config.json`* |
 
-### Bekannte Einschränkungen / offene Punkte
+## Tipps und Fehlersuche
 
-- **FTP** — kein automatischer Reconnect bei Timeout, keine SSH-Key-Auth (nur Passwort)
-- **DocumentSymbolProvider** — erkennt nur Funktionen mit explizitem Return-Typ
-- **tmLanguage** — Heredoc-Edge-Cases, kein semantisches Highlighting für lokale Funktionen
-- **Multi-Root-Workspace** — nur der erste Folder wird ausgewertet
-- **uploadOnSave** — Setting existiert, Logik (Phase 2.5) folgt
-- **Externer LSP-Server** (z. B. jlchmura/lpc-language-server) — Client-Stub steht, Server-Anbindung offen
-- **Unit-Tests / CI / VSIX-Packaging** — noch nicht eingerichtet
+- **Plugin reagiert nicht:** Liegt die `lpc-config.json` direkt im geöffneten Ordner?
+  Fehler in der Datei stehen im Ausgabefenster (`Strg+Shift+U`) unter **LPC-IDE-Master**.
+- **`.c`-Dateien werden als C statt LPC angezeigt:** Unten rechts in der Statusleiste auf
+  den Sprachmodus klicken und **LPC** wählen. Dauerhaft geht es über die Einstellung
+  `"files.associations": { "*.c": "lpc", "*.h": "lpc" }` in den Workspace-Einstellungen.
+- **Falsches Passwort gespeichert:** Befehl **LPC: FTP-Passwort ändern** (`Strg+Shift+P`).
+- **Verbindungsprobleme:** `lpc.ftp.verbose` einschalten und den Mitschnitt prüfen.
+
+## Bekannte Einschränkungen
+
+- **FTP** – kein automatischer Reconnect bei Timeout, keine SSH-Key-Anmeldung (nur Passwort)
+- **Outline** – erkennt nur Funktionen mit ausdrücklichem Rückgabetyp
+- **Syntax-Highlighting** – Sonderfälle bei Heredocs, kein semantisches Highlighting für lokale Funktionen
+- **Multi-Root-Workspace** – nur der erste Ordner wird ausgewertet
+- **uploadOnSave** – Setting existiert, Funktion folgt
+- **Externer LSP-Server** – Client-Grundgerüst vorhanden, Anbindung offen
+- **Unit-Tests / CI** – noch nicht eingerichtet
+
+## Entwicklung
+
+Zum Weiterentwickeln das Repository in VS Code öffnen, `npm install` ausführen und mit
+**F5** einen Extension Development Host starten. `npm run watch` kompiliert bei jeder Änderung neu.
 
 ## Repository
 

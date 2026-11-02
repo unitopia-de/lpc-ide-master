@@ -32,7 +32,7 @@ auf der UNItopia-Mudlib (LDMud 3.5/3.6). Sie kombiniert vier Bereiche:
 | `eslint src --ext ts` | ⚠️ 0 Fehler, 72 Warnungen (fast nur die `curly`-Regel; 69 mit `--fix` automatisch behebbar) |
 | Unit-Tests | ❌ keine vorhanden |
 | CI | ❌ keine eingerichtet |
-| VSIX-Paketierung | `.vscodeignore` ist vorbereitet (uncommittete Änderung), `@vscode/vsce` ist aber keine devDependency |
+| VSIX-Paketierung | ✅ `npm run package` erzeugt `lpc-ide-master-0.2.0.vsix` (461 Dateien, 923 KB); `@vscode/vsce` 4.0.0 ist devDependency |
 | Git | 9 Commits; uncommittet: `.vscodeignore`, `language-configuration.json` (`colorizedBracketPairs`), neu: `LICENSE`, `examples/syntax-showcase/` |
 
 ## 3. Architektur
@@ -143,11 +143,11 @@ npm run compile      # oder: npm run watch
 Danach in VS Code **F5** drücken („Run Extension“). Das startet einen Extension Development Host
 mit dem Plugin.
 
-Ein VSIX-Paket erstellen (vsce muss erst installiert werden):
+Ein VSIX-Paket erstellen:
 
 ```bash
-npx @vscode/vsce package
-code --install-extension lpc-ide-master-0.1.0.vsix
+npm run package
+code --install-extension lpc-ide-master-0.2.0.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -244,7 +244,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 
 - `LICENSE` und `examples/syntax-showcase/` committen; die Änderungen an `.vscodeignore` übernehmen.
 - Prüfen, ob die Repository-URL `github.com/unitopia-de/lpc-ide-master` und der Publisher `unitopia-de` tatsächlich existieren.
-- `@vscode/vsce` als devDependency und ein `package`-Skript ergänzen.
+- ~~`@vscode/vsce` als devDependency und ein `package`-Skript ergänzen.~~ Erledigt (Version 0.2.0).
 - ESLint-Warnungen mit `npx eslint src --ext ts --fix` beheben.
 - Mindestens einfache Tests ergänzen, z. B. für die Konfigurationsprüfung (`validate`) und das HomeMUD-Pfad-Mapping.
 - `README_old.md` löschen oder archivieren.

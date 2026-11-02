@@ -4,7 +4,7 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
-## [Unreleased]
+## 0.2.0
 
 ### Hinzugefügt
 - HomeMUD: Befehle „Von Remote herunterladen“ und „Mit Remote vergleichen“ (Diff-Ansicht) im Explorer- und Editor-Tab-Kontextmenü.
