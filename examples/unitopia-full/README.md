@@ -41,6 +41,7 @@ viel weniger Felder, weil die Defaults greifen.
 | `protocol` | nein | Eines von: `"ftp"` (unverschlüsselt), `"ftps"` (explicit AUTH TLS, Default), `"ftps-implicit"` (TLS ab Verbindungsbeginn), `"sftp"` (SSH-basiert). |
 | `tls` | nein | Nur für `ftps`/`ftps-implicit`. Optionen für die TLS-Schicht. |
 | `tls.rejectUnauthorized` | nein | Default `true` (strikte Zertifikatsprüfung). Auf `false` setzen, um selbst-signierte Zertifikate zu akzeptieren. |
+| `allowSeparateTransferHost` | nein | Nur für `ftp`/`ftps`/`ftps-implicit`. Default `false`. Auf `true` setzen, wenn der Server per PASV eine andere IP für Datenverbindungen meldet als die der Steuerverbindung. Sonst bricht die Übertragung mit „PASV returned another host“ ab. |
 
 **Beispiel FTPS (explicit, mit selbst-signiertem Zertifikat)**:
 ```json

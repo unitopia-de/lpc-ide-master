@@ -8,10 +8,12 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ### Hinzugefügt
 - HomeMUD: Befehle „Von Remote herunterladen“ und „Mit Remote vergleichen“ (Diff-Ansicht) im Explorer- und Editor-Tab-Kontextmenü.
+- Option `ftp.allowSeparateTransferHost` in `lpc-config.json` für Server, die per PASV eine andere Daten-IP melden.
 
 ### Geändert
 - Standard-Protokoll für `ftp.protocol` ist jetzt `ftps` statt unverschlüsseltem `ftp`.
 - Eingebautes Profil `ldmud-unitopia` enthält jetzt alle 322 Efuns und 201 Sfuns.
+- `basic-ftp` von 5.3.1 auf 6.2.3 aktualisiert (fest gepinnt). Bessere TLS-Session-Wiederaufnahme für FTPS, robustere Timeouts. Weicht die PASV-Daten-IP von der Server-IP ab, bricht die Verbindung jetzt standardmäßig ab (siehe `ftp.allowSeparateTransferHost`).
 
 ### Entfernt
 - Dialekt `mudos` (gab weder Profil noch Erkennung).

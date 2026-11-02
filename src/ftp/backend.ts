@@ -19,6 +19,8 @@ export interface ConnectionOptions {
     tls?: {
         rejectUnauthorized?: boolean;
     };
+    /** Erlaubt eine abweichende Daten-IP aus der PASV-Antwort. Nur für FTP-Backend relevant. */
+    allowSeparateTransferHost?: boolean;
 }
 
 export type RemoteProtocol = 'ftp' | 'ftps' | 'ftps-implicit' | 'sftp';

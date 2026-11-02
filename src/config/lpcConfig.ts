@@ -19,6 +19,11 @@ export interface FtpConfig {
         /** Default true. Auf false setzen, um selbst-signierte Zertifikate zu akzeptieren. */
         rejectUnauthorized?: boolean;
     };
+    /**
+     * Default false. Auf true setzen, wenn der Server per PASV eine andere IP für
+     * Datenverbindungen meldet als die der Steuerverbindung (sonst bricht basic-ftp ab).
+     */
+    allowSeparateTransferHost?: boolean;
 }
 
 export interface MudConsoleConfig {
@@ -204,6 +209,12 @@ function validate(input: unknown): ValidationIssue[] {
                     path: 'ftp.protocol',
                     message: 'Erlaubt: "ftp" | "ftps" | "ftps-implicit" | "sftp".'
                 });
+            }
+            if (
+                ftp.allowSeparateTransferHost !== undefined &&
+                typeof ftp.allowSeparateTransferHost !== 'boolean'
+            ) {
+                issues.push({ path: 'ftp.allowSeparateTransferHost', message: 'Boolean erwartet.' });
             }
             if (ftp.tls !== undefined) {
                 if (typeof ftp.tls !== 'object' || ftp.tls === null) {

@@ -65,6 +65,11 @@
               "description": "Default true (strikte Zertifikatsprüfung). Auf false setzen, um selbst-signierte Zertifikate zu akzeptieren."
             }
           }
+        },
+        "allowSeparateTransferHost": {
+          "type": "boolean",
+          "default": false,
+          "description": "Nur für ftp/ftps/ftps-implicit. Auf true setzen, wenn der Server per PASV eine andere IP für Datenverbindungen meldet als die der Steuerverbindung. Default false (Schutz vor FTP-Bounce-Angriffen)."
         }
       }
     },

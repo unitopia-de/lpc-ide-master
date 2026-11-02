@@ -28,7 +28,11 @@ export class FtpBackend implements RemoteBackend {
 
     async connect(opts: ConnectionOptions): Promise<void> {
         const basicFtp = await this.loadLib();
-        this.client = new basicFtp.Client();
+        // Ab basic-ftp 6 ist allowSeparateTransferHost standardmäßig false (Schutz vor
+        // FTP-Bounce). Nur auf ausdrücklichen Wunsch in lpc-config.json einschalten.
+        this.client = new basicFtp.Client(undefined, {
+            allowSeparateTransferHost: opts.allowSeparateTransferHost === true
+        });
 
         // Optionales Verbose-Logging der FTP-Protokoll-Kommandos.
         const settings = vscode.workspace.getConfiguration('lpc');

@@ -106,7 +106,8 @@ export class ConnectionManager {
             user,
             password,
             mode: protocol === 'sftp' ? undefined : protocol,
-            tls: cfg.tls
+            tls: cfg.tls,
+            allowSeparateTransferHost: cfg.allowSeparateTransferHost
         });
         this.clients.set(host, backend);
         this.output.appendLine(
