@@ -1,0 +1,9 @@
+# Nur für tools/index-generator/Dockerfile (Build-Kontext = Repository-Wurzel).
+node_modules
+out
+*.vsix
+.git
+.vscode
+.claude
+examples
+images

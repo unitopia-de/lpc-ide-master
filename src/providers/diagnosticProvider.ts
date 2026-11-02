@@ -89,12 +89,11 @@ async function run(
     let im: RegExpExecArray | null;
     while ((im = inheritRe.exec(text))) {
         const path = im[2];
-        // Mit homemud wie der Master auflösen ("%room" → /i/room.c). Ohne homemud lassen sich
-        // %-Pfade nicht prüfen — dann keine Warnung.
-        const local = index.toLocal(document.uri);
+        // Mit homemud wie der Master auflösen ("%room" → /i/room.c, aufwärts gesucht). Ohne
+        // homemud lassen sich %-Pfade nicht prüfen — dann keine Warnung.
         if (!index.enabled && path.startsWith('%')) continue;
-        const resolved = index.enabled && local
-            ? await index.resolveMudPath(path, local, ['.c', ''])
+        const resolved = index.enabled
+            ? await index.resolveInheritPath(document, path)
             : await resolveLpcPath(path, document, config, homemud, ['.c', '']);
         if (!resolved) {
             const offset = im.index + im[0].indexOf(`"${path}"`);

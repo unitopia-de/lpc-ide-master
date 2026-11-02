@@ -79,7 +79,7 @@ export function registerCompletionProvider(
 
         async resolveCompletionItem(item) {
             if (item.efunName && !item.documentation) {
-                const doc = await index.efunDocs.get(item.efunName);
+                const doc = await index.efunDoc(item.efunName);
                 if (doc) item.documentation = new vscode.MarkdownString(doc.markdown);
             }
             return item;

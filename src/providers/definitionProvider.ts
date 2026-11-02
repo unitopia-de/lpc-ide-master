@@ -54,6 +54,12 @@ export function registerDefinitionProvider(
             if (location) {
                 return new vscode.Location(location.uri, new vscode.Position(location.line, location.character));
             }
+
+            // Doku-Blöcke aus dem Mudlib-Index — bei mehreren zeigt VS Code eine Auswahl.
+            const docs = index.docsFor(word).filter((d) => d.uri);
+            if (docs.length) {
+                return docs.map((d) => new vscode.Location(d.uri!, new vscode.Position(d.line, 0)));
+            }
             return undefined;
         }
     };

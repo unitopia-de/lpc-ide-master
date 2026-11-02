@@ -4,6 +4,18 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## 0.2.3 – Mudlib-Index vom Server für Inherits, Sfuns und Doku
+
+### Hinzugefügt
+- Mudlib-Index: Ein Generator ([tools/index-generator/](tools/index-generator/README.md), Docker-Image) erzeugt aus einer schreibgeschützt eingehängten Mudlib eine JSON-Datei mit Efuns, Sfuns, erbbaren Klassen (mit aufgelösten inherits) und allen Doku-Kommentaren (`FUNKTION:`). Das Plugin lädt sie per FTP (`mudlib.indexFile`, Standard `/doc/lpc-ide/index.json.gz`), nur wenn sich die `.stamp`-Datei geändert hat, und speichert sie lokal zwischen.
+- Ohne homemud: geerbte Funktionen, Sfuns und Efun-Hilfe aus dem Mudlib-Index.
+- Hover und Strg+Klick auf sonst unbekannte Namen zeigen passende Doku-Kommentare aus der ganzen Mudlib.
+- Befehl **LPC: Mudlib-Index neu laden**.
+
+### Geändert
+- `inherit "%name"` und `#include <datei>` werden wie im UNItopia-Master vom Verzeichnis der Datei aufwärts gesucht (domain-eigene `i/`- und `sys/`-Verzeichnisse). Dadurch werden u. a. Makros aus domain-eigenen Headern aufgelöst.
+- Pfadauflösung, Vererbung und simul_efun liegen in einem Modul ohne VS-Code-Abhängigkeit (`src/analysis/mudlib.ts`), das Plugin und Generator gemeinsam nutzen.
+
 ## 0.2.2 – homemud für Inherits, Sfuns und Efun-Doku nutzen
 
 ### Hinzugefügt

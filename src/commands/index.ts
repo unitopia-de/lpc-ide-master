@@ -7,6 +7,7 @@ import { RemoteExplorerProvider, RemoteNode } from '../tree/remoteExplorerProvid
 import { CredentialsManager } from '../ftp/credentialsManager';
 import { MudConsole } from '../mud/mudConsole';
 import { HomeMudService } from '../homemud/homeMudService';
+import { ServerIndexLoader } from '../analysis/serverIndexLoader';
 
 export interface CommandContext {
     config: LpcConfigService;
@@ -18,6 +19,7 @@ export interface CommandContext {
     remoteMud: MudConsole;
     homeMud: MudConsole;
     homeMudService: HomeMudService;
+    indexLoader: ServerIndexLoader;
     output: vscode.OutputChannel;
 }
 
@@ -30,6 +32,12 @@ export function registerCommands(
     };
 
     // --- Konfig & Dialekt -------------------------------------------------
+
+    sub('lpc.reloadIndex', async () => {
+        await deps.indexLoader.reload();
+        await deps.indexLoader.refreshFromFtp(true);
+        deps.output.show(true);
+    });
 
     sub('lpc.reloadConfig', async () => {
         await deps.config.load();

@@ -80,10 +80,22 @@ export interface ParsedLpc {
     includes: LpcInclude[];
     /** #define NAME wert — Werte als Roh-Text. */
     defines: Map<string, string>;
+    /** Alle Doku-Blöcke im UNItopia-Format, auch solche ohne Funktion darunter. */
+    docBlocks: LpcDocBlock[];
+}
+
+export interface LpcDocBlock {
+    /** Namen aus "FUNKTION:" (ein Block kann mehrere Funktionen beschreiben). */
+    names: string[];
+    declaration?: string;
+    markdown: string;
+    /** 0-basierte Zeile, in der der Kommentar beginnt. */
+    line: number;
 }
 
 export function parseLpc(text: string): ParsedLpc {
-    const stripped = stripCommentsAndStrings(text);
+    const blockComments: { start: number; end: number }[] = [];
+    const stripped = stripCommentsAndStrings(text, blockComments);
     const mask = inactiveLineMask(stripped);
     const code = applyLineMask(stripped, mask);
     // Für die Doku-Suche: Kommentare behalten, inaktive Zweige und #if-Zeilen ausblenden —
@@ -192,7 +204,23 @@ export function parseLpc(text: string): ParsedLpc {
         }
     }
 
-    return { functions, variables, inherits, includes, defines };
+    const docBlocks: LpcDocBlock[] = [];
+    for (const c of blockComments) {
+        const raw = text.substring(c.start + 2, Math.max(c.start + 2, c.end - 2));
+        const doc = parseUnitopiaDoc(raw);
+        const names = doc?.FUNKTION?.split(/[\s,]+/).filter((n) => /^[A-Za-z_]\w*$/.test(n)) ?? [];
+        if (!doc || !names.length) {
+            continue;
+        }
+        docBlocks.push({
+            names,
+            declaration: doc.DEKLARATION?.replace(/\s+/g, ' ').trim() || undefined,
+            markdown: unitopiaDocToMarkdown(doc),
+            line: offsetToPosition(lineStarts, c.start).line
+        });
+    }
+
+    return { functions, variables, inherits, includes, defines, docBlocks };
 }
 
 /**
@@ -241,7 +269,10 @@ export function evaluateStringExpression(
 }
 
 /** Kommentare und Strings durch Leerzeichen gleicher Länge ersetzen; Offsets bleiben gültig. */
-export function stripCommentsAndStrings(text: string): string {
+export function stripCommentsAndStrings(
+    text: string,
+    blockComments?: { start: number; end: number }[]
+): string {
     const out: string[] = [];
     let i = 0;
     const n = text.length;
@@ -256,6 +287,7 @@ export function stripCommentsAndStrings(text: string): string {
         } else if (ch === '/' && next === '*') {
             const end = text.indexOf('*/', i + 2);
             const stop = end === -1 ? n : end + 2;
+            blockComments?.push({ start: i, end: stop });
             for (let j = i; j < stop; j++) {
                 out.push(text[j] === '\n' ? '\n' : ' ');
             }

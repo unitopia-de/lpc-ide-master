@@ -18,6 +18,7 @@ import { registerDefinitionProvider } from './providers/definitionProvider';
 import { registerDiagnosticProvider } from './providers/diagnosticProvider';
 import { registerSignatureHelpProvider } from './providers/signatureHelpProvider';
 import { LpcIndex } from './analysis/lpcIndex';
+import { ServerIndexLoader } from './analysis/serverIndexLoader';
 import { registerDocumentCache } from './analysis/documentCache';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -45,6 +46,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const connections = new ConnectionManager(credentials, config, output);
     context.subscriptions.push({ dispose: () => void connections.dispose() });
+
+    // Mudlib-Index (JSON vom Server bzw. aus dem homemud) als Rückfallebene ohne homemud
+    // und Quelle für Doku-Blöcke außerhalb der Vererbung.
+    const indexLoader = new ServerIndexLoader(context, config, homeMudService, connections, lpcIndex, output);
+    context.subscriptions.push(indexLoader);
+    void indexLoader.reload();
 
     const ftpProvider = new FtpFileSystemProvider(connections, output);
     context.subscriptions.push(
@@ -135,6 +142,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         remoteMud,
         homeMud,
         homeMudService,
+        indexLoader,
         output
     });
 }

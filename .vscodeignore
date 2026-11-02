@@ -27,6 +27,11 @@ README_old.md
 ANALYSE.md
 .efun-alternation.txt
 
+# --- Index-Generator (läuft im Docker-Container, nicht im Plugin) ---
+tools/**
+out/tools/**
+.dockerignore
+
 # --- Eigene VSIX-Builds nicht ins nächste Paket schleppen ---
 *.vsix
 

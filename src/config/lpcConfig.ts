@@ -6,6 +6,8 @@ export interface MudlibConfig {
     simulEfunFile?: string;
     includeDirs?: string[];
     efunDefinitions?: string;
+    /** Mudlib-Index (JSON, auch .gz) als Mudlib-Pfad. Standard: /doc/lpc-ide/index.json.gz. */
+    indexFile?: string;
 }
 
 export interface FtpConfig {
@@ -187,6 +189,9 @@ function validate(input: unknown): ValidationIssue[] {
         }
         if (mudlib.includeDirs !== undefined && !Array.isArray(mudlib.includeDirs)) {
             issues.push({ path: 'mudlib.includeDirs', message: 'Array von Strings erwartet.' });
+        }
+        if (mudlib.indexFile !== undefined && typeof mudlib.indexFile !== 'string') {
+            issues.push({ path: 'mudlib.indexFile', message: 'String erwartet.' });
         }
     }
 

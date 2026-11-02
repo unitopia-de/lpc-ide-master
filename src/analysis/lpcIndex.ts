@@ -2,9 +2,13 @@ import * as vscode from 'vscode';
 import { LpcConfigService } from '../config/lpcConfig';
 import { HomeMudService } from '../homemud/homeMudService';
 import type { EfunDefinition } from '../dialect/efunProvider';
-import { EfunDocs } from './efunDocs';
-import { decodeText, evaluateStringExpression, LpcFunction, parseLpc, ParsedLpc } from './lpcParser';
+import { EfunDocs, EfunDoc } from './efunDocs';
+import { decodeText, LpcFunction } from './lpcParser';
+import { Mudlib, MudFs } from './mudlib';
+import { IndexFunction, MudlibIndex } from './indexFormat';
 import { parseDocument } from './documentCache';
+
+export { bestPerName } from './mudlib';
 
 export interface IndexedFunction extends LpcFunction {
     uri: vscode.Uri;
@@ -12,27 +16,36 @@ export interface IndexedFunction extends LpcFunction {
     mudPath: string;
     /** Vererbungskette bis zu dieser Datei, z. B. ["/i/room.c", "/i/item/smell.c"]. */
     via: string[];
+    /** true, wenn die Angaben aus dem Mudlib-Index stammen (nicht live aus dem homemud). */
+    fromIndex?: boolean;
 }
 
-// Grenzen, damit eine kaputte oder riesige Vererbung den Editor nicht ausbremst.
-const MAX_FILES = 300;
-const MAX_INCLUDE_DEPTH = 4;
+export interface IndexedDoc {
+    names: string[];
+    signature?: string;
+    documentation: string;
+    uri: vscode.Uri | undefined;
+    mudPath: string;
+    /** 0-basierte Zeile. */
+    line: number;
+}
 
-// Index über die lokale homemud-Mudlib: löst Vererbung auf, sammelt geerbte
-// Funktionen, liest die Sfuns aus der simul_efun und stellt die Efun-Hilfe
-// bereit. Ohne konfiguriertes homemud ist er inaktiv.
+// Wissen über die Mudlib aus zwei Quellen:
+//  1. homemud (lokale Mudlib) — live gelesen, immer aktuell.
+//  2. Mudlib-Index (JSON vom Server oder aus dem homemud) — Rückfallebene ohne
+//     homemud und Quelle für Doku-Blöcke außerhalb der Vererbung.
 export class LpcIndex implements vscode.Disposable {
     readonly efunDocs: EfunDocs;
 
-    private readonly files = new Map<string, Promise<ParsedLpc | undefined>>();
-    private readonly defines = new Map<string, Promise<Map<string, string>>>();
-    private readonly existsCache = new Map<string, Promise<boolean>>();
+    private mudlib: Mudlib | undefined;
+    private server: MudlibIndex | undefined;
+    private serverSource = '';
     private simulEfunFiles = new Set<string>();
 
     private watcher: vscode.FileSystemWatcher | undefined;
     private readonly disposables: vscode.Disposable[] = [];
     private readonly sfunEmitter = new vscode.EventEmitter<void>();
-    /** Feuert (verzögert), wenn sich eine Datei der simul_efun geändert hat. */
+    /** Feuert (verzögert), wenn sich die Sfuns geändert haben könnten. */
     readonly onDidChangeSimulEfuns = this.sfunEmitter.event;
     private sfunTimer: NodeJS.Timeout | undefined;
 
@@ -50,8 +63,14 @@ export class LpcIndex implements vscode.Disposable {
         this.reset();
     }
 
+    /** true, wenn eine lokale homemud-Mudlib gelesen werden kann. */
     get enabled(): boolean {
-        return !!this.homemud.localRoot;
+        return !!this.mudlib;
+    }
+
+    /** Stand des geladenen Mudlib-Index, falls vorhanden. */
+    get indexDate(): Date | undefined {
+        return this.server?.generatedAt;
     }
 
     dispose(): void {
@@ -65,279 +84,239 @@ export class LpcIndex implements vscode.Disposable {
         }
     }
 
-    // --- Pfade ------------------------------------------------------------
-
-    /** Lokale homemud-Datei zu einem Dokument (lpc-ftp:// wird auf das homemud abgebildet). */
-    toLocal(uri: vscode.Uri): vscode.Uri | undefined {
-        if (uri.scheme === 'file') {
-            return uri;
+    /** Mudlib-Index setzen oder entfernen (vom Loader aufgerufen). */
+    setServerIndex(index: MudlibIndex | undefined, source: string): void {
+        this.server = index;
+        this.serverSource = source;
+        if (index) {
+            const d = index.data;
+            this.output.appendLine(
+                `Mudlib-Index geladen (${source}, Stand ${index.generatedAt.toLocaleString()}): ` +
+                    `${Object.keys(d.classes).length} Klassen, ${d.sfuns.length} Sfuns, ` +
+                    `${d.efuns.length} Efuns, ${d.docs.length} Doku-Blöcke.`
+            );
         }
-        if (uri.scheme === 'lpc-ftp' && this.homemud.isConfigured) {
-            try {
-                return this.homemud.remoteToLocal(uri).localUri;
-            } catch {
-                return undefined;
-            }
-        }
-        return undefined;
+        this.scheduleSimulEfunReload();
     }
 
-    /** Mudlib-Pfad ("/i/room.c") einer lokalen Datei, sonst der Dateiname. */
-    mudPathOf(uri: vscode.Uri): string {
+    // --- Pfade ------------------------------------------------------------
+
+    /** Mudlib-Pfad ("/i/room.c") eines Dokuments, falls bestimmbar. */
+    mudPathFor(uri: vscode.Uri): string | undefined {
+        if (uri.scheme === 'lpc-ftp') {
+            if (this.homemud.isConfigured) {
+                try {
+                    return this.mudPathFor(this.homemud.remoteToLocal(uri).localUri);
+                } catch {
+                    return uri.path;
+                }
+            }
+            return uri.path;
+        }
         const root = this.homemud.localRoot?.path.replace(/\/+$/, '');
         if (root && uri.path.toLowerCase().startsWith(root.toLowerCase() + '/')) {
             return uri.path.substring(root.length);
         }
-        return uri.path.substring(uri.path.lastIndexOf('/') + 1);
-    }
-
-    /**
-     * Löst einen Mudlib-Pfad wie bei UNItopia auf: "%name" → /i/name,
-     * absolute Pfade ab der Mudlib-Wurzel, relative ab der Datei.
-     */
-    async resolveMudPath(
-        requested: string,
-        from: vscode.Uri,
-        extensions: string[]
-    ): Promise<vscode.Uri | undefined> {
-        const root = this.homemud.localRoot;
-        if (!root) {
-            return undefined;
-        }
-        let path = requested.trim();
-        if (path.startsWith('%/')) {
-            path = path.substring(1);
-        }
-        else if (path.startsWith('%')) {
-            path = '/i/' + path.substring(1);
-        }
-
-        const candidates: vscode.Uri[] = [];
-        if (path.startsWith('/')) {
-            candidates.push(joinMud(root, path));
-        } else {
-            candidates.push(joinMud(dirname(from), path), joinMud(root, path));
-        }
-        for (const cand of candidates) {
-            for (const ext of extensions) {
-                const target = ext && cand.path.endsWith(ext) ? cand : cand.with({ path: cand.path + ext });
-                if (await this.exists(target)) {
-                    return target;
-                }
-            }
-        }
         return undefined;
     }
 
-    /** Löst den Ausdruck hinter inherit auf (Literal, Makro, Verkettung). */
-    async resolveInherit(
-        expression: string,
-        from: vscode.Uri,
-        parsed: ParsedLpc
-    ): Promise<vscode.Uri | undefined> {
-        const literal = /^"([^"]*)"$/.exec(expression.trim());
-        const path = literal
-            ? literal[1]
-            : evaluateStringExpression(expression, await this.definesFor(from, parsed));
-        if (!path) {
-            return undefined;
-        }
-        return this.resolveMudPath(path, from, ['.c', '']);
+    /** Für Anzeigen: Mudlib-Pfad, sonst der Dateiname. */
+    mudPathOf(uri: vscode.Uri): string {
+        return this.mudPathFor(uri) ?? uri.path.substring(uri.path.lastIndexOf('/') + 1);
     }
 
-    /** Für Strg+Klick auf eine inherit-Zeile im Editor. */
-    async resolveInheritAtLine(document: vscode.TextDocument, line: number): Promise<vscode.Uri | undefined> {
-        const local = this.toLocal(document.uri);
-        if (!this.enabled || !local) {
-            return undefined;
-        }
-        const parsed = parseDocument(document);
-        const inh = parsed.inherits.find((i) => document.positionAt(i.offset).line === line);
-        return inh ? this.resolveInherit(inh.expression, local, parsed) : undefined;
-    }
-
-    async resolveInclude(path: string, system: boolean, from: vscode.Uri): Promise<vscode.Uri | undefined> {
+    /** URI zu einem Mudlib-Pfad: lokal im homemud, sonst über lpc-ftp://. */
+    uriFor(mudPath: string): vscode.Uri | undefined {
         const root = this.homemud.localRoot;
-        if (!root) {
-            return undefined;
+        if (root) {
+            return joinMud(root, mudPath);
         }
-        const candidates: string[] = [];
-        if (system) {
-            candidates.push('/sys/' + path, ...(this.config.value?.mudlib?.includeDirs ?? []).map((d) => `${d}/${path}`));
-        } else if (path.startsWith('/')) {
-            candidates.push(path);
-        } else {
-            const viaFile = joinMud(dirname(from), path);
-            if (await this.exists(viaFile)) {
-                return viaFile;
-            }
-            candidates.push('/sys/' + path);
-        }
-        for (const c of candidates) {
-            const uri = joinMud(root, c);
-            if (await this.exists(uri)) {
-                return uri;
-            }
-        }
-        return undefined;
+        const host = this.config.value?.ftp?.host;
+        return host ? vscode.Uri.parse(`lpc-ftp://${host}${mudPath}`) : undefined;
     }
 
     // --- Vererbung ---------------------------------------------------------
 
+    /** Für Strg+Klick auf eine inherit-Zeile im Editor. */
+    async resolveInheritAtLine(document: vscode.TextDocument, line: number): Promise<vscode.Uri | undefined> {
+        const parsed = parseDocument(document);
+        const inh = parsed.inherits.find((i) => document.positionAt(i.offset).line === line);
+        if (!inh) {
+            return undefined;
+        }
+        const from = this.fromPath(document);
+        let target: string | undefined;
+        if (this.mudlib) {
+            target = await this.mudlib.resolveInherit(inh.expression, from, parsed);
+        } else if (this.server) {
+            target = this.server.resolveInherit(inh.expression, from, parsed.defines);
+        }
+        return target ? this.uriFor(target) : undefined;
+    }
+
+    /** Prüft einen inherit-Pfad aus einem Dokument (nur mit homemud). */
+    async resolveInheritPath(document: vscode.TextDocument, path: string): Promise<vscode.Uri | undefined> {
+        if (!this.mudlib) {
+            return undefined;
+        }
+        const target = await this.mudlib.resolvePath(path, this.fromPath(document), ['.c', '']);
+        return target ? this.uriFor(target) : undefined;
+    }
+
     /**
      * Alle Funktionen, die ein Dokument über inherit sieht — nächste Ebene
-     * zuerst, private Funktionen der Eltern ausgenommen. Bei gleichem Namen
-     * gewinnt die näher liegende Definition.
+     * zuerst, private Funktionen der Eltern ausgenommen.
      */
     async inheritedFunctions(document: vscode.TextDocument): Promise<IndexedFunction[]> {
-        const local = this.toLocal(document.uri);
-        if (!this.enabled || !local) {
-            return [];
+        const parsed = parseDocument(document);
+        const from = this.fromPath(document);
+        if (this.mudlib) {
+            const fns = await this.mudlib.inheritedFunctions(from, parsed);
+            return fns.flatMap((fn) => {
+                const uri = this.uriFor(fn.file);
+                return uri ? [{ ...fn, uri, mudPath: fn.file, via: fn.via }] : [];
+            });
         }
-
-        const result = new Map<string, IndexedFunction>();
-        const visited = new Set<string>([local.toString()]);
-        let queue: { uri: vscode.Uri; parsed: ParsedLpc; via: string[] }[] = [
-            { uri: local, parsed: parseDocument(document), via: [] }
-        ];
-
-        while (queue.length && visited.size < MAX_FILES) {
-            const next: typeof queue = [];
-            for (const item of queue) {
-                for (const inh of item.parsed.inherits) {
-                    const target = await this.resolveInherit(inh.expression, item.uri, item.parsed);
-                    if (!target || visited.has(target.toString())) {
-                        continue;
-                    }
-                    visited.add(target.toString());
-                    const parsed = await this.parsedFile(target);
-                    if (!parsed) {
-                        continue;
-                    }
-                    const via = [...item.via, this.mudPathOf(target)];
-                    for (const fn of bestPerName(parsed.functions)) {
-                        if (fn.modifiers.includes('private')) {
-                            continue;
-                        }
-                        const existing = result.get(fn.name);
-                        if (existing && !(existing.isPrototype && !fn.isPrototype)) {
-                            continue;
-                        }
-                        result.set(fn.name, {
-                            ...fn,
-                            documentation: fn.documentation ?? existing?.documentation,
-                            uri: target,
-                            mudPath: via[via.length - 1],
-                            via
-                        });
-                    }
-                    next.push({ uri: target, parsed, via });
-                }
-            }
-            queue = next;
+        if (this.server) {
+            const direct = parsed.inherits
+                .map((i) => this.server!.resolveInherit(i.expression, from, parsed.defines))
+                .filter((p): p is string => !!p);
+            return this.server.inheritedFunctions(direct).flatMap(({ fn, file, via }) => {
+                const uri = this.uriFor(file);
+                return uri ? [{ ...fromIndexFunction(fn), uri, mudPath: file, via, fromIndex: true }] : [];
+            });
         }
-        return Array.from(result.values());
+        return [];
     }
 
     async findInherited(document: vscode.TextDocument, name: string): Promise<IndexedFunction | undefined> {
         return (await this.inheritedFunctions(document)).find((f) => f.name === name);
     }
 
-    // --- simul_efun --------------------------------------------------------
+    // --- Sfuns, Efun-Hilfe, Doku-Blöcke --------------------------------------
 
     /**
-     * Liest die Sfuns aus der simul_efun des homemud: die Datei aus
-     * mudlib.simulEfunFile samt "..."-Includes und inherits. Sfuns sind alle
-     * öffentlichen Funktionen (nicht private/protected/static).
+     * Sfuns: mit homemud live aus der simul_efun (mudlib.simulEfunFile samt
+     * Includes und inherits), sonst aus dem Mudlib-Index.
      */
     async loadSimulEfuns(): Promise<EfunDefinition[]> {
-        const root = this.homemud.localRoot;
-        if (!root) {
-            return [];
+        if (this.mudlib) {
+            const configured = this.config.value?.mudlib?.simulEfunFile ?? '/secure/simul_efun.c';
+            const start = await this.mudlib.resolvePath(configured, '/', ['', '.c']);
+            if (!start) {
+                this.output.appendLine(`simul_efun nicht gefunden im homemud: ${configured}`);
+            } else {
+                const { functions, files } = await this.mudlib.simulEfuns(start);
+                this.simulEfunFiles = new Set(files);
+                this.output.appendLine(
+                    `simul_efun aus homemud gelesen: ${functions.length} Sfuns aus ${files.length} Dateien (${start}).`
+                );
+                return functions.map((fn) => ({
+                    name: fn.name,
+                    signature: fn.declaration ?? fn.signature,
+                    documentation: fn.documentation,
+                    isSimulated: true,
+                    location: this.location(fn.file, fn.line, fn.character)
+                }));
+            }
         }
-        const configured = this.config.value?.mudlib?.simulEfunFile ?? '/secure/simul_efun.c';
-        const start = await this.resolveMudPath(configured, root, ['', '.c']);
-        if (!start) {
-            this.output.appendLine(`simul_efun nicht gefunden im homemud: ${configured}`);
-            return [];
+        if (this.server) {
+            return this.server.data.sfuns.map((s) => ({
+                name: s.name,
+                signature: s.signature,
+                documentation: s.doc,
+                isSimulated: true,
+                location: this.location(s.file, s.line - 1, 0)
+            }));
         }
+        return [];
+    }
 
-        const visited = new Set<string>();
-        const found = new Map<string, { fn: LpcFunction; uri: vscode.Uri }>();
-        const walk = async (uri: vscode.Uri): Promise<void> => {
-            if (visited.has(uri.toString()) || visited.size >= MAX_FILES) {
-                return;
-            }
-            visited.add(uri.toString());
-            const parsed = await this.parsedFile(uri);
-            if (!parsed) {
-                return;
-            }
-            for (const fn of bestPerName(parsed.functions)) {
-                if (fn.isPrototype || fn.name.startsWith('__')) {
-                    continue;
-                }
-                if (fn.modifiers.some((m) => m === 'private' || m === 'protected' || m === 'static')) {
-                    continue;
-                }
-                if (!found.has(fn.name)) {found.set(fn.name, { fn, uri });}
-            }
-            for (const inc of parsed.includes) {
-                if (inc.system) {
-                    continue;
-                }
-                const target = await this.resolveInclude(inc.path, false, uri);
-                if (target) {
-                    await walk(target);
-                }
-            }
-            for (const inh of parsed.inherits) {
-                const target = await this.resolveInherit(inh.expression, uri, parsed);
-                if (target) {
-                    await walk(target);
-                }
-            }
-        };
-        await walk(start);
-        this.simulEfunFiles = visited;
+    /** Efun-Hilfe: aus doc/efun im homemud, sonst aus dem Mudlib-Index. */
+    async efunDoc(name: string): Promise<EfunDoc | undefined> {
+        const local = this.mudlib ? await this.efunDocs.get(name) : undefined;
+        if (local) {
+            return local;
+        }
+        const doc = this.server?.efun(name)?.doc;
+        return doc ? { markdown: doc } : undefined;
+    }
 
-        const defs: EfunDefinition[] = Array.from(found.values()).map(({ fn, uri }) => ({
-            name: fn.name,
-            signature: fn.declaration ?? fn.signature,
-            documentation: fn.documentation,
-            isSimulated: true,
-            location: { uri, line: fn.line, character: fn.character }
+    /** Doku-Blöcke ("FUNKTION:") aus dem Mudlib-Index zu einem Namen. */
+    docsFor(name: string): IndexedDoc[] {
+        return (this.server?.docs(name) ?? []).map((d) => ({
+            names: d.names,
+            signature: d.signature,
+            documentation: d.doc,
+            uri: this.uriFor(d.file),
+            mudPath: d.file,
+            line: d.line - 1
         }));
-        this.output.appendLine(
-            `simul_efun aus homemud gelesen: ${defs.length} Sfuns aus ${visited.size} Dateien (${this.mudPathOf(start)}).`
-        );
-        return defs;
     }
 
     // --- intern -------------------------------------------------------------
 
+    private fromPath(document: vscode.TextDocument): string {
+        const known = this.mudPathFor(document.uri);
+        if (known) {
+            return known;
+        }
+        // Datei außerhalb der Mudlib: relative inherits ab der Wurzel auflösen.
+        return '/' + document.uri.path.substring(document.uri.path.lastIndexOf('/') + 1);
+    }
+
+    private location(
+        mudPath: string,
+        line: number,
+        character: number
+    ): EfunDefinition['location'] {
+        const uri = this.uriFor(mudPath);
+        return uri ? { uri, line, character } : undefined;
+    }
+
     private reset(): void {
-        this.files.clear();
-        this.defines.clear();
-        this.existsCache.clear();
         this.efunDocs.clear();
         this.watcher?.dispose();
         this.watcher = undefined;
         const root = this.homemud.localRoot;
         if (!root) {
+            this.mudlib = undefined;
             return;
         }
-        this.watcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(root, '**/*.{c,h,inc}')
-        );
+        const fs: MudFs = {
+            async read(mudPath) {
+                const uri = joinMud(root, mudPath);
+                // Geöffnete Dokumente (auch ungespeichert) direkt aus dem Editor lesen.
+                const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+                if (open) {
+                    return open.getText();
+                }
+                try {
+                    return decodeText(await vscode.workspace.fs.readFile(uri));
+                } catch {
+                    return undefined;
+                }
+            },
+            async exists(mudPath) {
+                try {
+                    return (await vscode.workspace.fs.stat(joinMud(root, mudPath))).type === vscode.FileType.File;
+                } catch {
+                    return false;
+                }
+            }
+        };
+        this.mudlib = new Mudlib(fs, { includeDirs: this.config.value?.mudlib?.includeDirs });
+
+        this.watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '**/*.{c,h,inc}'));
         const onChange = (uri: vscode.Uri): void => {
             this.invalidate(uri);
-            if (this.simulEfunFiles.has(uri.toString())) {
+            const path = this.mudPathFor(uri);
+            if (path && this.simulEfunFiles.has(path)) {
                 this.scheduleSimulEfunReload();
             }
         };
         const onCreateDelete = (uri: vscode.Uri): void => {
-            this.existsCache.clear();
+            this.mudlib?.invalidateExists();
             onChange(uri);
         };
         this.watcher.onDidChange(onChange);
@@ -346,9 +325,10 @@ export class LpcIndex implements vscode.Disposable {
     }
 
     private invalidate(uri: vscode.Uri): void {
-        const key = uri.toString();
-        this.files.delete(key);
-        this.defines.delete(key);
+        const path = this.mudPathFor(uri);
+        if (path) {
+            this.mudlib?.invalidate(path);
+        }
     }
 
     private scheduleSimulEfunReload(): void {
@@ -357,102 +337,21 @@ export class LpcIndex implements vscode.Disposable {
         }
         this.sfunTimer = setTimeout(() => this.sfunEmitter.fire(), 500);
     }
-
-    private parsedFile(uri: vscode.Uri): Promise<ParsedLpc | undefined> {
-        const key = uri.toString();
-        // Geöffnete Dokumente mit ungespeicherten Änderungen direkt aus dem Editor lesen.
-        const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === key);
-        if (open?.isDirty) {
-            return Promise.resolve(parseDocument(open));
-        }
-        let entry = this.files.get(key);
-        if (!entry) {
-            entry = Promise.resolve(vscode.workspace.fs.readFile(uri)).then(
-                (data) => parseLpc(decodeText(data)),
-                () => undefined
-            );
-            this.files.set(key, entry);
-        }
-        return entry;
-    }
-
-    /** #defines einer Datei inklusive ihrer Includes (eigene Definitionen haben Vorrang). */
-    private definesFor(uri: vscode.Uri, parsed: ParsedLpc): Promise<Map<string, string>> {
-        const key = uri.toString();
-        let entry = this.defines.get(key);
-        if (!entry) {
-            entry = this.collectDefines(uri, parsed, 0, new Set([key]));
-            this.defines.set(key, entry);
-        }
-        return entry;
-    }
-
-    private async collectDefines(
-        uri: vscode.Uri,
-        parsed: ParsedLpc,
-        depth: number,
-        seen: Set<string>
-    ): Promise<Map<string, string>> {
-        const result = new Map(parsed.defines);
-        if (depth >= MAX_INCLUDE_DEPTH) {
-            return result;
-        }
-        for (const inc of parsed.includes) {
-            const target = await this.resolveInclude(inc.path, inc.system, uri);
-            if (!target || seen.has(target.toString())) {
-                continue;
-            }
-            seen.add(target.toString());
-            const incParsed = await this.parsedFile(target);
-            if (!incParsed) {
-                continue;
-            }
-            const nested = await this.collectDefines(target, incParsed, depth + 1, seen);
-            for (const [k, v] of nested) {
-                if (!result.has(k)) {
-                    result.set(k, v);
-                }
-            }
-        }
-        return result;
-    }
-
-    private exists(uri: vscode.Uri): Promise<boolean> {
-        const key = uri.toString();
-        let entry = this.existsCache.get(key);
-        if (!entry) {
-            entry = Promise.resolve(vscode.workspace.fs.stat(uri)).then(
-                (s) => s.type === vscode.FileType.File,
-                () => false
-            );
-            this.existsCache.set(key, entry);
-        }
-        return entry;
-    }
 }
 
-/** Pro Name die beste Fundstelle: Definition vor Prototyp, Doku notfalls vom Prototyp. */
-export function bestPerName(functions: LpcFunction[]): LpcFunction[] {
-    const best = new Map<string, LpcFunction>();
-    for (const fn of functions) {
-        const existing = best.get(fn.name);
-        if (!existing) {
-            best.set(fn.name, fn);
-        } else if (existing.isPrototype && !fn.isPrototype) {
-            best.set(fn.name, {
-                ...fn,
-                documentation: fn.documentation ?? existing.documentation,
-                declaration: fn.declaration ?? existing.declaration
-            });
-        } else if (!existing.documentation && fn.documentation) {
-            best.set(fn.name, { ...existing, documentation: fn.documentation });
-        }
-    }
-    return Array.from(best.values());
-}
-
-function dirname(uri: vscode.Uri): vscode.Uri {
-    return uri.with({ path: uri.path.substring(0, uri.path.lastIndexOf('/')) || '/' });
+function fromIndexFunction(fn: IndexFunction): LpcFunction {
+    return {
+        name: fn.n,
+        signature: fn.s,
+        modifiers: [],
+        isPrototype: false,
+        offset: 0,
+        line: fn.l - 1,
+        character: 0,
+        declOffset: 0,
+        declLength: 0,
+        documentation: fn.d
+    };
 }
 
 function joinMud(base: vscode.Uri, path: string): vscode.Uri {

@@ -38,7 +38,12 @@
         "baseDir": { "type": "string" },
         "simulEfunFile": { "type": "string" },
         "includeDirs": { "type": "array", "items": { "type": "string" } },
-        "efunDefinitions": { "type": "string" }
+        "efunDefinitions": { "type": "string" },
+        "indexFile": {
+          "type": "string",
+          "default": "/doc/lpc-ide/index.json.gz",
+          "description": "Mudlib-Index (vom Index-Generator erzeugt) als Mudlib-Pfad. Wird aus dem homemud gelesen oder per FTP geladen und lokal zwischengespeichert."
+        }
       }
     },
     "ftp": {

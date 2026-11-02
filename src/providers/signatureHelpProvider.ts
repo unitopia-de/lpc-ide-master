@@ -29,7 +29,8 @@ export function registerSignatureHelpProvider(
             const sig = new vscode.SignatureInformation(sigLabel);
             let documentation = fn ? fn.documentation : def!.documentation;
             if (!documentation && def && !def.isSimulated) {
-                documentation = (await index.efunDocs.get(def.name))?.description;
+                const efunDoc = await index.efunDoc(def.name);
+                documentation = efunDoc?.description ?? efunDoc?.markdown;
             }
             if (documentation) {
                 sig.documentation = new vscode.MarkdownString(documentation);

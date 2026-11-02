@@ -60,7 +60,12 @@ src/
 │   ├── lpcParser.ts             Regex-Parser: Funktionen, Variablen, inherit, #include, #define, Doku-Kommentare
 │   ├── lpcIndex.ts              homemud-Index: Vererbung, simul_efun, Pfadauflösung ("%room", Makros)
 │   ├── efunDocs.ts              Efun-Hilfe aus <homemud>/doc/efun/
-│   └── documentCache.ts         Geparste Editor-Dokumente je Version
+│   ├── documentCache.ts         Geparste Editor-Dokumente je Version
+│   ├── mudlib.ts                Pfadauflösung/Vererbung/simul_efun ohne VS-Code-Abhängigkeit (auch im Generator)
+│   ├── efunDocText.ts           Umwandlung der Efun-Doku in Markdown (auch im Generator)
+│   ├── indexFormat.ts           Format des Mudlib-Index und Abfragen darauf
+│   └── serverIndexLoader.ts     Lädt den Mudlib-Index aus dem homemud oder per FTP (mit .stamp-Abgleich)
+├── tools/buildIndex.ts          Index-Generator (Kommandozeile, Docker: tools/index-generator/)
 ├── providers/                   Hover, Completion, Outline, Goto-Definition,
 │                                Diagnostics, Signature-Help
 ├── commands/index.ts            Alle 20 Befehle
@@ -159,7 +164,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.2.vsix
+code --install-extension lpc-ide-master-0.2.3.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -245,7 +250,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 - Bei Multi-Root-Workspaces wird nur der erste Ordner berücksichtigt.
 - Die Auto-Erkennung ordnet jede `master.c`/`lpctypes.h` dem UNItopia-Profil zu, auch bei anderen LDMud-Mudlibs.
 - Präprozessor-Bedingungen werden nicht ausgewertet, sondern per Faustregel entschieden: bei `#if … #else` gilt der `#else`-Zweig, `#if 0` ist inaktiv, Treiber-Makros wie `__LDMUD__` gelten als definiert. Bei `#if __VERSION__ > "…" … #else` kann das den falschen Zweig treffen.
-- Geerbte Funktionen, Efun-Hilfe und Sfuns aus der `simul_efun` gibt es nur mit HomeMUD. Ohne lokale Mudlib wird nichts über FTP nachgeladen.
+- Ohne HomeMUD kommen geerbte Funktionen, Efun-Hilfe und Sfuns aus dem Mudlib-Index, sofern der Server einen bereitstellt. Der Index ist ein Stand vom Zeitpunkt der Erzeugung, und Makros in `inherit` löst das Plugin ohne HomeMUD nur auf, wenn sie in der Datei selbst definiert sind.
 - `private inherit` wird wie normales `inherit` behandelt, Funktionen daraus sind in Enkel-Dateien also fälschlich sichtbar.
 - [src/lsp/client.ts](src/lsp/client.ts) ist nur ein Platzhalter. Für die Anbindung eines Language Servers muss `vscode-languageclient` wieder installiert werden.
 
@@ -331,12 +336,14 @@ Parameterhilfe; Outline; FTPS und SFTP mit TLS-Optionen; VSIX-Paketierung.
 1. **Präprozessor besser auswerten**, mindestens `__VERSION__`-Vergleiche gegen `version` aus der
    `lpc-config.json` und `#ifdef` gegen bekannte `#define`s. Das betrifft vor allem Varianten derselben
    Funktion.
-2. **Ohne HomeMUD:** Vererbung optional auch über FTP auflösen, mit Zwischenspeicher, weil jede
-   Datei einzeln geladen werden muss.
+2. ~~**Ohne HomeMUD:** Vererbung über FTP auflösen.~~ Gelöst über den Mudlib-Index, den der Server
+   bereitstellt ([tools/index-generator/](tools/index-generator/README.md)). Offen ist, wer ihn bei
+   UNItopia betreibt und welche Bereiche mit `--exclude` ausgenommen werden.
 3. **`uploadOnSave`** für Dateien im HomeMUD umsetzen.
 4. **Tests** für Parser und Pfadauflösung. Die Prüfungen gegen die echte Mudlib laufen bisher nur
    als einmalige Skripte.
 
 **Fazit:** Mit HomeMUD deckt das Plugin die Ziele aus dem Plan weitgehend ab: Vererbung, Sfuns
-direkt aus dem Quelltext, Hilfetexte für Efuns und das Sichtbarkeitsmodell. Offen sind vor allem
+direkt aus dem Quelltext, Hilfetexte für Efuns und das Sichtbarkeitsmodell. Ohne HomeMUD gilt das
+ebenso, sofern der Server einen Mudlib-Index bereitstellt. Offen sind vor allem
 ein echter Language Server mit Syntaxprüfung, `uploadOnSave` und automatisierte Tests.

@@ -26,21 +26,23 @@ export function registerHoverProvider(
                 return new vscode.Hover(functionHover(own, '*Funktion in dieser Datei*'), range);
             }
 
-            // 2. Geerbte Funktion (nur mit homemud)
+            // 2. Geerbte Funktion (homemud oder Mudlib-Index)
             const inherited = await index.findInherited(document, word);
             if (inherited) {
                 const chain = inherited.via.length > 1 ? ` (über ${inherited.via.slice(0, -1).join(' → ')})` : '';
                 return new vscode.Hover(
-                    functionHover(inherited, `*Geerbt aus \`${inherited.mudPath}\`${chain}*`),
+                    functionHover(inherited, `*Geerbt aus \`${inherited.mudPath}\`${chain}${indexNote(index, inherited.fromIndex)}*`),
                     range
                 );
             }
 
             // 3. Efun / Sfun
             const def = efuns.lookup(word);
-            if (!def) return undefined;
+            if (!def) {
+                return docsHover(index, word, range);
+            }
             const md = new vscode.MarkdownString();
-            const efunDoc = !def.isSimulated && !def.documentation ? await index.efunDocs.get(word) : undefined;
+            const efunDoc = !def.isSimulated && !def.documentation ? await index.efunDoc(word) : undefined;
             if (efunDoc) {
                 md.appendMarkdown(efunDoc.markdown);
             } else {
@@ -57,6 +59,32 @@ export function registerHoverProvider(
         }
     };
     context.subscriptions.push(vscode.languages.registerHoverProvider(LPC_SELECTOR, provider));
+}
+
+// 4. Doku-Blöcke aus dem Mudlib-Index ("FUNKTION:" außerhalb der Vererbung) —
+//    z. B. für Funktionen, die per call_other aufgerufen oder in Objekten implementiert werden.
+const MAX_DOCS_IN_HOVER = 3;
+
+function docsHover(index: LpcIndex, word: string, range: vscode.Range): vscode.Hover | undefined {
+    const docs = index.docsFor(word);
+    if (!docs.length) return undefined;
+    const md = new vscode.MarkdownString();
+    docs.slice(0, MAX_DOCS_IN_HOVER).forEach((d, i) => {
+        if (i > 0) md.appendMarkdown('\n\n---\n\n');
+        if (d.signature) md.appendCodeblock(d.signature, 'lpc');
+        md.appendMarkdown(d.documentation + `\n\n*Dokumentiert in \`${d.mudPath}\`*`);
+    });
+    if (docs.length > MAX_DOCS_IN_HOVER) {
+        md.appendMarkdown(`\n\n*… und ${docs.length - MAX_DOCS_IN_HOVER} weitere Stellen (Strg+Klick)*`);
+    }
+    const note = indexNote(index, true).replace(/^ — /, '');
+    if (note) md.appendMarkdown(`\n\n*${note}*`);
+    return new vscode.Hover(md, range);
+}
+
+function indexNote(index: LpcIndex, fromIndex: boolean | undefined): string {
+    const date = index.indexDate;
+    return fromIndex && date ? ` — Mudlib-Index vom ${date.toLocaleDateString()}` : '';
 }
 
 function functionHover(fn: LpcFunction, origin: string): vscode.MarkdownString {

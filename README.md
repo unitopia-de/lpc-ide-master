@@ -44,7 +44,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.2.vsix`.
+z. B. `lpc-ide-master-0.2.3.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -227,6 +227,26 @@ Login-Prompts und TLS, steht in [examples/unitopia-full/](examples/unitopia-full
 
 > `telnet` ist unverschlüsselt – das MUD-Passwort geht im Klartext über die Leitung.
 
+### Mudlib-Index vom Server (ohne homemud)
+
+Stellt der MUD-Betreiber einen **Mudlib-Index** bereit, bekommen auch Magier ohne homemud
+geerbte Funktionen, Sfuns, Efun-Hilfe und alle Doku-Kommentare (`FUNKTION:`) im Editor. Der
+Index wird auf dem Server von einem Generator erzeugt, siehe
+[tools/index-generator/](tools/index-generator/README.md).
+
+- **Wo:** `mudlib.indexFile` in der `lpc-config.json`, Standard `/doc/lpc-ide/index.json.gz`.
+- **Wann geladen:** Sobald eine FTP-Verbindung besteht, liest das Plugin eine winzige
+  `.stamp`-Datei daneben. Nur wenn sie sich geändert hat, lädt es den Index (rund 1,6 MB) und
+  legt ihn lokal ab. Ohne Verbindung wird die lokale Kopie benutzt. Es gibt keine
+  regelmäßigen Abfragen.
+- **Mit homemud** liest das Plugin Vererbung, Sfuns und Efun-Hilfe weiterhin live aus der
+  lokalen Mudlib. Aus dem Index kommen dann nur die Doku-Kommentare außerhalb der
+  Vererbung, sofern die Datei auch im homemud liegt.
+- **Von Hand aktualisieren:** Befehl **LPC: Mudlib-Index neu laden** (`Strg+Shift+P`).
+
+Doku-Kommentare außerhalb der Vererbung erscheinen beim Hover über einen sonst unbekannten
+Namen, etwa eine per `->` aufgerufene Funktion. Strg+Klick springt zur Fundstelle.
+
 ### Weitere Felder in `lpc-config.json`
 
 | Feld | Standard | Bedeutung |
@@ -236,6 +256,7 @@ Login-Prompts und TLS, steht in [examples/unitopia-full/](examples/unitopia-full
 | `ftp.tls.rejectUnauthorized` | `true` | `false` akzeptiert selbst-signierte Zertifikate |
 | `ftp.allowSeparateTransferHost` | `false` | `true`, wenn der Server für Dateiübertragungen eine andere IP meldet (Fehler „PASV returned another host“) |
 | `mudlib.efunDefinitions` | – | Eigene JSON-Datei mit zusätzlichen Efuns/Sfuns, ergänzt das eingebaute Profil |
+| `mudlib.indexFile` | `"/doc/lpc-ide/index.json.gz"` | Mudlib-Index (siehe oben) |
 
 ## VS-Code-Einstellungen
 
@@ -264,7 +285,8 @@ Erreichbar über `Strg+,` → Suche „lpc“.
 
 - **FTP** – kein automatischer Reconnect bei Timeout, keine SSH-Key-Anmeldung (nur Passwort)
 - **Präprozessor** – `#if`-Bedingungen werden nicht ausgewertet; bei `#if … #else` gilt der `#else`-Zweig
-- **Ohne homemud** – keine geerbten Funktionen, keine Efun-Hilfe, Sfuns nur aus der mitgelieferten Liste
+- **Ohne homemud und ohne Mudlib-Index** – keine geerbten Funktionen, keine Efun-Hilfe, Sfuns nur aus der mitgelieferten Liste
+- **Mudlib-Index** – Stand vom Zeitpunkt der Erzeugung; Makros in `inherit` werden ohne homemud nur aufgelöst, wenn sie in der Datei selbst definiert sind
 - **Syntax-Highlighting** – Sonderfälle bei Heredocs, kein semantisches Highlighting für lokale Funktionen
 - **Multi-Root-Workspace** – nur der erste Ordner wird ausgewertet
 - **uploadOnSave** – Setting existiert, Funktion folgt
