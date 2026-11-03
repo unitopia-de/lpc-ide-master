@@ -117,7 +117,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         connections,
         remoteMud,
         homeMud,
-        homeMudService
+        homeMudService,
+        lpcIndex,
+        indexLoader
     );
     context.subscriptions.push(statusBar);
 

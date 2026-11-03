@@ -12,6 +12,9 @@
 #     -v /pfad/zur/mud/lib/doc/lpc-ide:/out \
 #     lpc-ide-index
 #
+# Mit rootless Podman: --userns=keep-id --user "$(id -u):$(id -g)" (als Besitzer der Mudlib starten),
+# bei SELinux zusätzlich --security-opt label=disable.
+#
 # Weitere Optionen werden angehängt, z. B.:
 #   ... lpc-ide-index --lib /mudlib --out /out/index.json.gz --exclude "^/secure/(?!simul_efun/)"
 

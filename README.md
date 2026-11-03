@@ -44,7 +44,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.3.vsix`.
+z. B. `lpc-ide-master-0.2.4.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -243,6 +243,9 @@ Index wird auf dem Server von einem Generator erzeugt, siehe
   lokalen Mudlib. Aus dem Index kommen dann nur die Doku-Kommentare außerhalb der
   Vererbung, sofern die Datei auch im homemud liegt.
 - **Von Hand aktualisieren:** Befehl **LPC: Mudlib-Index neu laden** (`Strg+Shift+P`).
+- **Wo man es sieht:** Der Tooltip des LPC-Eintrags in der Statusleiste zeigt Stand und Herkunft
+  des Index. Während des Abgleichs dreht sich dort ein Symbol. Im Ausgabefenster
+  **LPC-IDE-Master** steht bei jedem Abgleich, ob der Index aktuell war oder neu geladen wurde.
 
 Doku-Kommentare außerhalb der Vererbung erscheinen beim Hover über einen sonst unbekannten
 Namen, etwa eine per `->` aufgerufene Funktion. Strg+Klick springt zur Fundstelle.

@@ -17,6 +17,14 @@ export const DEFAULT_INDEX_FILE = '/doc/lpc-ide/index.json.gz';
 export class ServerIndexLoader implements vscode.Disposable {
     private readonly disposables: vscode.Disposable[] = [];
     private loading: Promise<void> | undefined;
+    private readonly loadingEmitter = new vscode.EventEmitter<boolean>();
+    /** Feuert mit true beim Start und mit false am Ende eines Abgleichs mit dem Server. */
+    readonly onDidChangeLoading = this.loadingEmitter.event;
+
+    /** true, solange ein Abgleich mit dem Server läuft. */
+    get isLoading(): boolean {
+        return !!this.loading;
+    }
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -37,6 +45,7 @@ export class ServerIndexLoader implements vscode.Disposable {
     }
 
     dispose(): void {
+        this.loadingEmitter.dispose();
         for (const d of this.disposables) {
             d.dispose();
         }
@@ -65,7 +74,11 @@ export class ServerIndexLoader implements vscode.Disposable {
     /** Index per FTP aktualisieren (nur bei bestehender Verbindung). */
     refreshFromFtp(force = false): Promise<void> {
         if (!this.loading) {
-            this.loading = this.doRefresh(force).finally(() => (this.loading = undefined));
+            this.loading = this.doRefresh(force).finally(() => {
+                this.loading = undefined;
+                this.loadingEmitter.fire(false);
+            });
+            this.loadingEmitter.fire(true);
         }
         return this.loading;
     }
@@ -82,8 +95,16 @@ export class ServerIndexLoader implements vscode.Disposable {
             const stamp = stampData ? Buffer.from(stampData).toString('utf8').trim() : undefined;
             const cachedStamp = this.context.globalState.get<string>(stampKey);
             if (!force && stamp && stamp === cachedStamp && (await readOptional(this.cacheUri()))) {
-                return; // Zwischengespeicherte Kopie ist aktuell.
+                this.output.appendLine(
+                    `Mudlib-Index ist aktuell (Server ${host}, Stand ${new Date(stamp).toLocaleString()}).`
+                );
+                return;
             }
+            this.output.appendLine(
+                `Lade Mudlib-Index von ${host}${this.indexPath()}` +
+                    (force ? ' (neu laden erzwungen)' : stamp ? ' (neuer Stand auf dem Server)' : '') +
+                    ' …'
+            );
             const data = await readOptional(remote);
             if (!data) {
                 this.output.appendLine(`Kein Mudlib-Index auf dem Server (${this.indexPath()}).`);

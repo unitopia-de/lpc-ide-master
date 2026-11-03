@@ -164,7 +164,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.3.vsix
+code --install-extension lpc-ide-master-0.2.4.vsix
 ```
 
 ### 5.2 Workspace einrichten

@@ -48,6 +48,9 @@ export class LpcIndex implements vscode.Disposable {
     /** Feuert (verzögert), wenn sich die Sfuns geändert haben könnten. */
     readonly onDidChangeSimulEfuns = this.sfunEmitter.event;
     private sfunTimer: NodeJS.Timeout | undefined;
+    private readonly indexEmitter = new vscode.EventEmitter<void>();
+    /** Feuert, wenn ein Mudlib-Index geladen oder entfernt wurde. */
+    readonly onDidChangeIndex = this.indexEmitter.event;
 
     constructor(
         private readonly config: LpcConfigService,
@@ -73,9 +76,23 @@ export class LpcIndex implements vscode.Disposable {
         return this.server?.generatedAt;
     }
 
+    /** Herkunft des geladenen Mudlib-Index, z. B. "Server unitopia.de" oder "Zwischenspeicher". */
+    get indexSource(): string | undefined {
+        return this.server ? this.serverSource : undefined;
+    }
+
+    /** Umfang des geladenen Mudlib-Index für Anzeigen. */
+    get indexSummary(): string | undefined {
+        const d = this.server?.data;
+        return d
+            ? `${Object.keys(d.classes).length} Klassen, ${d.sfuns.length} Sfuns, ${d.efuns.length} Efuns, ${d.docs.length} Doku-Blöcke`
+            : undefined;
+    }
+
     dispose(): void {
         this.watcher?.dispose();
         this.sfunEmitter.dispose();
+        this.indexEmitter.dispose();
         if (this.sfunTimer) {
             clearTimeout(this.sfunTimer);
         }
@@ -89,13 +106,11 @@ export class LpcIndex implements vscode.Disposable {
         this.server = index;
         this.serverSource = source;
         if (index) {
-            const d = index.data;
             this.output.appendLine(
-                `Mudlib-Index geladen (${source}, Stand ${index.generatedAt.toLocaleString()}): ` +
-                    `${Object.keys(d.classes).length} Klassen, ${d.sfuns.length} Sfuns, ` +
-                    `${d.efuns.length} Efuns, ${d.docs.length} Doku-Blöcke.`
+                `Mudlib-Index geladen (${source}, Stand ${index.generatedAt.toLocaleString()}): ${this.indexSummary}.`
             );
         }
+        this.indexEmitter.fire();
         this.scheduleSimulEfunReload();
     }
 

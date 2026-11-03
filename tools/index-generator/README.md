@@ -20,7 +20,7 @@ Neben der Index-Datei entsteht eine kleine `.stamp`-Datei mit dem Erzeugungszeit
 Plugin lädt beim Verbinden nur diese paar Bytes und holt den Index nur, wenn sie sich
 geändert hat.
 
-Größe bei der UNItopia-Mudlib (49.000 Dateien): rund **1,6 MB** gepackt (7,5 MB entpackt).
+Größe bei der UNItopia-Mudlib (39.000 Dateien ohne `OLD`-Verzeichnisse): rund **1,5 MB** gepackt (7,0 MB entpackt).
 
 ## Bauen
 
@@ -50,6 +50,37 @@ docker run --rm \
   (`mudlib.indexFile`).
 - Die Datei wird zuerst unter einem temporären Namen geschrieben und dann umbenannt. Wer
   gerade per FTP liest, bekommt nie eine halbe Datei.
+- Das Ausgabeverzeichnis (`lib/doc/lpc-ide/`) muss vorher existieren und dem Benutzer
+  gehören, unter dem der Container läuft.
+
+### Mit Podman (rootless)
+
+Rootless Podman legt einen eigenen User-Namespace an. Ohne Zusatz landet jede uid im
+Container auf einer fremden Unter-ID des Hosts. Das gilt auch für `node` (uid 1000), den
+Standardbenutzer des Images. Der Generator meldet dann z. B. `/ (EACCES)` oder kann nicht
+nach `/out` schreiben.
+
+Abhilfe: Podman als Besitzer der Mudlib starten und **beides** angeben:
+
+- `--userns=keep-id` bildet deine uid unverändert in den Container ab,
+- `--user "$(id -u):$(id -g)"` lässt den Generator auch unter dieser uid laufen. Ohne diese
+  Angabe bliebe es beim `USER node` aus dem Image.
+
+```bash
+podman run --rm \
+  --userns=keep-id --user "$(id -u):$(id -g)" \
+  -v /pfad/zur/mud/lib:/mudlib:ro \
+  -v /pfad/zur/mud/lib/doc/lpc-ide:/out \
+  myonara/lpc-ide-index
+```
+
+Woran man es erkennt: Der Generator nennt in seinen Warnungen den Benutzer, unter dem er
+läuft. Steht dort `1000:1000` statt deiner uid, fehlt `--user`.
+
+Kommt danach immer noch `EACCES`, ist meist **SELinux** aktiv (Prüfung mit `getenforce`).
+Dann zusätzlich `--security-opt label=disable` angeben. Das schaltet die SELinux-Trennung
+nur für diesen Container ab. Die Alternative `:z`/`:Z` an den Mounts würde alle Dateien
+der Mudlib dauerhaft umlabeln und ist hier nicht zu empfehlen.
 
 Läuft der Generator regelmäßig, etwa nachts per cron oder nach Mudlib-Updates, bleibt
 der Index aktuell:
@@ -75,6 +106,14 @@ docker run ... lpc-ide-index --lib /mudlib --out /out/index.json.gz --exclude "^
 | `--classes <regex>` | Welche Dateien als erbbare Klassen gelten (Standard: `/i/`) |
 | `--exclude <regex>` | Mudlib-Pfade überspringen, mehrfach möglich |
 | `--include-dir <pfad>` | Zusätzlicher Suchpfad für `#include <...>`, mehrfach möglich |
+| `--include-old` | Auch Verzeichnisse namens `OLD`/`Old` einlesen (Standard: überspringen, siehe unten) |
+
+### Ausgemusterte Verzeichnisse (`OLD`)
+
+Verzeichnisse namens `OLD` oder `Old` überspringt der Generator vollständig, wie der Master,
+der sie für `#include` sperrt. Dateien darunter fehlen im Index, und ein `inherit` oder
+`#include` aus einer aktiven Datei dorthin gilt als nicht auflösbar. Bei UNItopia sind das
+322 Verzeichnisse mit rund 10.000 Dateien.
 
 ### Was alle Magier sehen können
 
@@ -84,7 +123,6 @@ Domains. Soll das nicht so sein, schließt man Bereiche aus, z. B.:
 
 ```bash
 --exclude "^/secure/(?!simul_efun/)"   # /secure ohne die simul_efun
---exclude "^/d/[^/]+/(OLD|Old)/"        # alte Bereiche in Domains
 ```
 
 ## Ohne Docker
@@ -104,5 +142,5 @@ node out/tools/buildIndex.js --lib /pfad/zur/mud/lib --out /pfad/zur/mud/lib/doc
   zwei Minuten.
 - Präprozessor-Bedingungen (`#if`) werden per Faustregel entschieden, nicht ausgewertet.
   Bei `#if … #else` gilt der `#else`-Zweig.
-- Nicht auflösbare inherits werden gezählt und übersprungen. Bei UNItopia sind das rund
-  100, fast alle in `OLD`-Verzeichnissen mit nicht mehr vorhandenen Basisklassen.
+- Nicht auflösbare inherits werden gezählt und übersprungen. Bei UNItopia sind das ohne die
+  `OLD`-Verzeichnisse rund 40.

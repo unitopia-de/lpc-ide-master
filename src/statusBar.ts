@@ -5,6 +5,8 @@ import { LpcConfigService } from './config/lpcConfig';
 import { ConnectionManager } from './ftp/connectionManager';
 import { MudConsole } from './mud/mudConsole';
 import { HomeMudService } from './homemud/homeMudService';
+import { LpcIndex } from './analysis/lpcIndex';
+import { ServerIndexLoader } from './analysis/serverIndexLoader';
 
 export function createStatusBar(
     dialect: DialectManager,
@@ -13,7 +15,9 @@ export function createStatusBar(
     connections: ConnectionManager,
     remoteMud: MudConsole,
     homeMud: MudConsole,
-    homeMudService: HomeMudService
+    homeMudService: HomeMudService,
+    lpcIndex: LpcIndex,
+    indexLoader: ServerIndexLoader
 ): vscode.Disposable {
     const dialectItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     dialectItem.command = 'lpc.switchDialect';
@@ -29,11 +33,30 @@ export function createStatusBar(
             dialectItem.tooltip = issues.map((i) => `${i.path}: ${i.message}`).join('\n');
             return;
         }
-        dialectItem.text = `$(symbol-misc) LPC: ${dialect.current} (${efuns.size})`;
+        dialectItem.text = indexLoader.isLoading
+            ? `$(sync~spin) LPC: Mudlib-Index …`
+            : `$(symbol-misc) LPC: ${dialect.current} (${efuns.size})`;
         dialectItem.tooltip =
             `Aktiver Dialekt: ${dialect.current}\n` +
             `Geladene Symbole: ${efuns.size}\n` +
+            `${indexLine()}\n` +
             `Klick: Dialekt wechseln`;
+    };
+
+    const indexLine = (): string => {
+        if (indexLoader.isLoading) {
+            return 'Mudlib-Index: wird mit dem Server abgeglichen …';
+        }
+        const date = lpcIndex.indexDate;
+        if (!date) {
+            return homeMudService.isConfigured
+                ? 'Mudlib-Index: keiner (Vererbung, Sfuns und Efun-Hilfe live aus dem homemud)'
+                : 'Mudlib-Index: keiner geladen';
+        }
+        return (
+            `Mudlib-Index: Stand ${date.toLocaleString()} (${lpcIndex.indexSource})\n` +
+            `  ${lpcIndex.indexSummary}`
+        );
     };
 
     const updateFtp = (): void => {
@@ -103,6 +126,8 @@ export function createStatusBar(
     const subs = [
         dialect.onDidChange(updateDialect),
         efuns.onDidChange(updateDialect),
+        lpcIndex.onDidChangeIndex(updateDialect),
+        indexLoader.onDidChangeLoading(updateDialect),
         config.onDidChange(() => {
             updateDialect();
             updateFtp();

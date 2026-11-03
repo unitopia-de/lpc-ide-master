@@ -19,6 +19,14 @@ interface Options {
     classes: RegExp;
     exclude: RegExp[];
     includeDirs: string[];
+    includeOld: boolean;
+}
+
+// Verzeichnisse mit diesen Namen sind ausgemustert (wie NO_INCLUDE_DIRS im UNItopia-Master).
+const OLD_DIRS = new Set(['OLD', 'Old']);
+
+function isOldPath(mudPath: string): boolean {
+    return mudPath.split('/').some((segment) => OLD_DIRS.has(segment));
 }
 
 const USAGE = `Aufruf: node buildIndex.js --lib <mudlib-verzeichnis> --out <datei[.gz]> [Optionen]
@@ -30,6 +38,7 @@ const USAGE = `Aufruf: node buildIndex.js --lib <mudlib-verzeichnis> --out <date
   --classes <regex>    Welche Dateien als erbbare Klassen gelten (Standard: "/i/")
   --exclude <regex>    Mudlib-Pfade überspringen, z. B. "^/secure/(?!simul_efun/)" — mehrfach möglich
   --include-dir <pfad> Zusätzlicher Suchpfad für #include <...> — mehrfach möglich
+  --include-old        Auch Verzeichnisse namens OLD/Old einlesen (Standard: überspringen)
   --help               Diese Hilfe`;
 
 async function main(): Promise<number> {
@@ -55,6 +64,9 @@ async function main(): Promise<number> {
     const stats = { unreadable: 0, unresolvedInherits: 0 };
     const fs: MudFs = {
         async read(mudPath) {
+            if (!opts.includeOld && isOldPath(mudPath)) {
+                return undefined;
+            }
             try {
                 return decodeText(await fsp.readFile(toHost(root, mudPath)));
             } catch {
@@ -63,6 +75,9 @@ async function main(): Promise<number> {
             }
         },
         async exists(mudPath) {
+            if (!opts.includeOld && isOldPath(mudPath)) {
+                return false;
+            }
             try {
                 return (await fsp.stat(toHost(root, mudPath))).isFile();
             } catch {
@@ -75,15 +90,32 @@ async function main(): Promise<number> {
 
     log(`Durchsuche ${root} …`);
     const unreadableDirs: string[] = [];
-    const files = (await listSources(root, unreadableDirs)).filter((p) => !excluded(p));
+    const skippedOld: string[] = [];
+    const files = (
+        await listSources(root, unreadableDirs, (name) => !opts.includeOld && OLD_DIRS.has(name), skippedOld)
+    ).filter((p) => !excluded(p));
+    if (skippedOld.length) {
+        log(`${skippedOld.length} Verzeichnis(se) namens OLD/Old übersprungen (--include-old schaltet das ab).`);
+    }
     log(`${files.length} Quelldateien (.c/.h/.inc)`);
+    if (!files.length) {
+        // Lieber gar nichts schreiben, als einen funktionierenden Index durch einen leeren zu ersetzen.
+        log(
+            `FEHLER: Keine einzige Quelldatei lesbar — Index wird nicht geschrieben.` +
+                (unreadableDirs.length ? ` Nicht lesbar: ${unreadableDirs.slice(0, 3).join(', ')}.` : '') +
+                ` Läuft der Generator als Benutzer ${userInfo()}? Docker: --user <uid>:<gid> des` +
+                ' Mudlib-Besitzers; rootless Podman: --userns=keep-id --user "$(id -u):$(id -g)".'
+        );
+        return 3;
+    }
     if (unreadableDirs.length) {
         log(
             `WARNUNG: ${unreadableDirs.length} Verzeichnis(se) nicht lesbar — fehlen im Index:\n` +
                 unreadableDirs.slice(0, 10).map((d) => `  ${d}`).join('\n') +
                 (unreadableDirs.length > 10 ? `\n  … und ${unreadableDirs.length - 10} weitere` : '') +
-                `\n  Läuft der Generator als Benutzer ${userInfo()}? Im Container mit --user <uid>:<gid>` +
-                ` des Mudlib-Besitzers starten.`
+                `\n  Läuft der Generator als Benutzer ${userInfo()}? Docker: mit --user <uid>:<gid>` +
+                ' des Mudlib-Besitzers starten. Rootless Podman: --userns=keep-id --user "$(id -u):$(id -g)"' +
+                ` (bei SELinux zusätzlich --security-opt label=disable).`
         );
     }
 
@@ -162,15 +194,29 @@ async function main(): Promise<number> {
 
     const json = JSON.stringify(index);
     const payload = opts.out.endsWith('.gz') ? gzipSync(json) : Buffer.from(json, 'utf8');
-    await fsp.mkdir(path.dirname(path.resolve(opts.out)), { recursive: true });
-    const tmp = `${opts.out}.tmp-${process.pid}`;
-    await fsp.writeFile(tmp, payload);
-    await fsp.rename(tmp, opts.out);
-    // Kleiner Zeitstempel daneben: Das Plugin lädt beim Verbinden nur diese Datei
-    // und holt den Index nur, wenn sie sich geändert hat.
-    const stampTmp = `${opts.out}.stamp.tmp-${process.pid}`;
-    await fsp.writeFile(stampTmp, `${index.generatedAt}\n`);
-    await fsp.rename(stampTmp, `${opts.out}.stamp`);
+    try {
+        await fsp.mkdir(path.dirname(path.resolve(opts.out)), { recursive: true });
+        const tmp = `${opts.out}.tmp-${process.pid}`;
+        await fsp.writeFile(tmp, payload);
+        await fsp.rename(tmp, opts.out);
+        // Kleiner Zeitstempel daneben: Das Plugin lädt beim Verbinden nur diese Datei
+        // und holt den Index nur, wenn sie sich geändert hat.
+        const stampTmp = `${opts.out}.stamp.tmp-${process.pid}`;
+        await fsp.writeFile(stampTmp, `${index.generatedAt}\n`);
+        await fsp.rename(stampTmp, `${opts.out}.stamp`);
+    } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'EACCES' || code === 'EPERM' || code === 'EROFS') {
+            log(
+                `FEHLER: ${path.dirname(path.resolve(opts.out))} ist für Benutzer ${userInfo()} nicht beschreibbar (${code}).` +
+                    ' Das Verzeichnis muss dem Benutzer gehören, unter dem der Generator läuft.' +
+                    ' Docker: --user <uid>:<gid> des Besitzers.' +
+                    ' Rootless Podman: --userns=keep-id --user "$(id -u):$(id -g)".'
+            );
+            return 4;
+        }
+        throw err;
+    }
 
     log(
         `Geschrieben: ${opts.out} (${(payload.length / 1e6).toFixed(2)} MB` +
@@ -230,7 +276,12 @@ async function buildEfuns(fs: MudFs): Promise<IndexEfun[]> {
 }
 
 /** Alle .c/.h/.inc-Dateien als Mudlib-Pfade. Symlinks werden nicht verfolgt. */
-async function listSources(root: string, unreadableDirs: string[]): Promise<string[]> {
+async function listSources(
+    root: string,
+    unreadableDirs: string[],
+    skipDir: (name: string) => boolean,
+    skipped: string[]
+): Promise<string[]> {
     const out: string[] = [];
     const walk = async (dir: string): Promise<void> => {
         let entries;
@@ -243,6 +294,10 @@ async function listSources(root: string, unreadableDirs: string[]): Promise<stri
         for (const e of entries) {
             const full = path.join(dir, e.name);
             if (e.isDirectory()) {
+                if (skipDir(e.name)) {
+                    skipped.push(normalize(path.relative(root, full)));
+                    continue;
+                }
                 await walk(full);
             } else if (e.isFile() && /\.(c|h|inc)$/.test(e.name)) {
                 out.push(normalize(path.relative(root, full)));
@@ -295,7 +350,8 @@ function parseArgs(args: string[]): Options | undefined {
     const opts: Partial<Options> & { exclude: RegExp[]; includeDirs: string[] } = {
         classes: /\/i\//,
         exclude: [],
-        includeDirs: []
+        includeDirs: [],
+        includeOld: false
     };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -314,6 +370,7 @@ function parseArgs(args: string[]): Options | undefined {
                 case '--classes': opts.classes = new RegExp(value()); break;
                 case '--exclude': opts.exclude.push(new RegExp(value())); break;
                 case '--include-dir': opts.includeDirs.push(value()); break;
+                case '--include-old': opts.includeOld = true; break;
                 default:
                     throw new Error(`Unbekannte Option: ${arg}`);
             }

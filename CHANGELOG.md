@@ -4,6 +4,19 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## 0.2.4 – Anzeige des Mudlib-Index, Generator für Podman
+
+### Hinzugefügt
+- Statusleiste: Der Tooltip des LPC-Eintrags zeigt Stand, Herkunft und Umfang des Mudlib-Index. Während des Abgleichs mit dem Server erscheint `$(sync~spin) LPC: Mudlib-Index …`.
+- Ausgabefenster: Auch ein unveränderter Index wird gemeldet (`Mudlib-Index ist aktuell …`), ebenso der Beginn eines Downloads.
+
+### Geändert
+- Index-Generator: Bei nicht beschreibbarem Ausgabeverzeichnis klare Fehlermeldung mit Benutzer und Abhilfe statt Stacktrace (Exit-Code 4).
+- Index-Generator: Für rootless Podman lautet die Empfehlung jetzt `--userns=keep-id --user "$(id -u):$(id -g)"`. Ohne `--user` läuft der Generator als `node` (uid 1000) aus dem Image und kann nicht nach `/out` schreiben.
+- Index-Generator: Anleitung und Warnung für rootless Podman (bei SELinux zusätzlich `--security-opt label=disable`).
+- Index-Generator überspringt Verzeichnisse namens `OLD`/`Old` samt allen Dateien darunter, wie der Master (abschaltbar mit `--include-old`). Bei UNItopia: 322 Verzeichnisse, rund 10.000 Dateien weniger; nicht auflösbare inherits sinken von 104 auf 41.
+- Index-Generator bricht ab (Exit-Code 3), wenn keine einzige Quelldatei lesbar ist, statt einen vorhandenen Index durch einen leeren zu ersetzen.
+
 ## 0.2.3 – Mudlib-Index vom Server für Inherits, Sfuns und Doku
 
 ### Hinzugefügt
