@@ -210,14 +210,14 @@ Welche Datei als `simul_efun` gelesen wird, legt `mudlib.simulEfunFile` fest, z.
 
 Standardmäßig ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`)
 nach `lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` einen Block
-`mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B.:
+`mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B. für Orbit:
 
 ```json
 "mud": {
   "host": "unitopia.de",
-  "port": 4711,
+  "port": 9988,
   "user": "deinmagiername",
-  "protocol": "telnet"
+  "protocol": "telnets"
 }
 ```
 
