@@ -6,7 +6,11 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.5 – Veröffentlichung im VS Code Marketplace (Publisher myonara)
+
 ### Geändert
+- Publisher ist jetzt `myonara`, die Extension-ID lautet `myonara.lpc-ide-master`. Das Plugin ist im VS Code Marketplace erhältlich. Wer bisher eine selbst gebaute Version unter `unitopia-de` nutzt, deinstalliert diese vorher. FTP-Passwörter müssen einmal neu eingegeben werden.
+- README: Installation aus dem Marketplace als Standardweg, Selbstbauen als Alternative.
 - Index-Generator überspringt die Magier-Verzeichnisse unter `/w` samt allen Dateien darunter (abschaltbar mit `--include-w`). Pfade darunter gelten auch bei `inherit`/`#include` als nicht vorhanden.
 
 ## 0.2.4 – Anzeige des Mudlib-Index, Generator für Podman

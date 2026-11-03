@@ -16,10 +16,39 @@ VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 
 ## Installation
 
-Das Plugin ist noch nicht im VS Code Marketplace. Du baust es einmal selbst als
-`.vsix`-Datei und installierst diese Datei in VS Code.
+### Aus dem VS Code Marketplace (empfohlen)
 
-### Voraussetzungen
+Das Plugin steht im Marketplace unter
+[myonara.lpc-ide-master](https://marketplace.visualstudio.com/items?itemName=myonara.lpc-ide-master).
+
+1. VS Code öffnen und die Ansicht **Extensions** aufrufen (`Strg+Shift+X`).
+2. Nach **LPC-IDE-Master** suchen.
+3. Bei **LPC-IDE-Master (UNItopia Edition)** von **myonara** auf **Install** klicken.
+
+Alternativ in der Kommandozeile:
+
+```bash
+code --install-extension myonara.lpc-ide-master
+```
+
+Updates installiert VS Code dann automatisch.
+
+> **Arbeitest du mit VS-Code-Profilen?** Die Extension wird nur in das gerade aktive Profil
+> installiert. Taucht sie in einem anderen Fenster nicht auf, installiere sie dort ebenfalls
+> oder nutze `code --install-extension myonara.lpc-ide-master --profile <Profilname>`.
+
+> **Umstieg von einer selbst gebauten Version:** Frühere `.vsix`-Dateien liefen unter dem
+> Publisher `unitopia-de`, also als andere Extension. Deinstalliere **vorher** die alte
+> Version, sonst sind alle Befehle doppelt vorhanden. Deine `lpc-config.json` und die
+> Einstellungen bleiben erhalten. Die FTP-Zugangsdaten musst du einmal neu eingeben, und der
+> Mudlib-Index wird einmal neu geladen.
+
+### Selbst bauen (für Entwicklung oder Vorabversionen)
+
+Wer am Plugin mitentwickeln oder einen Stand vor der nächsten Veröffentlichung nutzen
+möchte, baut es selbst als `.vsix`-Datei und installiert diese Datei in VS Code.
+
+#### Voraussetzungen
 
 | Programm | Version | Prüfen mit |
 | --- | --- | --- |
@@ -27,7 +56,7 @@ Das Plugin ist noch nicht im VS Code Marketplace. Du baust es einmal selbst als
 | [Node.js](https://nodejs.org/) (inkl. npm) | **22 oder neuer** | `node --version` |
 | [VS Code](https://code.visualstudio.com/) | 1.85 oder neuer | Hilfe → Info |
 
-### 1. Repository klonen
+#### 1. Repository klonen
 
 Wechsle in ein Verzeichnis deiner Wahl, z. B. `C:\Projekte`, und klone das Repository:
 
@@ -36,7 +65,7 @@ git clone https://github.com/unitopia-de/lpc-ide-master.git
 cd lpc-ide-master
 ```
 
-### 2. VSIX-Datei erstellen
+#### 2. VSIX-Datei erstellen
 
 ```bash
 npm install
@@ -44,13 +73,13 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.4.vsix`.
+z. B. `lpc-ide-master-0.2.5.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
 > das ist eine optionale Beschleunigung der SSH-Bibliothek, die ohne C++-Compiler entfällt.
 
-### 3. In VS Code installieren
+#### 3. In VS Code installieren
 
 1. VS Code öffnen und die Ansicht **Extensions** aufrufen (`Strg+Shift+X`).
 2. Oben rechts in der Extensions-Ansicht auf **`…`** (Weitere Aktionen) klicken.
@@ -65,7 +94,7 @@ Unter **Installed** erscheint jetzt **LPC-IDE-Master (UNItopia Edition)**.
 > oder nutze in der Kommandozeile
 > `code --install-extension lpc-ide-master-<version>.vsix --profile <Profilname>`.
 
-### Aktualisieren
+#### Selbst gebaute Version aktualisieren
 
 ```bash
 cd lpc-ide-master
@@ -75,6 +104,10 @@ npm run package
 ```
 
 Anschließend Schritt 3 mit der neuen `.vsix`-Datei wiederholen. Die alte Version wird dabei ersetzt.
+
+Die selbst gebaute Version hat dieselbe ID wie die aus dem Marketplace (`myonara.lpc-ide-master`)
+und ersetzt sie. Erscheint im Marketplace eine neuere Version, installiert VS Code diese beim
+nächsten automatischen Update wieder darüber.
 
 ## Konfiguration
 

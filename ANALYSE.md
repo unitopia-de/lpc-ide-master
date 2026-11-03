@@ -9,7 +9,7 @@ Stand der Analyse: 2026-11-02 (erstmals 2026-10-11) · Branch `master`
 | Paketname | `lpc-ide-master` |
 | Anzeigename | LPC-IDE-Master (UNItopia Edition) |
 | Version | 0.1.0 |
-| Publisher | `unitopia-de` |
+| Publisher | `myonara` (Extension-ID `myonara.lpc-ide-master`, im VS Code Marketplace veröffentlicht) |
 | Lizenz | MIT (`LICENSE` noch nicht eingecheckt) |
 | VS-Code-Version | `^1.85.0` |
 | Sprache | TypeScript (strict), ca. 3.350 Zeilen in 23 Dateien unter `src/` |
@@ -164,7 +164,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.4.vsix
+code --install-extension lpc-ide-master-0.2.5.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -262,7 +262,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 ### 6.4 Vor einer Veröffentlichung im Marketplace
 
 - `LICENSE` und `examples/syntax-showcase/` committen; die Änderungen an `.vscodeignore` übernehmen.
-- Prüfen, ob die Repository-URL `github.com/unitopia-de/lpc-ide-master` und der Publisher `unitopia-de` tatsächlich existieren.
+- ~~Repository-URL und Publisher prüfen.~~ Erledigt: Publisher `myonara`, Extension im Marketplace.
 - ~~`@vscode/vsce` als devDependency und ein `package`-Skript ergänzen.~~ Erledigt (Version 0.2.0).
 - ESLint-Warnungen mit `npx eslint src --ext ts --fix` beheben.
 - Mindestens einfache Tests ergänzen, z. B. für die Konfigurationsprüfung (`validate`) und das HomeMUD-Pfad-Mapping.
