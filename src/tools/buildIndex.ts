@@ -20,13 +20,20 @@ interface Options {
     exclude: RegExp[];
     includeDirs: string[];
     includeOld: boolean;
+    includeW: boolean;
 }
 
 // Verzeichnisse mit diesen Namen sind ausgemustert (wie NO_INCLUDE_DIRS im UNItopia-Master).
 const OLD_DIRS = new Set(['OLD', 'Old']);
+// Magier-Verzeichnisse: privat, und laut Master nur von /w aus erbbar.
+const WIZARD_DIR = '/w';
 
-function isOldPath(mudPath: string): boolean {
-    return mudPath.split('/').some((segment) => OLD_DIRS.has(segment));
+/** true, wenn ein Mudlib-Pfad (Datei oder Verzeichnis) nicht in den Index gehört. */
+function isSkippedPath(mudPath: string, opts: Options): boolean {
+    if (!opts.includeOld && mudPath.split('/').some((segment) => OLD_DIRS.has(segment))) {
+        return true;
+    }
+    return !opts.includeW && (mudPath === WIZARD_DIR || mudPath.startsWith(WIZARD_DIR + '/'));
 }
 
 const USAGE = `Aufruf: node buildIndex.js --lib <mudlib-verzeichnis> --out <datei[.gz]> [Optionen]
@@ -39,6 +46,7 @@ const USAGE = `Aufruf: node buildIndex.js --lib <mudlib-verzeichnis> --out <date
   --exclude <regex>    Mudlib-Pfade überspringen, z. B. "^/secure/(?!simul_efun/)" — mehrfach möglich
   --include-dir <pfad> Zusätzlicher Suchpfad für #include <...> — mehrfach möglich
   --include-old        Auch Verzeichnisse namens OLD/Old einlesen (Standard: überspringen)
+  --include-w          Auch die Magier-Verzeichnisse unter /w einlesen (Standard: überspringen)
   --help               Diese Hilfe`;
 
 async function main(): Promise<number> {
@@ -64,7 +72,7 @@ async function main(): Promise<number> {
     const stats = { unreadable: 0, unresolvedInherits: 0 };
     const fs: MudFs = {
         async read(mudPath) {
-            if (!opts.includeOld && isOldPath(mudPath)) {
+            if (isSkippedPath(mudPath, opts)) {
                 return undefined;
             }
             try {
@@ -75,7 +83,7 @@ async function main(): Promise<number> {
             }
         },
         async exists(mudPath) {
-            if (!opts.includeOld && isOldPath(mudPath)) {
+            if (isSkippedPath(mudPath, opts)) {
                 return false;
             }
             try {
@@ -90,12 +98,16 @@ async function main(): Promise<number> {
 
     log(`Durchsuche ${root} …`);
     const unreadableDirs: string[] = [];
-    const skippedOld: string[] = [];
+    const skipped: string[] = [];
     const files = (
-        await listSources(root, unreadableDirs, (name) => !opts.includeOld && OLD_DIRS.has(name), skippedOld)
+        await listSources(root, unreadableDirs, (dir) => isSkippedPath(dir, opts), skipped)
     ).filter((p) => !excluded(p));
-    if (skippedOld.length) {
-        log(`${skippedOld.length} Verzeichnis(se) namens OLD/Old übersprungen (--include-old schaltet das ab).`);
+    const skippedW = skipped.filter((d) => d === WIZARD_DIR || d.startsWith(WIZARD_DIR + '/')).length;
+    if (skipped.length - skippedW) {
+        log(`${skipped.length - skippedW} Verzeichnis(se) namens OLD/Old übersprungen (--include-old schaltet das ab).`);
+    }
+    if (skippedW) {
+        log(`Magier-Verzeichnisse unter ${WIZARD_DIR} übersprungen (--include-w schaltet das ab).`);
     }
     log(`${files.length} Quelldateien (.c/.h/.inc)`);
     if (!files.length) {
@@ -279,7 +291,7 @@ async function buildEfuns(fs: MudFs): Promise<IndexEfun[]> {
 async function listSources(
     root: string,
     unreadableDirs: string[],
-    skipDir: (name: string) => boolean,
+    skipDir: (mudPath: string) => boolean,
     skipped: string[]
 ): Promise<string[]> {
     const out: string[] = [];
@@ -294,8 +306,9 @@ async function listSources(
         for (const e of entries) {
             const full = path.join(dir, e.name);
             if (e.isDirectory()) {
-                if (skipDir(e.name)) {
-                    skipped.push(normalize(path.relative(root, full)));
+                const mudPath = normalize(path.relative(root, full));
+                if (skipDir(mudPath)) {
+                    skipped.push(mudPath);
                     continue;
                 }
                 await walk(full);
@@ -351,7 +364,8 @@ function parseArgs(args: string[]): Options | undefined {
         classes: /\/i\//,
         exclude: [],
         includeDirs: [],
-        includeOld: false
+        includeOld: false,
+        includeW: false
     };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -371,6 +385,7 @@ function parseArgs(args: string[]): Options | undefined {
                 case '--exclude': opts.exclude.push(new RegExp(value())); break;
                 case '--include-dir': opts.includeDirs.push(value()); break;
                 case '--include-old': opts.includeOld = true; break;
+                case '--include-w': opts.includeW = true; break;
                 default:
                     throw new Error(`Unbekannte Option: ${arg}`);
             }

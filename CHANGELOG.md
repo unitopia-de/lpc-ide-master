@@ -4,6 +4,11 @@ Alle nennenswerten Änderungen an dieser Extension werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/),
 Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
+## [Unreleased]
+
+### Geändert
+- Index-Generator überspringt die Magier-Verzeichnisse unter `/w` samt allen Dateien darunter (abschaltbar mit `--include-w`). Pfade darunter gelten auch bei `inherit`/`#include` als nicht vorhanden.
+
 ## 0.2.4 – Anzeige des Mudlib-Index, Generator für Podman
 
 ### Hinzugefügt

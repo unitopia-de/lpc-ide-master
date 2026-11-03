@@ -107,10 +107,15 @@ docker run ... lpc-ide-index --lib /mudlib --out /out/index.json.gz --exclude "^
 | `--exclude <regex>` | Mudlib-Pfade überspringen, mehrfach möglich |
 | `--include-dir <pfad>` | Zusätzlicher Suchpfad für `#include <...>`, mehrfach möglich |
 | `--include-old` | Auch Verzeichnisse namens `OLD`/`Old` einlesen (Standard: überspringen, siehe unten) |
+| `--include-w` | Auch die Magier-Verzeichnisse unter `/w` einlesen (Standard: überspringen, siehe unten) |
 
-### Ausgemusterte Verzeichnisse (`OLD`)
+### Übersprungene Bereiche (`OLD`, `/w`)
 
-Verzeichnisse namens `OLD` oder `Old` überspringt der Generator vollständig, wie der Master,
+**Magier-Verzeichnisse (`/w`)** liest der Generator nicht. Sie sind privat, und laut Master
+dürfen Dateien aus `/w` ohnehin nur von Dateien aus `/w` geerbt werden. Ein `inherit` aus
+einer anderen Datei nach `/w` gilt als nicht auflösbar.
+
+**Ausgemusterte Verzeichnisse:** Verzeichnisse namens `OLD` oder `Old` überspringt der Generator vollständig, wie der Master,
 der sie für `#include` sperrt. Dateien darunter fehlen im Index, und ein `inherit` oder
 `#include` aus einer aktiven Datei dorthin gilt als nicht auflösbar. Bei UNItopia sind das
 322 Verzeichnisse mit rund 10.000 Dateien.
