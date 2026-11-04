@@ -6,6 +6,15 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.11 – Prototypen bei call_other ausblenden
+
+### Behoben
+- Hover und Strg+Klick bei `ob->fun()` listeten auch Klassen, die die Funktion nur als Prototyp deklarieren (`string query_wiz_level();`), z. B. bei `query_wiz_level` zehn Deklarationen neben der eigentlichen Funktion. Jetzt erscheinen nur echte Definitionen; Prototypen nur, wenn es keine Definition gibt.
+- Geerbte Funktionen aus dem Mudlib-Index: Ein Prototyp in einer näheren Erbebene verdeckt keine Definition weiter hinten mehr (Strg+Klick springt zur echten Funktion).
+
+### Geändert
+- Der Index-Generator markiert Prototypen im Index (Feld `p`). Ältere Indizes funktionieren weiter, die Prototypen werden aber erst nach einem neuen Lauf des Generators ausgeblendet.
+
 ## 0.2.10 – Funktionskommentare in CRLF-Dateien
 
 ### Behoben

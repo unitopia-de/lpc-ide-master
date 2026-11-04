@@ -256,7 +256,15 @@ async function buildClass(
     }
     const functions = bestPerName(parsed.functions)
         .filter((fn) => !fn.modifiers.includes('private'))
-        .map((fn) => compact({ n: fn.name, s: fn.declaration ?? fn.signature, l: fn.line + 1, d: fn.documentation }));
+        .map((fn) =>
+            compact({
+                n: fn.name,
+                s: fn.declaration ?? fn.signature,
+                l: fn.line + 1,
+                d: fn.documentation,
+                p: fn.isPrototype ? (1 as const) : undefined
+            })
+        );
     return { inherits, functions };
 }
 

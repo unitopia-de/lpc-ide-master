@@ -52,6 +52,8 @@ export interface IndexFunction {
     l: number;
     /** Doku als Markdown */
     d?: string;
+    /** 1, wenn die Klasse die Funktion nur deklariert (Prototyp mit ";", Definition liegt woanders). */
+    p?: 1;
 }
 
 export interface IndexDoc {
@@ -181,8 +183,10 @@ export class MudlibIndex {
                     continue;
                 }
                 for (const fn of cls.functions) {
-                    if (!result.has(fn.n)) {
-                        result.set(fn.n, { fn, file: item.file, via: item.via });
+                    // Ein Prototyp verdeckt keine Definition aus einer tieferen Ebene.
+                    const existing = result.get(fn.n);
+                    if (!existing || (existing.fn.p && !fn.p)) {
+                        result.set(fn.n, { fn: existing && !fn.d ? { ...fn, d: existing.fn.d } : fn, file: item.file, via: item.via });
                     }
                 }
                 for (const parent of cls.inherits) {

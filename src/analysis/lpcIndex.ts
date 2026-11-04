@@ -262,11 +262,16 @@ export class LpcIndex implements vscode.Disposable {
         return { candidates, total: all.length };
     }
 
-    /** Alle Klassen mit einer Funktion dieses Namens, sortiert wie callCandidates — für Strg+Klick. */
+    /**
+     * Alle Klassen mit einer Funktion dieses Namens, sortiert wie callCandidates — für Strg+Klick.
+     * Reine Prototypen (";" statt Rumpf) nur, wenn es nirgends eine Definition gibt.
+     */
     allCallTargets(name: string): CallTarget[] {
         const rank = (file: string): number => (file.startsWith('/i/') ? 0 : file.startsWith('/p/') ? 1 : 2);
         const quality = (doc: string | undefined): number => (!doc ? 2 : doc.length < 40 ? 1 : 0);
-        return [...(this.server?.functionsNamed(name) ?? [])]
+        const all = this.server?.functionsNamed(name) ?? [];
+        const definitions = all.filter((t) => !t.fn.p);
+        return [...(definitions.length ? definitions : all)]
             .sort(
                 (a, b) =>
                     quality(a.fn.d) - quality(b.fn.d) ||
@@ -428,7 +433,7 @@ function fromIndexFunction(fn: IndexFunction): LpcFunction {
         name: fn.n,
         signature: fn.s,
         modifiers: [],
-        isPrototype: false,
+        isPrototype: fn.p === 1,
         offset: 0,
         line: fn.l - 1,
         character: 0,
