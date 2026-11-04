@@ -66,6 +66,9 @@ export class LpcConfigService implements vscode.Disposable {
     readonly onDidChange = this.emitter.event;
 
     private watcher: vscode.FileSystemWatcher | undefined;
+    private reloadTimer: NodeJS.Timeout | undefined;
+    /** Zuletzt gelesener Inhalt (undefined = keine Datei) — der Wächter lädt nur bei Änderungen neu. */
+    private lastText: string | undefined;
 
     constructor(private readonly output: vscode.OutputChannel) {}
 
@@ -97,7 +100,9 @@ export class LpcConfigService implements vscode.Disposable {
         let raw: Uint8Array;
         try {
             raw = await vscode.workspace.fs.readFile(uri);
+            this.lastText = Buffer.from(raw).toString('utf8');
         } catch {
+            this.lastText = undefined;
             this.output.appendLine(`Keine ${fileName} gefunden (${uri.fsPath}).`);
             this.current = undefined;
             this.lastIssues = [];
@@ -135,6 +140,9 @@ export class LpcConfigService implements vscode.Disposable {
     }
 
     dispose(): void {
+        if (this.reloadTimer) {
+            clearTimeout(this.reloadTimer);
+        }
         this.watcher?.dispose();
         this.emitter.dispose();
     }
@@ -145,13 +153,33 @@ export class LpcConfigService implements vscode.Disposable {
         }
         const pattern = new vscode.RelativePattern(folder, fileName);
         this.watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        // Windows meldet ein Speichern oft mehrfach: Meldungen kurz sammeln und nur
+        // neu laden, wenn sich der Inhalt wirklich geändert hat. Sonst lädt jeder
+        // Abnehmer (Dialekt, Sfuns, Mudlib-Index) unnötig neu.
         const reload = (): void => {
-            this.output.appendLine('lpc-config.json geändert — neu laden.');
-            void this.load();
+            if (this.reloadTimer) {
+                clearTimeout(this.reloadTimer);
+            }
+            this.reloadTimer = setTimeout(() => void this.reloadIfChanged(), 300);
         };
         this.watcher.onDidChange(reload);
         this.watcher.onDidCreate(reload);
         this.watcher.onDidDelete(reload);
+    }
+
+    private async reloadIfChanged(): Promise<void> {
+        this.reloadTimer = undefined;
+        let text: string | undefined;
+        try {
+            text = this.currentUri ? Buffer.from(await vscode.workspace.fs.readFile(this.currentUri)).toString('utf8') : undefined;
+        } catch {
+            text = undefined;
+        }
+        if (text === this.lastText) {
+            return;
+        }
+        this.output.appendLine('lpc-config.json geändert — neu laden.');
+        await this.load();
     }
 }
 

@@ -120,7 +120,10 @@ export class LpcIndex implements vscode.Disposable {
             );
         }
         this.indexEmitter.fire();
-        this.scheduleSimulEfunReload();
+        // Mit homemud kommen die Sfuns live aus dessen simul_efun — der Index ändert daran nichts.
+        if (!this.mudlib || this.simulEfunFiles.size === 0) {
+            this.scheduleSimulEfunReload();
+        }
     }
 
     // --- Pfade ------------------------------------------------------------
