@@ -73,7 +73,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.5.vsix`.
+z. B. `lpc-ide-master-0.2.6.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -243,19 +243,29 @@ Welche Datei als `simul_efun` gelesen wird, legt `mudlib.simulEfunFile` fest, z.
 
 Standardmäßig ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`)
 nach `lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` einen Block
-`mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B. für Orbit:
+`mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B. für UNItopia:
 
 ```json
 "mud": {
   "host": "unitopia.de",
-  "port": 9988,
+  "port": 992,
   "user": "deinmagiername",
   "protocol": "telnets"
 }
 ```
 
-Danach gibt es im Remote Explorer per Rechtsklick auf eine Datei **Update Object** und
-**Destruct Object**. Eine vollständige Beispielkonfiguration mit allen Feldern, z. B. für
+| MUD | `telnets` (verschlüsselt) | `telnet` |
+| --- | --- | --- |
+| UNItopia | Port **992** (Standard bei `telnets`) | Port 3333 |
+| Orbit | Port **9988** | – |
+
+Antwortet der Server nach dem Verbinden nicht, stimmt meist der Port nicht. Die TLS-Verbindung
+kommt dann zwar zustande, aber es erscheint keine Begrüßung, und die Konsole meldet nach
+15 Sekunden einen Timeout.
+
+**LPC: Remote-MUD-Konsole anzeigen** (oder ein Klick auf den MUD-Eintrag in der Statusleiste)
+öffnet das Ausgabefenster und baut die Verbindung auf. Danach gibt es im Remote Explorer per
+Rechtsklick auf eine Datei **Update Object** und **Destruct Object**. Eine vollständige Beispielkonfiguration mit allen Feldern, z. B. für
 Login-Prompts und TLS, steht in [examples/unitopia-full/](examples/unitopia-full/).
 
 > `telnet` ist unverschlüsselt – das MUD-Passwort geht im Klartext über die Leitung.

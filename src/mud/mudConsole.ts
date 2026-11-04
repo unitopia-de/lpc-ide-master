@@ -38,6 +38,26 @@ export class MudConsole implements vscode.Disposable {
         this.channel.show(true);
     }
 
+    /** Zeigt die Konsole und baut die Verbindung auf, falls noch keine besteht. */
+    async open(): Promise<void> {
+        this.channel.show(true);
+        if (this.isConnected) {
+            return;
+        }
+        if (!this.isConfigured) {
+            this.channel.appendLine(
+                `— ${this.label}: keine MUD-Verbindung konfiguriert. Nötig sind der Block ` +
+                    `"mud" in lpc-config.json und die Einstellung "lpc.mud.enabled": true. —`
+            );
+            return;
+        }
+        try {
+            await this.ensureConnected();
+        } catch (err) {
+            vscode.window.showErrorMessage(`MUD-Konsole ${this.label}: ${(err as Error).message}`);
+        }
+    }
+
     async send(command: string): Promise<string> {
         const client = await this.ensureConnected();
         this.channel.appendLine(`> ${command}`);

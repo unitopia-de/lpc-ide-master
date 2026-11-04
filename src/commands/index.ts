@@ -195,8 +195,8 @@ export function registerCommands(
 
     // --- MUD-Konsolen -----------------------------------------------------
 
-    sub('lpc.openRemoteMudConsole', () => deps.remoteMud.show());
-    sub('lpc.openHomeMudConsole', () => deps.homeMud.show());
+    sub('lpc.openRemoteMudConsole', () => deps.remoteMud.open());
+    sub('lpc.openHomeMudConsole', () => deps.homeMud.open());
 
     sub('lpc.disconnectMud', async () => {
         const choice = await pickMud(deps, 'Welche Konsole trennen?');

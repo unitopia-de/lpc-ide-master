@@ -6,6 +6,12 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.6 – MUD-Konsole verbindet beim Öffnen
+
+### Behoben
+- **LPC: Remote-/HomeMUD-Konsole anzeigen** und der Klick auf den MUD-Eintrag in der Statusleiste bauen jetzt die Verbindung auf. Bisher öffnete sich nur ein leeres Ausgabefenster, verbunden wurde erst bei Update/Destruct. Fehlt die Konfiguration oder ist `lpc.mud.enabled` aus, steht ein Hinweis im Fenster.
+- README: Ports für `telnets` ergänzt (UNItopia 992, Orbit 9988).
+
 ## 0.2.5 – Veröffentlichung im VS Code Marketplace (Publisher myonara)
 
 ### Geändert
