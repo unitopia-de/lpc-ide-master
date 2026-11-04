@@ -57,6 +57,12 @@ export class FtpFileSystemProvider implements vscode.FileSystemProvider {
         try {
             return await backend.download(path);
         } catch (err) {
+            // Fehlende Datei (FTP 550, SFTP 2/ENOENT) ist kein Fehler: VS Code fragt z. B.
+            // .vscode/settings.json ab und erwartet dann FileNotFound.
+            const code = err instanceof RemoteError ? (err.cause as { code?: unknown })?.code : undefined;
+            if (code === 550 || code === 2 || code === 'ENOENT') {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
             this.handleRemoteError(err, uri);
         }
     }

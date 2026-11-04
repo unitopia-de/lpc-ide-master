@@ -2,7 +2,7 @@
   "name": "lpc-ide-master",
   "displayName": "LPC-IDE-Master (UNItopia Edition)",
   "description": "LPC-Entwicklungsumgebung mit Dialekt-Management, Remote-FTP/FTPS/SFTP-Sync, Editor-Unterstützung für UNItopia und weitere Mudlibs.",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "publisher": "myonara",
   "license": "MIT",
   "icon": "images/icon.png",

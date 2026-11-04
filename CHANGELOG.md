@@ -6,6 +6,14 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.7 – Fehlende Remote-Dateien ohne Fehlermeldung, TLS-Info in der MUD-Konsole
+
+### Hinzugefügt
+- MUD-Konsole: Bei `telnets` steht nach dem TLS-Aufbau eine Zeile mit TLS-Version und Zertifikatsstatus. So sieht man, ob die Verbindung steht und nur die Begrüßung des MUD ausbleibt.
+
+### Behoben
+- Fehlende Dateien auf dem Server (FTP 550) meldet das Dateisystem jetzt als „nicht gefunden“ statt als „nicht verfügbar“, ohne Stacktrace im Ausgabefenster. VS Code fragt im `lpc-ftp`-Ordner z. B. nach `.vscode/settings.json`, das erzeugte bisher vier Fehlermeldungen beim Start.
+
 ## 0.2.6 – MUD-Konsole verbindet beim Öffnen
 
 ### Behoben

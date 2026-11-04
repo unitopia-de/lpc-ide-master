@@ -101,6 +101,8 @@ export class MudClient extends EventEmitter {
             if (protocol === 'telnets') {
                 const sock = tls.connect({ host, port, rejectUnauthorized: false }, () => {
                     sock.removeListener('error', reject);
+                    const cert = sock.authorized ? 'Zertifikat gültig' : `Zertifikat ungeprüft: ${sock.authorizationError}`;
+                    this.emit('data', `[TLS aufgebaut: ${sock.getProtocol()}, ${cert}. Warte auf Begrüßung …]\n`);
                     resolve(sock);
                 });
                 sock.once('error', reject);
