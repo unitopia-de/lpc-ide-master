@@ -91,10 +91,10 @@ export function createStatusBar(
         const host = mud.host ?? '?';
         if (mud.isConnected) {
             item.text = `$(terminal) ${mud.label}: ${host}`;
-            item.tooltip = `${mud.label}-Konsole verbunden\nKlick: Output anzeigen`;
+            item.tooltip = `${mud.label}-Terminal verbunden\nKlick: Terminal öffnen`;
         } else {
             item.text = `$(circle-slash) ${mud.label}: ${host}`;
-            item.tooltip = `${mud.label}-Konsole nicht verbunden\nKlick: Output anzeigen`;
+            item.tooltip = `${mud.label}-Terminal nicht verbunden\nKlick: Terminal öffnen und verbinden`;
         }
         item.command = connectCmd;
         item.show();

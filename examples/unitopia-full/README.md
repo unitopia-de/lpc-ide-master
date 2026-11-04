@@ -54,18 +54,16 @@ viel weniger Felder, weil die Defaults greifen.
 }
 ```
 
-### `mud` — Telnet-Konsole für `update`/`destruct`
+### `mud` — MUD-Terminal
 
 | Feld | Pflicht | Erläuterung |
 |---|---|---|
 | `host` | **ja** | Hostname/IP des MUD-Servers. |
 | `port` | nein | Default `4711` (telnet) bzw. `992` (telnets). |
-| `user` | nein | Magier-Login. **Fehlt user**, wird die Login-Sequenz übersprungen — sinnvoll für homemud im Gast-Modus oder offene Test-MUDs. |
 | `protocol` | nein | `"telnet"` (Default, plain TCP) oder `"telnets"` (TLS). |
-| `loginPrompt` | nein | **Regex**, auf den der Client wartet, bevor der Username gesendet wird. Default: `"(Name\|Wie\\s*hei[ßs]?t\\s*du)"`. |
-| `passwordPrompt` | nein | **Regex** für den Passwort-Prompt. Default: `"Passwort"`. |
-| `commandPrompt` | nein | **Regex** für den Befehlsprompt — daran erkennt der Client, dass eine Antwort vollständig empfangen wurde. Default: `"^>\\s*$"`. |
-| `completionMarker` | nein | Optionaler Endmarker. Wenn gesetzt, sendet das Plugin nach jedem Befehl ein zusätzliches `echo <marker>` und sammelt den Output bis zum Marker — robuster als reines Prompt-Matching, falls der MUD-Output Prompt-ähnliche Zeichen enthält. |
+
+Das Login machst du selbst im Terminal. Ältere Felder wie `user`, `loginPrompt`,
+`passwordPrompt`, `commandPrompt` und `completionMarker` werden ignoriert.
 
 ### `homemud` — lokales Entwicklungs-MUD im Workspace
 
@@ -77,7 +75,7 @@ zweiten Telnet-Kanal (z.B. zu localhost) bereitstellen.
 |---|---|---|
 | `path` | **ja** | Workspace-relativer Pfad zum lokalen MUD-Verzeichnis (z.B. `"./mud"`). |
 | `libPath` | nein | Pfad zur Mudlib innerhalb von `path`. Default `"/lib"`. |
-| `mud` | nein | Optionaler `mud`-Block (gleiche Felder wie oben) für eine zweite Telnet-Konsole zum localhost-MUD. |
+| `mud` | nein | Optionaler `mud`-Block (gleiche Felder wie oben) für ein zweites MUD-Terminal zum localhost-MUD. |
 
 #### Pfad-Mapping
 
@@ -101,10 +99,6 @@ lpc-ftp://mud.unitopia.de/players/magier/std/room.c
 | Remote-Tree → Rechtsklick | **Nach homemud kopieren** (Datei oder ganzes Verzeichnis rekursiv) |
 | Datei-Explorer / Editor-Tab → Rechtsklick (innerhalb von `homemud.path`) | **Zur Remote hochladen** (mit Modal-Bestätigung) |
 
-#### Default-MUD für `update`/`destruct`
-
-Sind beide MUDs konfiguriert, fragt das Plugin per QuickPick — **Default-Auswahl ist homemud**, weil dort entwickelt/getestet wird. Mit nur einem konfigurierten MUD entfällt die Frage.
-
 ## Was passiert beim Start
 
 1. Plugin liest `lpc-config.json`.
@@ -114,24 +108,22 @@ Sind beide MUDs konfiguriert, fragt das Plugin per QuickPick — **Default-Auswa
 5. Statusleiste zeigt: `LPC: ldmud-unitopia (39)` (37 + 2 magier-eigene Sfuns).
 6. Drei weitere Items in der Statusleiste:
    - `$(circle-slash) FTP: mud.unitopia.de` (klick → verbinden)
-   - `$(circle-slash) MUD: mud.unitopia.de` (klick → MUD-Konsole anzeigen)
+   - `$(circle-slash) remote: unitopia.de` (klick → MUD-Terminal öffnen und verbinden)
 
 ## Befehle, die diese Konfiguration freischaltet
 
 | Aktion | Wo | Effekt |
 |---|---|---|
-| Rechtsklick auf `.c`-Datei → **Update Object** | Remote Explorer | Sendet `update <pfad>` an den MUD via Telnet. |
-| Rechtsklick auf `.c`-Datei → **Destruct Object** | Remote Explorer | Modal-Bestätigung → sendet `destruct <pfad>`. |
-| Klick auf MUD-Statusbar-Item | Statusleiste | OutputChannel **„LPC MUD Console"** öffnet sich. |
+| Klick auf MUD-Statusbar-Item | Statusleiste | Terminal **„MUD remote: …“** öffnet sich und verbindet. |
 | Inline `$(new-file)`/`$(new-folder)` neben Verzeichnissen | Remote Explorer | Erstellt Datei/Ordner direkt via FTP. |
 
 ## Sicherheit
 
-- Passwörter (`ftp` und `mud`) werden ausschließlich über die VS Code
+- FTP-Passwörter werden ausschließlich über die VS Code
   [SecretStorage API](https://code.visualstudio.com/api/references/vscode-api#SecretStorage)
   in der OS-Keychain (Credential Manager unter Windows) gespeichert.
 - Diese `lpc-config.json` enthält **keine** Geheimnisse und kann bedenkenlos in
   Git eingecheckt werden.
+- MUD-Passwörter speichert das Plugin nicht, du tippst sie im Terminal ein.
 - `telnet` ist unverschlüsselt — Passwörter gehen im Klartext über die Leitung.
-  Wenn UNItopia einen TLS-Port anbietet, sollte `protocol: "telnets"` mit dem
-  entsprechenden Port verwendet werden.
+  Für UNItopia daher `protocol: "telnets"` mit Port 992 verwenden.

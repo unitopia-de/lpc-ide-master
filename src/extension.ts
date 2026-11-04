@@ -77,27 +77,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         connections.onDidChangeConnection(updateContextKeys)
     );
 
-    // Zwei OutputChannels + zwei MudConsole-Instanzen (remote + homemud).
-    const remoteChannel = vscode.window.createOutputChannel('LPC MUD Console (remote)');
-    const homeChannel = vscode.window.createOutputChannel('LPC MUD Console (homemud)');
-    context.subscriptions.push(remoteChannel, homeChannel);
-
+    // Zwei MUD-Terminals (remote + homemud).
     const isMudEnabled = (): boolean =>
         vscode.workspace.getConfiguration('lpc').get<boolean>('mud.enabled', false);
 
-    const remoteMud = new MudConsole(
-        'remote',
-        remoteChannel,
-        () => (isMudEnabled() ? config.value?.mud : undefined),
-        credentials
-    );
-    const homeMud = new MudConsole(
-        'homemud',
-        homeChannel,
-        () => (isMudEnabled() ? config.value?.homemud?.mud : undefined),
-        credentials
-    );
+    const remoteMud = new MudConsole('remote', () => (isMudEnabled() ? config.value?.mud : undefined));
+    const homeMud = new MudConsole('homemud', () => (isMudEnabled() ? config.value?.homemud?.mud : undefined));
     context.subscriptions.push(remoteMud, homeMud);
+
+    // Bis 0.2.7 gespeicherte MUD-Passwörter entfernen: Das Login macht man jetzt selbst im Terminal.
+    void credentials.deleteOldMudPasswords([config.value?.mud, config.value?.homemud?.mud]);
 
     // Bei Setting-Änderung: Statusbar refresh anstoßen, indem wir den
     // onDidChange-Event der MudConsole feuern (no-op disconnect).

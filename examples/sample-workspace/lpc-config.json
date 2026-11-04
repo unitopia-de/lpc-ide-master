@@ -15,12 +15,8 @@
     "protocol": "ftp"
   },
   "mud": {
-    "host": "mud.unitopia.de",
-    "port": 4711,
-    "user": "magier",
-    "protocol": "telnet",
-    "loginPrompt": "(Wie heisst du|Name)",
-    "passwordPrompt": "Passwort",
-    "commandPrompt": "^>\\s*$"
+    "host": "unitopia.de",
+    "port": 992,
+    "protocol": "telnets"
   }
 }

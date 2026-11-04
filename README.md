@@ -8,7 +8,7 @@ VS Code Extension für die LPC-Entwicklung mit Schwerpunkt auf der UNItopia
 * Remote-Dateisystem über FTP/FTPS/SFTP – Mudlib-Dateien direkt im Editor bearbeiten
 * Remote Explorer in der Seitenleiste mit Neu, Umbenennen, Löschen, Pfad kopieren
 * Optionaler lokaler Entwicklungs-MUD („homemud“) mit Herunterladen, Hochladen und Vergleichen
-* Telnet-Konsole für Magier-Befehle (`update`/`destruct`), standardmäßig aus
+* MUD-Terminal (Telnet/TLS) direkt in VS Code, standardmäßig aus
 * LPC-Syntax-Highlighting und Editor-Unterstützung (Hover, Completion, Outline,
   Goto-Definition, Diagnostics, Signature-Help) für 322 LDMud-Efuns und 229 UNItopia-Sfuns
 * Mit homemud zusätzlich: geerbte Funktionen über die ganze `inherit`-Kette, Efun-Hilfe aus
@@ -73,7 +73,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.7.vsix`.
+z. B. `lpc-ide-master-0.2.8.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -239,17 +239,17 @@ Welche Datei als `simul_efun` gelesen wird, legt `mudlib.simulEfunFile` fest, z.
 `"/secure/simul_efun/simul_efun.c"`. Wie viele Sfuns gefunden wurden, steht im Ausgabefenster
 **LPC-IDE-Master**.
 
-### Optional: Telnet-Konsole für `update`/`destruct`
+### Optional: MUD-Terminal
 
-Standardmäßig ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`)
-nach `lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` einen Block
+Ein Terminal in VS Code, in dem du wie in einem MUD-Client arbeitest. Standardmäßig
+ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`) nach
+`lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` einen Block
 `mud` (Remote-MUD) und/oder `homemud.mud` (lokales MUD) ergänzen, z. B. für UNItopia:
 
 ```json
 "mud": {
   "host": "unitopia.de",
   "port": 992,
-  "user": "deinmagiername",
   "protocol": "telnets"
 }
 ```
@@ -259,14 +259,22 @@ nach `lpc.mud.enabled` suchen und aktivieren. Dann in der `lpc-config.json` eine
 | UNItopia | Port **992** (Standard bei `telnets`) | Port 3333 |
 | Orbit | Port **9988** | – |
 
-Antwortet der Server nach dem Verbinden nicht, stimmt meist der Port nicht. Die TLS-Verbindung
-kommt dann zwar zustande, aber es erscheint keine Begrüßung, und die Konsole meldet nach
-15 Sekunden einen Timeout.
+**LPC: Remote-MUD-Terminal öffnen** (oder ein Klick auf den MUD-Eintrag in der Statusleiste)
+öffnet einen Terminal-Tab und verbindet. Einloggen tust du dich dort selbst, mit Name und
+Passwort wie in jedem MUD-Client. Das Plugin speichert keine MUD-Passwörter.
 
-**LPC: Remote-MUD-Konsole anzeigen** (oder ein Klick auf den MUD-Eintrag in der Statusleiste)
-öffnet das Ausgabefenster und baut die Verbindung auf. Danach gibt es im Remote Explorer per
-Rechtsklick auf eine Datei **Update Object** und **Destruct Object**. Eine vollständige Beispielkonfiguration mit allen Feldern, z. B. für
-Login-Prompts und TLS, steht in [examples/unitopia-full/](examples/unitopia-full/).
+| Taste | Wirkung |
+| --- | --- |
+| Enter | Zeile ans MUD schicken; nach einem Verbindungsabbruch neu verbinden |
+| ← → Pos1 Ende, Rücktaste, Entf | Zeile bearbeiten |
+| ↑ ↓ | frühere Eingaben (Passwörter werden nicht gemerkt) |
+| Strg+C | Zeile verwerfen |
+
+Fragt das MUD nach dem Passwort, bleibt die Eingabe unsichtbar. Farben des MUD werden
+angezeigt. **LPC: MUD-Terminal trennen** oder das Schließen des Terminal-Tabs beendet die
+Verbindung.
+
+Erscheint nach `[TLS aufgebaut …]` keine Begrüßung, stimmt meist der Port nicht.
 
 > `telnet` ist unverschlüsselt – das MUD-Passwort geht im Klartext über die Leitung.
 

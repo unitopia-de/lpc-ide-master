@@ -6,6 +6,22 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.8 – MUD-Terminal statt Ausgabefenster
+
+### Hinzugefügt
+- Die MUD-Verbindung läuft jetzt in einem VS-Code-Terminal: direkt tippen, Enter schickt die Zeile ab. Zeilenbearbeitung mit ← → Pos1 Ende, Rücktaste, Entf; ↑ ↓ für frühere Eingaben; Strg+C verwirft die Zeile. Farben des MUD werden angezeigt.
+- Telnet-Optionen: Schaltet das MUD das Echo ab (Passwortabfrage), bleibt die Eingabe unsichtbar und kommt nicht in den Verlauf. Andere Optionen lehnt der Client ab.
+- Nach einem Verbindungsabbruch verbindet Enter im Terminal neu.
+
+### Entfernt
+- Automatisches Login. Man loggt sich im Terminal selbst ein. Die Felder `user`, `loginPrompt`, `passwordPrompt`, `commandPrompt` und `completionMarker` im `mud`-Block werden ignoriert. Früher gespeicherte MUD-Passwörter entfernt das Plugin beim Start aus dem Schlüsselbund.
+- Befehl **LPC: MUD-Passwort ändern**.
+- **Update Object** und **Destruct Object** im Remote Explorer. Bei UNItopia heißen diese Befehle anders; man tippt sie jetzt im Terminal.
+- Die Ausgabefenster „LPC MUD Console (remote/homemud)“.
+
+### Geändert
+- Befehle heißen jetzt **LPC: Remote-MUD-Terminal öffnen**, **LPC: HomeMUD-Terminal öffnen** und **LPC: MUD-Terminal trennen**.
+
 ## 0.2.7 – Fehlende Remote-Dateien ohne Fehlermeldung, TLS-Info in der MUD-Konsole
 
 ### Hinzugefügt

@@ -34,28 +34,14 @@ export class CredentialsManager {
 
     // --- MUD (Telnet) -----------------------------------------------------
 
-    async getMudPassword(host: string, user: string): Promise<string | undefined> {
-        return this.secrets.get(this.mudKey(host, user));
-    }
-
-    async setMudPassword(host: string, user: string, password: string): Promise<void> {
-        await this.secrets.store(this.mudKey(host, user), password);
-    }
-
-    async deleteMudPassword(host: string, user: string): Promise<void> {
-        await this.secrets.delete(this.mudKey(host, user));
-    }
-
-    async promptForMudPassword(host: string, user: string): Promise<string | undefined> {
-        const password = await vscode.window.showInputBox({
-            prompt: `MUD-Passwort für ${user}@${host}`,
-            password: true,
-            ignoreFocusOut: true
-        });
-        if (password) {
-            await this.setMudPassword(host, user, password);
+    /** Entfernt Passwörter, die frühere Versionen für das automatische MUD-Login gespeichert haben. */
+    async deleteOldMudPasswords(muds: ({ host?: string } | undefined)[]): Promise<void> {
+        for (const mud of muds) {
+            const user = (mud as { user?: unknown } | undefined)?.user;
+            if (mud?.host && typeof user === 'string') {
+                await this.secrets.delete(this.mudKey(mud.host, user));
+            }
         }
-        return password;
     }
 
     // --- intern -----------------------------------------------------------

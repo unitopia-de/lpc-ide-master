@@ -31,14 +31,7 @@ export interface FtpConfig {
 export interface MudConsoleConfig {
     host: string;
     port?: number;
-    /** Optional. Fehlt user, springt der Client die Login-Sequenz und wartet direkt auf den Befehlsprompt. */
-    user?: string;
     protocol?: 'telnet' | 'telnets';
-    loginPrompt?: string;
-    passwordPrompt?: string;
-    commandPrompt?: string;
-    /** Endmarker, der nach jedem Befehl in die Antwort eingebettet wird, um das Ende zu erkennen. */
-    completionMarker?: string;
 }
 
 export interface HomeMudConfig {
@@ -46,7 +39,7 @@ export interface HomeMudConfig {
     path: string;
     /** Pfad zur Mudlib innerhalb von path. Default "/lib". */
     libPath?: string;
-    /** Optional: Telnet-Konsole zum lokalen MUD (z.B. localhost:4711). */
+    /** Optional: MUD-Terminal zum lokalen MUD (z.B. localhost:4711). */
     mud?: MudConsoleConfig;
 }
 
@@ -269,9 +262,6 @@ function validateMud(value: unknown, path: string, issues: ValidationIssue[]): v
     const mud = value as Record<string, unknown>;
     if (typeof mud.host !== 'string' || !mud.host) {
         issues.push({ path: `${path}.host`, message: 'Pflichtfeld.' });
-    }
-    if (mud.user !== undefined && typeof mud.user !== 'string') {
-        issues.push({ path: `${path}.user`, message: 'String erwartet (oder weglassen, um Login zu überspringen).' });
     }
     if (mud.port !== undefined && typeof mud.port !== 'number') {
         issues.push({ path: `${path}.port`, message: 'Zahl erwartet.' });

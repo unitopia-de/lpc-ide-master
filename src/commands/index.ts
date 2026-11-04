@@ -193,60 +193,14 @@ export function registerCommands(
         vscode.window.setStatusBarMessage(`Pfad kopiert: ${node.uri.path}`, 3000);
     });
 
-    // --- MUD-Konsolen -----------------------------------------------------
+    // --- MUD-Terminals ---------------------------------------------------
 
     sub('lpc.openRemoteMudConsole', () => deps.remoteMud.open());
     sub('lpc.openHomeMudConsole', () => deps.homeMud.open());
 
     sub('lpc.disconnectMud', async () => {
-        const choice = await pickMud(deps, 'Welche Konsole trennen?');
+        const choice = await pickMud(deps, 'Welches MUD-Terminal trennen?');
         if (choice) await choice.disconnect();
-    });
-
-    sub('lpc.changeMudPassword', async () => {
-        const choice = await pickMud(deps, 'Welcher MUD?');
-        if (!choice) return;
-        const cfg = choice === deps.remoteMud ? deps.config.value?.mud : deps.config.value?.homemud?.mud;
-        if (!cfg?.host || !cfg.user) {
-            vscode.window.showWarningMessage('Dieses MUD nutzt keinen Login.');
-            return;
-        }
-        const pw = await deps.credentials.promptForMudPassword(cfg.host, cfg.user);
-        if (pw) {
-            await choice.disconnect();
-            vscode.window.showInformationMessage('Passwort gespeichert. Bitte neu verbinden.');
-        }
-    });
-
-    sub('lpc.updateObject', async (node?: RemoteNode) => {
-        const path = await pickObjectPath(node);
-        if (!path) return;
-        const mud = await pickMudForCommand(deps);
-        if (!mud) return;
-        try {
-            await mud.send(`update ${path}`);
-        } catch (err) {
-            vscode.window.showErrorMessage(`update fehlgeschlagen: ${err}`);
-        }
-    });
-
-    sub('lpc.destructObject', async (node?: RemoteNode) => {
-        const path = await pickObjectPath(node);
-        if (!path) return;
-        const mud = await pickMudForCommand(deps);
-        if (!mud) return;
-        const confirm = await vscode.window.showWarningMessage(
-            `Objekt "${path}" im ${mud.label}-MUD zerstören?\n\n` +
-                `Alle Instanzen verschwinden aus dem laufenden MUD. Die Source-Datei bleibt erhalten.`,
-            { modal: true },
-            'Zerstören'
-        );
-        if (confirm !== 'Zerstören') return;
-        try {
-            await mud.send(`destruct ${path}`);
-        } catch (err) {
-            vscode.window.showErrorMessage(`destruct fehlgeschlagen: ${err}`);
-        }
     });
 
     // --- HomeMUD: Sync ----------------------------------------------------
@@ -426,33 +380,6 @@ async function pickMud(
     if (choices.length === 1) return choices[0].mud;
     const picked = await vscode.window.showQuickPick(choices, { placeHolder });
     return picked?.mud;
-}
-
-// Default für update/destruct: homemud, falls konfiguriert. Sonst remote.
-async function pickMudForCommand(deps: CommandContext): Promise<MudConsole | undefined> {
-    if (deps.homeMud.isConfigured && deps.remoteMud.isConfigured) {
-        const picked = await vscode.window.showQuickPick(
-            [
-                { label: '$(home) homemud (Default)', mud: deps.homeMud },
-                { label: '$(globe) remote', mud: deps.remoteMud }
-            ],
-            { placeHolder: 'Auf welchem MUD ausführen?' }
-        );
-        return picked?.mud;
-    }
-    if (deps.homeMud.isConfigured) return deps.homeMud;
-    if (deps.remoteMud.isConfigured) return deps.remoteMud;
-    vscode.window.showWarningMessage('Kein MUD konfiguriert.');
-    return undefined;
-}
-
-async function pickObjectPath(node?: RemoteNode): Promise<string | undefined> {
-    const path = node?.uri.path;
-    if (!path) {
-        vscode.window.showWarningMessage('Kein Datei-Knoten ausgewählt.');
-        return undefined;
-    }
-    return path;
 }
 
 function childUri(parent: vscode.Uri, name: string): vscode.Uri {

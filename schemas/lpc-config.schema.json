@@ -11,12 +11,7 @@
       "properties": {
         "host": { "type": "string" },
         "port": { "type": "integer", "description": "Default 4711 (telnet) bzw. 992 (telnets)." },
-        "user": { "type": "string", "description": "Optional. Fehlt user, wird die Login-Sequenz übersprungen." },
-        "protocol": { "type": "string", "enum": ["telnet", "telnets"], "default": "telnet" },
-        "loginPrompt": { "type": "string", "description": "Regex; Default: \"(Name|Wie heisst du)\"." },
-        "passwordPrompt": { "type": "string", "description": "Regex; Default: \"Passwort\"." },
-        "commandPrompt": { "type": "string", "description": "Regex für den Befehlsprompt; Default: \"^>\\s*$\"." },
-        "completionMarker": { "type": "string", "description": "Optionaler Endmarker pro Befehl." }
+        "protocol": { "type": "string", "enum": ["telnet", "telnets"], "default": "telnet" }
       }
     }
   },
@@ -80,7 +75,7 @@
     },
     "mud": {
       "$ref": "#/definitions/mudConsole",
-      "description": "Telnet-/Telnets-Verbindung zum REMOTE MUD für Magier-Befehle (update, destruct, ...)."
+      "description": "Telnet-/Telnets-Verbindung zum REMOTE MUD, geöffnet als Terminal in VS Code."
     },
     "homemud": {
       "type": "object",
@@ -98,7 +93,7 @@
         },
         "mud": {
           "$ref": "#/definitions/mudConsole",
-          "description": "Optional: Telnet-Konsole zum lokalen MUD."
+          "description": "Optional: Telnet-Terminal zum lokalen MUD."
         }
       }
     }

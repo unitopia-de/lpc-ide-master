@@ -22,7 +22,7 @@ auf der UNItopia-Mudlib (LDMud 3.5/3.6). Sie kombiniert vier Bereiche:
 1. **Sprachunterstützung** – Syntax-Highlighting und eigene Editor-Provider (ohne externen Language Server)
 2. **Remote-Dateisystem** – Mudlib-Dateien per FTP/FTPS/SFTP direkt im Editor bearbeiten (`lpc-ftp://`)
 3. **HomeMUD** – ein lokales Entwicklungs-MUD mit Datei-Abgleich zum Remote-MUD
-4. **MUD-Konsole** – Telnet-Verbindung, um Magier-Befehle (`update`, `destruct`) abzusetzen
+4. **MUD-Terminal** – Telnet-/TLS-Verbindung zum MUD als Terminal in VS Code
 
 ## 2. Build- und Qualitätsstatus
 
@@ -54,8 +54,8 @@ src/
 ├── tree/remoteExplorerProvider.ts   Baumansicht "Remote Explorer" (Lazy Loading)
 ├── homemud/homeMudService.ts    Pfad-Mapping und rekursives Kopieren Remote ↔ lokal
 ├── mud/
-│   ├── mudClient.ts             Eigener Telnet/TLS-Client mit Login-Ablauf
-│   └── mudConsole.ts            Output-Channel + Lebenszyklus je Konsole
+│   ├── mudClient.ts             Eigener Telnet/TLS-Client (Telnet-Optionen, Echo für Passwörter)
+│   └── mudConsole.ts            Pseudoterminal mit Zeilenbearbeitung und Verlauf je MUD
 ├── analysis/
 │   ├── lpcParser.ts             Regex-Parser: Funktionen, Variablen, inherit, #include, #define, Doku-Kommentare
 │   ├── lpcIndex.ts              homemud-Index: Vererbung, simul_efun, Pfadauflösung ("%room", Makros)
@@ -86,7 +86,7 @@ Weitere Bestandteile:
 1. Aktivierung, sobald der Workspace eine `lpc-config.json` enthält oder eine `lpc-ftp://`-Ressource geöffnet wird.
 2. `lpc-config.json` wird geladen und validiert; Fehler landen im Output-Channel **LPC-IDE-Master**.
 3. Der Dialekt wird automatisch erkannt (über `mudlib.name` oder Dateien wie `secure/master.c`, `lpctypes.h`) und das passende Efun-Profil geladen.
-4. Dateisystem-Provider, Baumansicht, zwei MUD-Konsolen (remote, homemud), Statusleiste, Editor-Provider und Befehle werden registriert.
+4. Dateisystem-Provider, Baumansicht, zwei MUD-Terminals (remote, homemud), Statusleiste, Editor-Provider und Befehle werden registriert.
 5. Context-Keys (`lpc.hasFtpConfig`, `lpc.ftpConnected`, `lpc.hasHomeMud`) steuern, welche Menüs und Willkommensansichten erscheinen.
 
 ## 4. Funktionsumfang im Detail
@@ -122,7 +122,7 @@ Weitere Bestandteile:
 
 Eigener Bereich **Remote MUD** in der Activity Bar. Verzeichnisse werden erst beim Aufklappen geladen,
 Ordner stehen vor Dateien. Kontextmenü: Neue Datei/Ordner, Umbenennen, Löschen (mit Bestätigung),
-Pfad kopieren, Update/Destruct Object, „Nach homemud kopieren“.
+Pfad kopieren, „Nach homemud kopieren“.
 
 ### 4.4 HomeMUD
 
@@ -136,12 +136,13 @@ localRoot  = <workspace>/<homemud.path>/<homemud.libPath ?? "/lib">
 `lpc-ftp://host/<remoteRoot>/foo/bar.c` entspricht also `<localRoot>/foo/bar.c`. Dateien und ganze
 Verzeichnisse lassen sich in beide Richtungen rekursiv kopieren (mit Fortschrittsanzeige, ohne `.git` und `node_modules`).
 
-### 4.5 MUD-Konsole (Telnet)
+### 4.5 MUD-Terminal (Telnet)
 
 - Standardmäßig **aus**; wird über das Setting `lpc.mud.enabled` eingeschaltet
-- Eigener TCP-/TLS-Client (`telnet` / `telnets`) mit einstellbaren Prompt-Mustern (Login, Passwort, Befehl) und optionalem `completionMarker`
-- Zwei getrennte Konsolen: **remote** und **homemud**, jede mit eigenem Output-Channel
-- `update` und `destruct` werden standardmäßig auf dem HomeMUD ausgeführt, falls er konfiguriert ist; sonst auf dem Remote-MUD
+- Eigener TCP-/TLS-Client (`telnet` / `telnets`), UTF-8; von den Telnet-Optionen wird nur ECHO ausgewertet (Passworteingabe verbergen), alle anderen lehnt der Client ab
+- VS-Code-Pseudoterminal mit lokaler Zeilenbearbeitung, Verlauf und ANSI-Farben; Enter verbindet nach einem Abbruch neu
+- Kein automatisches Login und keine gespeicherten MUD-Passwörter; früher gespeicherte werden beim Start entfernt
+- Zwei getrennte Terminals: **remote** und **homemud**
 
 ### 4.6 Statusleiste
 
@@ -164,7 +165,7 @@ Ein VSIX-Paket erstellen:
 
 ```bash
 npm run package
-code --install-extension lpc-ide-master-0.2.7.vsix
+code --install-extension lpc-ide-master-0.2.8.vsix
 ```
 
 ### 5.2 Workspace einrichten
@@ -205,7 +206,7 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 3. Beim ersten Mal das FTP-Passwort eingeben; es wird in der OS-Keychain gespeichert.
 4. Wählen, ob das Remote-Verzeichnis als Workspace-Ordner eingebunden werden soll oder nur im Baum erscheint.
 5. Dateien öffnen, bearbeiten und speichern; Speichern schreibt direkt auf den Server.
-6. Optional mit `lpc.mud.enabled = true` und einem `mud`-Block: Rechtsklick auf eine Datei → **Update Object**.
+6. Optional mit `lpc.mud.enabled = true` und einem `mud`-Block: **LPC: Remote-MUD-Terminal öffnen** und im Terminal einloggen.
 7. Optional mit HomeMUD: Dateien per **Nach homemud kopieren** holen, lokal testen und per **Zur Remote hochladen** (Rechtsklick im Explorer oder Editor-Tab) zurückspielen. Über dasselbe Menü lassen sich lokale Dateien mit **Von Remote herunterladen** aktualisieren oder mit **Mit Remote vergleichen** in einer Diff-Ansicht gegenüberstellen.
 
 ### 5.4 Befehle (Befehlspalette)
@@ -216,11 +217,11 @@ Die Datei wird überwacht; Änderungen werden sofort neu geladen.
 | `LPC: Remote-Baum aktualisieren` | Remote Explorer neu laden |
 | `LPC: Dialekt wechseln` | Profil manuell wählen |
 | `LPC: lpc-config.json neu laden` | Konfiguration neu einlesen |
-| `LPC: FTP-Passwort ändern` / `LPC: MUD-Passwort ändern` | Gespeichertes Passwort ersetzen |
-| `LPC: Remote-MUD-Konsole anzeigen` / `LPC: HomeMUD-Konsole anzeigen` | Telnet-Ausgabe anzeigen |
-| `LPC: MUD-Konsole trennen` | Telnet-Verbindung beenden |
+| `LPC: FTP-Passwort ändern` | Gespeichertes FTP-Passwort ersetzen |
+| `LPC: Remote-MUD-Terminal öffnen` / `LPC: HomeMUD-Terminal öffnen` | MUD-Terminal öffnen und verbinden |
+| `LPC: MUD-Terminal trennen` | Telnet-Verbindung beenden |
 | `LPC: HomeMUD im Explorer öffnen` | Lokales HomeMUD-Verzeichnis im Explorer anzeigen |
-| Kontextmenü | Neue Datei/Ordner, Umbenennen, Löschen, Pfad kopieren, Update/Destruct Object, Nach homemud kopieren, Zur Remote hochladen, Von Remote herunterladen, Mit Remote vergleichen |
+| Kontextmenü | Neue Datei/Ordner, Umbenennen, Löschen, Pfad kopieren, Nach homemud kopieren, Zur Remote hochladen, Von Remote herunterladen, Mit Remote vergleichen |
 
 ### 5.5 Einstellungen
 
@@ -302,7 +303,7 @@ Gemessen am Plan in [PLUGIN_PLAN.md](PLUGIN_PLAN.md):
 | Punkt | Stand |
 | --- | --- |
 | Remote Explorer mit Lazy Loading | ✅ |
-| Kontextmenü Update/Destruct über Telnet | ✅ |
+| Kontextmenü Update/Destruct über Telnet | entfernt in 0.2.8 (bei UNItopia andere Befehle); stattdessen MUD-Terminal |
 | `lpc-ftp://`-Dateisystem, Passwörter im OS-Schlüsselbund | ✅ |
 | `uploadOnSave` | ❌ Setting ohne Funktion. Dateien unter `lpc-ftp://` werden ohnehin direkt gespeichert; gemeint wäre der automatische Upload aus dem HomeMUD. |
 
@@ -328,7 +329,7 @@ Sichtbar sind die Funktionen der (indirekt) geerbten Objekte, die Sfuns und die 
 
 ### Über den Plan hinaus umgesetzt
 
-HomeMUD mit Herunterladen, Hochladen und Vergleichen; zwei Telnet-Konsolen; Statusleiste;
+HomeMUD mit Herunterladen, Hochladen und Vergleichen; zwei MUD-Terminals; Statusleiste;
 Parameterhilfe; Outline; FTPS und SFTP mit TLS-Optionen; VSIX-Paketierung.
 
 ### Nächste sinnvolle Schritte

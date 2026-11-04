@@ -1,83 +1,77 @@
 import * as net from 'net';
 import * as tls from 'tls';
 import { EventEmitter } from 'events';
+import { TextDecoder } from 'util';
 import { MudConsoleConfig } from '../config/lpcConfig';
 
-const DEFAULTS = {
-    loginPrompt: '(Name|Wie\\s*hei[ßs]?t\\s*du)',
-    passwordPrompt: 'Passwort',
-    commandPrompt: '^>\\s*$',
-    timeoutMs: 5000,
-    loginTimeoutMs: 15000
-};
-
-export interface MudClientOptions extends MudConsoleConfig {
-    /** Pflicht nur wenn user gesetzt ist. Bei MUDs ohne Login leer lassen. */
-    password?: string;
-}
-
-export interface MudClientEvents {
-    data: (chunk: string) => void;
-    close: (reason?: string) => void;
-}
+// Telnet-Steuerzeichen (RFC 854/857).
+const IAC = 255;
+const DONT = 254;
+const DO = 253;
+const WONT = 252;
+const WILL = 251;
+const SB = 250;
+const SE = 240;
+const OPT_ECHO = 1;
 
 type DuplexSocket = net.Socket | tls.TLSSocket;
 
-// Sehr schlanker Telnet-Client. Behandelt nur die Login-Sequenz und
-// einfache Request/Response-Befehle. IAC-Negotiation wird ignoriert
-// (UNItopia braucht das nicht für Magier-Befehle).
+const enum State {
+    data,
+    iac,
+    option,
+    sub,
+    subIac
+}
+
+// Schlanker Telnet-Client ohne Login-Automatik. Reicht den Text des MUD weiter
+// und wertet von den Telnet-Optionen nur ECHO aus: Schaltet das MUD das Echo
+// ab (Passworteingabe), meldet der Client das über das Event 'echo'. Alle
+// anderen Optionen lehnt er ab.
+//
+// Events: 'data' (text: string), 'echo' (localEcho: boolean), 'close' (reason?: string)
 export class MudClient extends EventEmitter {
     private socket: DuplexSocket | undefined;
-    private buffer = '';
-    private connected = false;
+    private readonly decoder = new TextDecoder('utf-8');
+    private state = State.data;
+    private command = 0;
+    private serverEcho = false;
 
-    constructor(private readonly opts: MudClientOptions) {
+    constructor(private readonly opts: MudConsoleConfig) {
         super();
     }
 
     get isConnected(): boolean {
-        return this.connected;
+        return !!this.socket && !this.socket.destroyed;
     }
 
     async connect(): Promise<void> {
         const protocol = this.opts.protocol ?? 'telnet';
         const port = this.opts.port ?? (protocol === 'telnets' ? 992 : 4711);
 
-        this.socket = await this.openSocket(protocol, this.opts.host, port);
-        this.socket.setEncoding('utf8');
-        this.socket.on('data', (data: string) => this.onData(data));
-        this.socket.on('close', () => {
-            this.connected = false;
+        const socket = await this.openSocket(protocol, this.opts.host, port);
+        this.socket = socket;
+        socket.on('data', (chunk: Buffer) => this.onData(chunk));
+        socket.on('close', () => {
+            this.socket = undefined;
             this.emit('close');
         });
-        this.socket.on('error', (err) => {
+        socket.on('error', (err) => {
             this.emit('close', err.message);
         });
-
-        await this.runLogin();
-        this.connected = true;
     }
 
-    /**
-     * Sendet einen Befehl und sammelt die Antwort bis zum nächsten Prompt
-     * (oder bis zum completionMarker, falls konfiguriert).
-     */
-    async send(command: string): Promise<string> {
-        if (!this.socket || !this.connected) {
-            throw new Error('MUD-Client ist nicht verbunden.');
+    sendLine(line: string): void {
+        // IAC im Text verdoppeln, Zeilenende nach Telnet-Konvention CR LF.
+        const bytes = Buffer.from(line + '\r\n', 'utf8');
+        const escaped: number[] = [];
+        for (const b of bytes) {
+            escaped.push(b);
+            if (b === IAC) {
+                escaped.push(IAC);
+            }
         }
-        const promptRe = new RegExp(this.opts.commandPrompt ?? DEFAULTS.commandPrompt, 'm');
-        const marker = this.opts.completionMarker;
-        const collected = this.collectUntil(
-            marker ? new RegExp(this.escape(marker)) : promptRe,
-            DEFAULTS.timeoutMs
-        );
-        this.write(command + '\n');
-        if (marker) {
-            // Marker nach dem eigentlichen Befehl als zweiten Befehl absetzen.
-            this.write(`echo ${marker}\n`);
-        }
-        return collected;
+        this.socket?.write(Buffer.from(escaped));
     }
 
     close(): void {
@@ -87,7 +81,6 @@ export class MudClient extends EventEmitter {
             /* ignore */
         }
         this.socket = undefined;
-        this.connected = false;
     }
 
     // --- intern -----------------------------------------------------------
@@ -102,7 +95,7 @@ export class MudClient extends EventEmitter {
                 const sock = tls.connect({ host, port, rejectUnauthorized: false }, () => {
                     sock.removeListener('error', reject);
                     const cert = sock.authorized ? 'Zertifikat gültig' : `Zertifikat ungeprüft: ${sock.authorizationError}`;
-                    this.emit('data', `[TLS aufgebaut: ${sock.getProtocol()}, ${cert}. Warte auf Begrüßung …]\n`);
+                    this.emit('data', `[TLS aufgebaut: ${sock.getProtocol()}, ${cert}]\n`);
                     resolve(sock);
                 });
                 sock.once('error', reject);
@@ -116,85 +109,73 @@ export class MudClient extends EventEmitter {
         });
     }
 
-    private onData(chunk: string): void {
-        // IAC-Bytes (0xff) grob entfernen, falls der Server welche schickt.
-        const cleaned = chunk.replace(/\xff[\xfb-\xfe]./g, '');
-        this.buffer += cleaned;
-        this.emit('data', cleaned);
+    private onData(chunk: Buffer): void {
+        const text: number[] = [];
+        for (const b of chunk) {
+            switch (this.state) {
+                case State.data:
+                    if (b === IAC) {
+                        this.state = State.iac;
+                    } else {
+                        text.push(b);
+                    }
+                    break;
+                case State.iac:
+                    if (b === IAC) {
+                        text.push(IAC);
+                        this.state = State.data;
+                    } else if (b === WILL || b === WONT || b === DO || b === DONT) {
+                        this.command = b;
+                        this.state = State.option;
+                    } else if (b === SB) {
+                        this.state = State.sub;
+                    } else {
+                        // GA, EOR, NOP usw. haben für die Anzeige keine Bedeutung.
+                        this.state = State.data;
+                    }
+                    break;
+                case State.option:
+                    this.negotiate(this.command, b);
+                    this.state = State.data;
+                    break;
+                case State.sub:
+                    if (b === IAC) {
+                        this.state = State.subIac;
+                    }
+                    break;
+                case State.subIac:
+                    this.state = b === SE ? State.data : State.sub;
+                    break;
+            }
+        }
+        if (text.length > 0) {
+            const decoded = this.decoder.decode(Buffer.from(text), { stream: true });
+            if (decoded) {
+                this.emit('data', decoded);
+            }
+        }
     }
 
-    private write(data: string): void {
-        this.socket?.write(data);
-    }
-
-    private async runLogin(): Promise<void> {
-        const promptRe = new RegExp(this.opts.commandPrompt ?? DEFAULTS.commandPrompt, 'm');
-
-        if (!this.opts.user) {
-            // Kein Login — direkt auf Befehlsprompt warten.
-            await this.collectUntil(promptRe, DEFAULTS.loginTimeoutMs);
+    private negotiate(command: number, option: number): void {
+        if (option === OPT_ECHO && (command === WILL || command === WONT)) {
+            const serverEcho = command === WILL;
+            if (serverEcho !== this.serverEcho) {
+                this.serverEcho = serverEcho;
+                this.reply(serverEcho ? DO : DONT, OPT_ECHO);
+                this.emit('echo', !serverEcho);
+            }
             return;
         }
-
-        const loginRe = new RegExp(this.opts.loginPrompt ?? DEFAULTS.loginPrompt, 'i');
-        await this.collectUntil(loginRe, DEFAULTS.loginTimeoutMs);
-        this.write(this.opts.user + '\n');
-
-        if (this.opts.password) {
-            const passRe = new RegExp(this.opts.passwordPrompt ?? DEFAULTS.passwordPrompt, 'i');
-            await this.collectUntil(passRe, DEFAULTS.loginTimeoutMs);
-            this.write(this.opts.password + '\n');
+        // Alles andere ablehnen. Auf WONT/DONT antworten wir nicht, das vermeidet Schleifen.
+        if (command === WILL) {
+            this.reply(DONT, option);
         }
-
-        await this.collectUntil(promptRe, DEFAULTS.loginTimeoutMs);
+        else if (command === DO) {
+            this.reply(WONT, option);
+        }
     }
 
-    private collectUntil(pattern: RegExp, timeoutMs: number): Promise<string> {
-        return new Promise((resolve, reject) => {
-            // Wenn das Pattern bereits im Puffer ist: sofort liefern.
-            const existing = this.matchAndConsume(pattern);
-            if (existing !== undefined) {
-                resolve(existing);
-                return;
-            }
-
-            const onData = (): void => {
-                const matched = this.matchAndConsume(pattern);
-                if (matched !== undefined) {
-                    cleanup();
-                    resolve(matched);
-                }
-            };
-            const onClose = (reason?: string): void => {
-                cleanup();
-                reject(new Error(`Verbindung getrennt${reason ? ': ' + reason : ''}`));
-            };
-            const timer = setTimeout(() => {
-                cleanup();
-                reject(new Error(`Timeout beim Warten auf "${pattern.source}".`));
-            }, timeoutMs);
-
-            const cleanup = (): void => {
-                clearTimeout(timer);
-                this.off('data', onData);
-                this.off('close', onClose);
-            };
-
-            this.on('data', onData);
-            this.on('close', onClose);
-        });
-    }
-
-    private matchAndConsume(pattern: RegExp): string | undefined {
-        const match = pattern.exec(this.buffer);
-        if (!match) return undefined;
-        const end = (match.index ?? 0) + match[0].length;
-        const collected = this.buffer.slice(0, match.index);
-        this.buffer = this.buffer.slice(end);
-        return collected;
-    }
-
-    private escape(s: string): string {
-        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    private reply(command: number, option: number): void {
+        this.socket?.write(Buffer.from([IAC, command, option]));
     }
 }

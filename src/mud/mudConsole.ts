@@ -1,25 +1,31 @@
 import * as vscode from 'vscode';
 import { MudClient } from './mudClient';
 import { MudConsoleConfig } from '../config/lpcConfig';
-import { CredentialsManager } from '../ftp/credentialsManager';
 
 export type MudConsoleConfigProvider = () => MudConsoleConfig | undefined;
 
-// Hochlevel-Wrapper. Zeigt Output im Channel "LPC MUD Console" und kapselt
-// den Lifecycle einer Telnet-Session. Pro Konsolen-Instanz (remote, homemud)
-// jeweils ein eigener OutputChannel.
+const HISTORY_SIZE = 100;
+
+// MUD-Sitzung in einem VS-Code-Terminal (Pseudoterminal). Pro Konsolen-Instanz
+// (remote, homemud) ein eigenes Terminal. Die Zeile wird lokal bearbeitet und
+// mit Enter ans MUD geschickt. Ein Login macht der Benutzer selbst.
 export class MudConsole implements vscode.Disposable {
     private client: MudClient | undefined;
-    private connecting: Promise<MudClient> | undefined;
+    private terminal: vscode.Terminal | undefined;
+    private readonly writeEmitter = new vscode.EventEmitter<string>();
+
+    private line = '';
+    private cursor = 0;
+    private localEcho = true;
+    private history: string[] = [];
+    private historyPos = 0;
 
     private readonly emitter = new vscode.EventEmitter<boolean>();
     readonly onDidChangeConnection = this.emitter.event;
 
     constructor(
         readonly label: string,
-        private readonly channel: vscode.OutputChannel,
-        private readonly getConfig: MudConsoleConfigProvider,
-        private readonly credentials: CredentialsManager
+        private readonly getConfig: MudConsoleConfigProvider
     ) {}
 
     get isConnected(): boolean {
@@ -34,118 +40,235 @@ export class MudConsole implements vscode.Disposable {
         return this.getConfig()?.host;
     }
 
-    show(): void {
-        this.channel.show(true);
-    }
-
-    /** Zeigt die Konsole und baut die Verbindung auf, falls noch keine besteht. */
-    async open(): Promise<void> {
-        this.channel.show(true);
-        if (this.isConnected) {
-            return;
-        }
-        if (!this.isConfigured) {
-            this.channel.appendLine(
-                `— ${this.label}: keine MUD-Verbindung konfiguriert. Nötig sind der Block ` +
-                    `"mud" in lpc-config.json und die Einstellung "lpc.mud.enabled": true. —`
-            );
-            return;
-        }
-        try {
-            await this.ensureConnected();
-        } catch (err) {
-            vscode.window.showErrorMessage(`MUD-Konsole ${this.label}: ${(err as Error).message}`);
-        }
-    }
-
-    async send(command: string): Promise<string> {
-        const client = await this.ensureConnected();
-        this.channel.appendLine(`> ${command}`);
-        try {
-            const reply = await client.send(command);
-            const trimmed = reply.replace(/\s+$/, '');
-            if (trimmed) {
-                this.channel.appendLine(trimmed);
+    /** Zeigt das Terminal und baut die Verbindung auf, falls noch keine besteht. */
+    open(): void {
+        if (this.terminal) {
+            this.terminal.show();
+            if (!this.isConnected) {
+                void this.connect();
             }
-            return reply;
-        } catch (err) {
-            this.channel.appendLine(`[Fehler] ${(err as Error).message}`);
-            throw err;
+            return;
         }
+        const pty: vscode.Pseudoterminal = {
+            onDidWrite: this.writeEmitter.event,
+            open: () => void this.connect(),
+            close: () => {
+                this.terminal = undefined;
+                this.closeClient();
+            },
+            handleInput: (data) => this.handleInput(data)
+        };
+        this.terminal = vscode.window.createTerminal({
+            name: `MUD ${this.label}${this.host ? ': ' + this.host : ''}`,
+            pty,
+            iconPath: new vscode.ThemeIcon('terminal')
+        });
+        this.terminal.show();
     }
 
     async disconnect(): Promise<void> {
-        this.client?.close();
-        this.client = undefined;
-        this.connecting = undefined;
-        this.channel.appendLine('— Verbindung getrennt —');
-        this.emitter.fire(false);
+        if (this.client) {
+            this.closeClient();
+            this.print('\r\n— Verbindung getrennt —\r\n');
+        }
     }
 
     dispose(): void {
-        this.client?.close();
+        this.closeClient();
+        this.terminal?.dispose();
+        this.writeEmitter.dispose();
         this.emitter.dispose();
     }
 
-    // --- intern -----------------------------------------------------------
+    // --- Verbindung -------------------------------------------------------
 
-    private async ensureConnected(): Promise<MudClient> {
-        if (this.client?.isConnected) {
-            return this.client;
+    private async connect(): Promise<void> {
+        if (this.client) {
+            return;
         }
-        if (this.connecting) {
-            return this.connecting;
-        }
-        this.connecting = this.openConnection().finally(() => {
-            this.connecting = undefined;
-        });
-        return this.connecting;
-    }
-
-    private async openConnection(): Promise<MudClient> {
         const cfg = this.getConfig();
         if (!cfg?.host) {
-            throw new Error(`${this.label}: keine MUD-Konfiguration vorhanden.`);
+            this.print(
+                `— ${this.label}: keine MUD-Verbindung konfiguriert. Nötig sind der Block ` +
+                    `"mud" in lpc-config.json und die Einstellung "lpc.mud.enabled": true. —\r\n`
+            );
+            return;
         }
-        const password = cfg.user ? await this.resolvePassword(cfg.host, cfg.user) : undefined;
-        if (cfg.user && !password) {
-            throw new Error('Passwort-Eingabe abgebrochen.');
-        }
+        this.print(`— ${this.label}: verbinde mit ${cfg.host}:${cfg.port ?? '(Standard)'} via ${cfg.protocol ?? 'telnet'} —\r\n`);
 
-        this.channel.show(true);
-        const who = cfg.user ?? '(kein Login)';
-        this.channel.appendLine(
-            `— ${this.label}: verbinde ${who}@${cfg.host}:${cfg.port ?? '(default)'} via ${cfg.protocol ?? 'telnet'} —`
-        );
-
-        const client = new MudClient({ ...cfg, password });
-        client.on('data', (chunk: string) => {
-            this.channel.append(chunk);
+        const client = new MudClient(cfg);
+        this.client = client;
+        this.localEcho = true;
+        client.on('data', (text: string) => this.print(text.replace(/\r?\n/g, '\r\n')));
+        client.on('echo', (localEcho: boolean) => {
+            this.localEcho = localEcho;
         });
-        client.on('close', () => {
+        client.on('close', (reason?: string) => {
+            if (this.client !== client) {
+                return;
+            }
             this.client = undefined;
             this.emitter.fire(false);
-            this.channel.appendLine('\n— Verbindung beendet —');
+            this.print(`\r\n— Verbindung beendet${reason ? ': ' + reason : ''}. Enter verbindet neu. —\r\n`);
         });
 
         try {
             await client.connect();
         } catch (err) {
-            this.channel.appendLine(`[Fehler] ${(err as Error).message}`);
-            throw err;
+            this.client = undefined;
+            this.print(`[Fehler] ${(err as Error).message}\r\nEnter versucht es erneut.\r\n`);
+            return;
         }
-
-        this.client = client;
         this.emitter.fire(true);
-        this.channel.appendLine('— Verbunden —');
-        return client;
     }
 
-    private async resolvePassword(host: string, user: string): Promise<string | undefined> {
-        let pw = await this.credentials.getMudPassword(host, user);
-        if (!pw) {
-            pw = await this.credentials.promptForMudPassword(host, user);
+    private closeClient(): void {
+        const client = this.client;
+        this.client = undefined;
+        client?.close();
+        if (client) {
+            this.emitter.fire(false);
         }
-        return pw;
+    }
+
+    // --- Ausgabe ----------------------------------------------------------
+
+    /** Schreibt Text vom MUD, ohne die gerade getippte Zeile zu zerstören. */
+    private print(text: string): void {
+        const typed = this.localEcho && this.line.length > 0;
+        if (typed) {
+            this.writeEmitter.fire(this.moveLeft(this.cursor) + '\x1b[K');
+        }
+        this.writeEmitter.fire(text);
+        if (typed) {
+            this.writeEmitter.fire(this.line + this.moveLeft(this.line.length - this.cursor));
+        }
+    }
+
+    private moveLeft(n: number): string {
+        return n > 0 ? `\x1b[${n}D` : '';
+    }
+
+    // --- Eingabe ----------------------------------------------------------
+
+    private handleInput(data: string): void {
+        let i = 0;
+        while (i < data.length) {
+            const rest = data.slice(i);
+            const seq = /^\x1b(\[[0-9;]*[A-Za-z~]|O[A-Za-z])/.exec(rest);
+            if (seq) {
+                this.handleEscape(seq[1]);
+                i += seq[0].length;
+                continue;
+            }
+            const ch = data[i++];
+            if (ch === '\r' || ch === '\n') {
+                if (ch === '\n' && data[i - 2] === '\r') {
+                    continue;
+                }
+                this.submit();
+            } else if (ch === '\x7f' || ch === '\b') {
+                this.backspace();
+            } else if (ch === '\x03') {
+                // Strg+C: Zeile verwerfen.
+                this.setLine('');
+            } else if (ch >= ' ') {
+                this.insert(ch);
+            }
+        }
+    }
+
+    private handleEscape(seq: string): void {
+        switch (seq) {
+            case '[D': case 'OD':
+                if (this.cursor > 0) {
+                    this.cursor--;
+                    this.echo('\x1b[D');
+                }
+                break;
+            case '[C': case 'OC':
+                if (this.cursor < this.line.length) {
+                    this.cursor++;
+                    this.echo('\x1b[C');
+                }
+                break;
+            case '[H': case 'OH': case '[1~':
+                this.echo(this.moveLeft(this.cursor));
+                this.cursor = 0;
+                break;
+            case '[F': case 'OF': case '[4~':
+                this.echo(this.line.length > this.cursor ? `\x1b[${this.line.length - this.cursor}C` : '');
+                this.cursor = this.line.length;
+                break;
+            case '[3~':
+                if (this.cursor < this.line.length) {
+                    this.line = this.line.slice(0, this.cursor) + this.line.slice(this.cursor + 1);
+                    this.echo(this.line.slice(this.cursor) + ' ' + this.moveLeft(this.line.length - this.cursor + 1));
+                }
+                break;
+            case '[A': case 'OA':
+                if (this.localEcho && this.historyPos > 0) {
+                    this.historyPos--;
+                    this.setLine(this.history[this.historyPos]);
+                }
+                break;
+            case '[B': case 'OB':
+                if (this.localEcho && this.historyPos < this.history.length) {
+                    this.historyPos++;
+                    this.setLine(this.history[this.historyPos] ?? '');
+                }
+                break;
+        }
+    }
+
+    private submit(): void {
+        const line = this.line;
+        const echoed = this.localEcho;
+        this.line = '';
+        this.cursor = 0;
+        this.writeEmitter.fire('\r\n');
+
+        if (!this.client) {
+            void this.connect();
+            return;
+        }
+        if (echoed && line.trim() && this.history[this.history.length - 1] !== line) {
+            this.history.push(line);
+            if (this.history.length > HISTORY_SIZE) {
+                this.history.shift();
+            }
+        }
+        this.historyPos = this.history.length;
+        this.client.sendLine(line);
+    }
+
+    private insert(ch: string): void {
+        this.line = this.line.slice(0, this.cursor) + ch + this.line.slice(this.cursor);
+        this.cursor += ch.length;
+        const tail = this.line.slice(this.cursor);
+        this.echo(ch + tail + this.moveLeft(tail.length));
+    }
+
+    private backspace(): void {
+        if (this.cursor === 0) {
+            return;
+        }
+        this.line = this.line.slice(0, this.cursor - 1) + this.line.slice(this.cursor);
+        this.cursor--;
+        const tail = this.line.slice(this.cursor);
+        this.echo('\b' + tail + ' ' + this.moveLeft(tail.length + 1));
+    }
+
+    private setLine(text: string): void {
+        this.echo(this.moveLeft(this.cursor) + '\x1b[K' + text);
+        this.line = text;
+        this.cursor = text.length;
+    }
+
+    /** Lokales Echo der Eingabe; bei abgeschaltetem Echo (Passwort) bleibt sie unsichtbar. */
+    private echo(text: string): void {
+        if (this.localEcho && text) {
+            this.writeEmitter.fire(text);
+        }
     }
 }

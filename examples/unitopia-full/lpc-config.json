@@ -20,14 +20,9 @@
     "protocol": "ftp"
   },
   "mud": {
-    "host": "mud.unitopia.de",
-    "port": 4711,
-    "user": "magier",
-    "protocol": "telnet",
-    "loginPrompt": "(Wie heisst du|Bitte gib Deinen Namen ein|Name)",
-    "passwordPrompt": "Passwort",
-    "commandPrompt": "^(>|magier@unitopia>)\\s*$",
-    "completionMarker": "###LPC_IDE_DONE###"
+    "host": "unitopia.de",
+    "port": 992,
+    "protocol": "telnets"
   },
   "homemud": {
     "path": "./mud",
@@ -35,8 +30,7 @@
     "mud": {
       "host": "localhost",
       "port": 4711,
-      "protocol": "telnet",
-      "commandPrompt": "^>\\s*$"
+      "protocol": "telnet"
     }
   }
 }
