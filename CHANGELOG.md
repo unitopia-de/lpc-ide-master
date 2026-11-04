@@ -6,6 +6,8 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.12 – Weniger Neuladen, klarere Meldungen
+
 ### Behoben
 - Beim Speichern der `lpc-config.json` wurden Efuns und Sfuns mehrfach aus dem homemud geladen: Windows meldet ein Speichern oft doppelt, und das Neuladen des Mudlib-Index stieß ein weiteres Sfun-Laden an. Jetzt werden Meldungen kurz gesammelt, ohne inhaltliche Änderung wird gar nicht neu geladen, und mit homemud lädt der Index die Sfuns nicht noch einmal.
 
