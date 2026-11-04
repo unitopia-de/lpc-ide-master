@@ -4,6 +4,7 @@ import { HomeMudService } from '../homemud/homeMudService';
 import { EfunProvider } from '../dialect/efunProvider';
 import { LpcIndex, bestPerName } from '../analysis/lpcIndex';
 import { parseDocument } from '../analysis/documentCache';
+import { callContext } from './callContext';
 
 const LPC_SELECTOR: vscode.DocumentSelector = [
     { language: 'lpc', scheme: 'file' },
@@ -41,6 +42,13 @@ export function registerDefinitionProvider(
             if (!range) return undefined;
             const word = document.getText(range);
 
+            // call_other: ob->fun() bzw. ob.fun() — Fundstellen im Zielobjekt bzw. in allen Klassen.
+            const call = callContext(line.slice(0, range.start.character));
+            if (call && !call.self) {
+                const targets = await callOtherLocations(document, index, word, call.target);
+                if (targets.length) return targets;
+            }
+
             const local = resolveLocalFunction(document, word);
             if (local) return local;
 
@@ -49,8 +57,8 @@ export function registerDefinitionProvider(
                 return new vscode.Location(inherited.uri, new vscode.Position(inherited.line, inherited.character));
             }
 
-            // Sfun aus der homemud-simul_efun: direkt zur Quelle springen.
-            const location = efuns.lookup(word)?.location;
+            // Sfun aus der homemud-simul_efun: direkt zur Quelle springen (nicht bei ob->fun()).
+            const location = call ? undefined : efuns.lookup(word)?.location;
             if (location) {
                 return new vscode.Location(location.uri, new vscode.Position(location.line, location.character));
             }
@@ -67,6 +75,30 @@ export function registerDefinitionProvider(
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(LPC_SELECTOR, provider)
     );
+}
+
+// Ist das Ziel ein Pfad ("/i/room"->fun()), genau die Funktion dort; sonst alle
+// Klassen des Mudlib-Index mit diesem Namen und die passenden Doku-Blöcke.
+async function callOtherLocations(
+    document: vscode.TextDocument,
+    index: LpcIndex,
+    word: string,
+    target: string | undefined
+): Promise<vscode.Location[]> {
+    const toLocation = (mudPath: string, line: number, character: number): vscode.Location[] => {
+        const uri = index.uriFor(mudPath);
+        return uri ? [new vscode.Location(uri, new vscode.Position(line, character))] : [];
+    };
+    if (target) {
+        const hit = await index.findInObject(document, target, word);
+        if (hit) {
+            return toLocation(hit.mudPath, hit.fn.line, hit.fn.character);
+        }
+    }
+    return [
+        ...index.allCallTargets(word).flatMap((t) => toLocation(t.mudPath, t.fn.line, t.fn.character)),
+        ...index.docsFor(word).flatMap((d) => toLocation(d.mudPath, d.line, 0))
+    ];
 }
 
 async function resolveInherit(

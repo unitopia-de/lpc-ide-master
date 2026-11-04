@@ -6,6 +6,15 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## 0.2.9 – call_other-Hover, Strg+Klick und saubere Funktionskommentare
+
+### Hinzugefügt
+- Strg+Klick auf `ob->fun()` bzw. `ob.fun()` springt zu den Fundstellen: bei einem Pfad als Ziel direkt in dieses Objekt, sonst als Auswahlliste aller Klassen des Mudlib-Index mit dieser Funktion, dazu die passenden Doku-Blöcke.
+
+### Behoben
+- Abschnittsüberschriften über Prototypen („// Prototypes“, „Prototypen:“, „Protos“ oder ein schlichter Kommentar über einer ganzen Gruppe von Prototypen) gelten nicht mehr als Funktionskommentar. UNItopia-Doku-Blöcke und Kommentare über einzelnen Funktionen bleiben erhalten. Für den Mudlib-Index wirkt das erst, wenn er mit dem neuen Generator neu erzeugt wurde.
+- Hover bei call_other (`ob->fun()`) und `ob.fun()` zeigt jetzt den Funktionskommentar. Bisher wurden nur die eigene Datei, die Vererbung und „FUNKTION:“-Blöcke durchsucht, nicht die Funktionen der übrigen Klassen im Mudlib-Index. Jetzt erscheinen bis zu drei Treffer aus den Klassen, ausführlich dokumentierte und solche aus `/i/` zuerst. Bei einem Pfad als Ziel (`"/i/room"->fun()`) kommt die Funktion aus genau diesem Objekt samt Vererbung, bei `this_object()->fun()` aus der eigenen Datei. Efuns werden nach `->` nicht mehr angezeigt.
+
 ## 0.2.8 – MUD-Terminal statt Ausgabefenster
 
 ### Hinzugefügt

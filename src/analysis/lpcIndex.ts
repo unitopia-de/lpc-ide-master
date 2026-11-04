@@ -4,7 +4,7 @@ import { HomeMudService } from '../homemud/homeMudService';
 import type { EfunDefinition } from '../dialect/efunProvider';
 import { EfunDocs, EfunDoc } from './efunDocs';
 import { decodeText, LpcFunction } from './lpcParser';
-import { Mudlib, MudFs } from './mudlib';
+import { Mudlib, MudFs, bestPerName } from './mudlib';
 import { IndexFunction, MudlibIndex } from './indexFormat';
 import { parseDocument } from './documentCache';
 
@@ -17,6 +17,15 @@ export interface IndexedFunction extends LpcFunction {
     /** Vererbungskette bis zu dieser Datei, z. B. ["/i/room.c", "/i/item/smell.c"]. */
     via: string[];
     /** true, wenn die Angaben aus dem Mudlib-Index stammen (nicht live aus dem homemud). */
+    fromIndex?: boolean;
+}
+
+/** Treffer für einen call_other-Aufruf. */
+export interface CallTarget {
+    fn: LpcFunction;
+    /** Mudlib-Pfad der Datei, in der die Funktion steht. */
+    mudPath: string;
+    via: string[];
     fromIndex?: boolean;
 }
 
@@ -206,6 +215,66 @@ export class LpcIndex implements vscode.Disposable {
 
     async findInherited(document: vscode.TextDocument, name: string): Promise<IndexedFunction | undefined> {
         return (await this.inheritedFunctions(document)).find((f) => f.name === name);
+    }
+
+    // --- call_other (ob->fun(), ob.fun()) -----------------------------------
+
+    /**
+     * Funktion in einem namentlich bekannten Zielobjekt, z. B. "/i/room"->fun():
+     * mit homemud live (eigene Funktionen, dann geerbte), sonst aus dem Index.
+     */
+    async findInObject(document: vscode.TextDocument, target: string, name: string): Promise<CallTarget | undefined> {
+        const from = this.fromPath(document);
+        if (this.mudlib) {
+            const file = await this.mudlib.resolvePath(target, from, ['.c', '']);
+            const parsed = file ? await this.mudlib.parsed(file) : undefined;
+            if (file && parsed) {
+                const own = bestPerName(parsed.functions).find((f) => f.name === name);
+                if (own) {
+                    return { fn: own, mudPath: file, via: [file] };
+                }
+                const inherited = (await this.mudlib.inheritedFunctions(file, parsed)).find((f) => f.name === name);
+                return inherited ? { fn: inherited, mudPath: inherited.file, via: [file, ...inherited.via] } : undefined;
+            }
+        }
+        const cls = this.server?.resolveInherit(JSON.stringify(target), from, new Map());
+        const hit = cls ? this.server!.inheritedFunctions([cls]).find((f) => f.fn.n === name) : undefined;
+        return hit ? { fn: fromIndexFunction(hit.fn), mudPath: hit.file, via: hit.via, fromIndex: true } : undefined;
+    }
+
+    /**
+     * Klassen aus dem Mudlib-Index, die eine Funktion dieses Namens definieren —
+     * für call_other auf ein unbekanntes Objekt. Ausführlich dokumentierte zuerst
+     * (kurze Kommentare wie "Prototypes" sind meist Abschnittsüberschriften),
+     * dann die Kern-Mudlib (/i/) vor /p/ und /d/; gleiche Kommentare nur einmal.
+     */
+    callCandidates(name: string): { candidates: CallTarget[]; total: number } {
+        const all = this.allCallTargets(name);
+        const seen = new Set<string>();
+        const candidates = all.filter((c) => {
+            const key = c.fn.documentation ?? '';
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+        return { candidates, total: all.length };
+    }
+
+    /** Alle Klassen mit einer Funktion dieses Namens, sortiert wie callCandidates — für Strg+Klick. */
+    allCallTargets(name: string): CallTarget[] {
+        const rank = (file: string): number => (file.startsWith('/i/') ? 0 : file.startsWith('/p/') ? 1 : 2);
+        const quality = (doc: string | undefined): number => (!doc ? 2 : doc.length < 40 ? 1 : 0);
+        return [...(this.server?.functionsNamed(name) ?? [])]
+            .sort(
+                (a, b) =>
+                    quality(a.fn.d) - quality(b.fn.d) ||
+                    rank(a.file) - rank(b.file) ||
+                    a.file.length - b.file.length ||
+                    a.file.localeCompare(b.file)
+            )
+            .map(({ fn, file, via }) => ({ fn: fromIndexFunction(fn), mudPath: file, via, fromIndex: true }));
     }
 
     // --- Sfuns, Efun-Hilfe, Doku-Blöcke --------------------------------------

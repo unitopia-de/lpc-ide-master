@@ -104,6 +104,8 @@ export function parseLpc(text: string): ParsedLpc {
     const lineStarts = computeLineStarts(text);
 
     const functions: LpcFunction[] = [];
+    // Für die Gruppenregel unten: Prototypen mit schlichtem Kommentar darüber.
+    const plainDocPrototypes: { fn: LpcFunction; endLine: number }[] = [];
     const depthAt = depthTracker(code);
     for (const m of code.matchAll(FUNC_REGEX)) {
         const name = m[3];
@@ -139,7 +141,7 @@ export function parseLpc(text: string): ParsedLpc {
         const pos = offsetToPosition(lineStarts, nameOffset);
         const declOffset = start + (m[0].length - m[0].trimStart().length);
         const doc = extractDocumentation(docText, lineStarts, offsetToPosition(lineStarts, declOffset).line, name);
-        functions.push({
+        const fn: LpcFunction = {
             name,
             signature,
             modifiers: modsRaw ? modsRaw.split(/\s+/) : [],
@@ -151,7 +153,22 @@ export function parseLpc(text: string): ParsedLpc {
             declLength: start + m[0].length - declOffset,
             documentation: doc?.markdown,
             declaration: doc?.declaration
-        });
+        };
+        functions.push(fn);
+        if (isPrototype && doc?.plain) {
+            plainDocPrototypes.push({ fn, endLine: offsetToPosition(lineStarts, start + m[0].length).line });
+        }
+    }
+
+    // Ein schlichter Kommentar über einem Prototyp, dem direkt der nächste Prototyp
+    // folgt, ist eine Überschrift für die ganze Gruppe ("// Funktionen aus …"), keine Doku.
+    const prototypeLines = new Set(
+        functions.filter((f) => f.isPrototype).map((f) => offsetToPosition(lineStarts, f.declOffset).line)
+    );
+    for (const { fn, endLine } of plainDocPrototypes) {
+        if (prototypeLines.has(endLine + 1)) {
+            fn.documentation = undefined;
+        }
     }
 
     const inherits: LpcInherit[] = [];
@@ -471,7 +488,7 @@ function extractDocumentation(
     lineStarts: number[],
     declLine: number,
     name: string
-): { markdown?: string; declaration?: string } | undefined {
+): { markdown?: string; declaration?: string; plain?: boolean } | undefined {
     let gap = 0;
     let p = lineStarts[declLine] - 1;
     while (p >= 0 && /\s/.test(text[p])) {
@@ -536,8 +553,15 @@ function extractDocumentation(
     if (/^[-=*]{2,}.*[-=*]{2,}$/.test(cleaned)) {
         return undefined;
     }
-    return { markdown: textToMarkdown(cleaned) };
+    // Überschriften über Prototyp-Blöcken ("// Prototypes", "Prototypen:", "Protos").
+    if (!cleaned.includes('\n') && SECTION_HEADING.test(cleaned)) {
+        return undefined;
+    }
+    return { markdown: textToMarkdown(cleaned), plain: true };
 }
+
+const SECTION_HEADING =
+    /^(?:forward[ -]?)?(?:proto(?:typ\w*|s)?|deklarationen|declarations?|vorwärtsdeklarationen)\b[^.!?]{0,40}$/i;
 
 function lineText(text: string, lineStarts: number[], line: number): string {
     const end = line + 1 < lineStarts.length ? lineStarts[line + 1] - 1 : text.length;

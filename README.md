@@ -73,7 +73,7 @@ npm run package
 ```
 
 Danach liegt im Verzeichnis `lpc-ide-master` die Datei **`lpc-ide-master-<version>.vsix`**,
-z. B. `lpc-ide-master-0.2.8.vsix`.
+z. B. `lpc-ide-master-0.2.9.vsix`.
 
 > Die Warnung von `vsce`, die Extension bestehe aus vielen Dateien und solle gebündelt werden,
 > ist harmlos. Meldungen von `npm install` zu `cpu-features` oder `node-gyp` ebenfalls –
@@ -307,7 +307,18 @@ Index wird auf dem Server von einem Generator erzeugt, siehe
   **LPC-IDE-Master** steht bei jedem Abgleich, ob der Index aktuell war oder neu geladen wurde.
 
 Doku-Kommentare außerhalb der Vererbung erscheinen beim Hover über einen sonst unbekannten
-Namen, etwa eine per `->` aufgerufene Funktion. Strg+Klick springt zur Fundstelle.
+Namen. Strg+Klick springt zur Fundstelle.
+
+**Hover und Strg+Klick bei `ob->fun()` und `ob.fun()`:** Das Plugin weiß meist nicht, welches
+Objekt `ob` ist. Es sucht den Namen deshalb in allen Klassen (`/i/…`) des Mudlib-Index:
+
+- **Hover** zeigt bis zu drei Treffer mit Kommentar, ausführlich dokumentierte und solche aus
+  der Kern-Mudlib zuerst.
+- **Strg+Klick** listet alle Fundstellen in derselben Reihenfolge, dazu passende Doku-Blöcke.
+  VS Code zeigt sie als Vorschau-Liste, aus der du die richtige Datei wählst.
+
+Steht das Ziel als Pfad da, etwa `"/i/room"->add_v_item()`, kommen Hover und Sprungziel genau
+aus diesem Objekt bzw. seiner `inherit`-Kette. Bei `this_object()->fun()` gilt die eigene Datei.
 
 ### Weitere Felder in `lpc-config.json`
 

@@ -74,6 +74,7 @@ const MAX_CLASSES = 300;
 export class MudlibIndex {
     private readonly efunsByName = new Map<string, IndexEfun>();
     private readonly docsByName = new Map<string, IndexDoc[]>();
+    private functionsByName: Map<string, IndexedClassFunction[]> | undefined;
 
     constructor(readonly data: IndexFile) {
         if (data.schema !== INDEX_SCHEMA) {
@@ -143,6 +144,24 @@ export class MudlibIndex {
             }
         }
         return undefined;
+    }
+
+    /** Alle Klassen, die eine Funktion dieses Namens selbst definieren (für call_other ohne bekanntes Ziel). */
+    functionsNamed(name: string): IndexedClassFunction[] {
+        if (!this.functionsByName) {
+            this.functionsByName = new Map();
+            for (const [file, cls] of Object.entries(this.data.classes)) {
+                for (const fn of cls.functions) {
+                    let list = this.functionsByName.get(fn.n);
+                    if (!list) {
+                        list = [];
+                        this.functionsByName.set(fn.n, list);
+                    }
+                    list.push({ fn, file, via: [file] });
+                }
+            }
+        }
+        return this.functionsByName.get(name) ?? [];
     }
 
     /** Funktionen, die über die angegebenen (aufgelösten) Klassen geerbt werden — nächste Ebene zuerst. */
