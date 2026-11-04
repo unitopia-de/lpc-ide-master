@@ -119,7 +119,14 @@ export class EfunProvider {
             const data = await vscode.workspace.fs.readFile(uri);
             return JSON.parse(Buffer.from(data).toString('utf8')) as ProfileFile;
         } catch (err) {
-            this.output.appendLine(`${label} nicht ladbar (${uri.fsPath}): ${err}`);
+            if (err instanceof vscode.FileSystemError && err.code === 'FileNotFound') {
+                this.output.appendLine(
+                    `${label} nicht gefunden (${uri.fsPath}). Wird kein eigenes Profil gebraucht, ` +
+                        'den Eintrag mudlib.efunDefinitions aus der lpc-config.json entfernen.'
+                );
+            } else {
+                this.output.appendLine(`${label} nicht ladbar (${uri.fsPath}): ${err}`);
+            }
             return undefined;
         }
     }

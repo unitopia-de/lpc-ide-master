@@ -6,6 +6,9 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Geändert
+- Fehlt die in `mudlib.efunDefinitions` eingetragene Datei, meldet das Ausgabefenster das jetzt ohne Fehlertext und mit Hinweis, den Eintrag zu entfernen.
+
 ### Entfernt
 - Die Meldung „LSP-Client als Stub aktiv (Phase 4 ausstehend).“ im Ausgabefenster beim Start.
 
