@@ -253,6 +253,14 @@ ausgeschaltet. Zum Einschalten in den VS-Code-Einstellungen (`Strg+,`) nach
   "protocol": "telnets"
 }
 ```
+Oder für Orbit:
+```json
+"mud": {
+  "host": "unitopia.de",
+  "port": 9988,
+  "protocol": "telnets"
+}
+```
 
 | MUD | `telnets` (verschlüsselt) | `telnet` |
 | --- | --- | --- |
