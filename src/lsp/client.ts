@@ -29,8 +29,6 @@ export class LpcLanguageClient {
         // };
         // this.client = new lc.LanguageClient('lpc', 'LPC Language Server', serverOptions, clientOptions);
         // await this.client.start();
-
-        this.output.appendLine('LSP-Client als Stub aktiv (Phase 4 ausstehend).');
     }
 
     async stop(): Promise<void> {

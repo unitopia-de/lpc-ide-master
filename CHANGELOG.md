@@ -6,6 +6,9 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Entfernt
+- Die Meldung „LSP-Client als Stub aktiv (Phase 4 ausstehend).“ im Ausgabefenster beim Start.
+
 ## 0.2.11 – Prototypen bei call_other ausblenden
 
 ### Behoben
