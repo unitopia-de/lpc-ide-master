@@ -265,7 +265,7 @@ Oder für Orbit:
 | MUD | `telnets` (verschlüsselt) | `telnet` |
 | --- | --- | --- |
 | UNItopia | Port **992** (Standard bei `telnets`) | Port 3333 |
-| Orbit | Port **9988** | – |
+| Orbit | Port **9988** | Port **9876** |
 
 **LPC: Remote-MUD-Terminal öffnen** (oder ein Klick auf den MUD-Eintrag in der Statusleiste)
 öffnet einen Terminal-Tab und verbindet. Einloggen tust du dich dort selbst, mit Name und
