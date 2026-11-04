@@ -6,6 +6,9 @@ Versionierung folgt [SemVer](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Behoben
+- Dateien mit Windows-Zeilenenden (CRLF) verloren alle Funktionskommentare: UNItopia-Doku-Blöcke (`FUNKTION:` …) wurden darin nicht erkannt, z. B. in `/lwo/exits.c`. Betraf Editor, homemud und den Index-Generator.
+
 ## 0.2.9 – call_other-Hover, Strg+Klick und saubere Funktionskommentare
 
 ### Hinzugefügt

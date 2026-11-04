@@ -93,7 +93,10 @@ export interface LpcDocBlock {
     line: number;
 }
 
-export function parseLpc(text: string): ParsedLpc {
+export function parseLpc(source: string): ParsedLpc {
+    // CRLF-Dateien: "\r" vor "\n" durch ein Leerzeichen ersetzen — gleiche Länge,
+    // also bleiben alle Offsets gültig; die Regex der Doku-Erkennung sehen nur "\n".
+    const text = source.replace(/\r(?=\n)/g, ' ');
     const blockComments: { start: number; end: number }[] = [];
     const stripped = stripCommentsAndStrings(text, blockComments);
     const mask = inactiveLineMask(stripped);
